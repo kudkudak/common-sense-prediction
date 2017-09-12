@@ -390,7 +390,7 @@ def wrap_no_config_registry(func, plugins=[]):
 
     # Create parser and get config
     parser = argparse.ArgumentParser()
-    parser.add_argument("--save_path", help="The destination for saving")
+    parser.add_argument("save_path", help="The destination for saving")
     add_arguments_from_func_signature(func, parser)
 
     args = parser.parse_args()

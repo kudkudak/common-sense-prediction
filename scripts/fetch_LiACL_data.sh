@@ -7,7 +7,8 @@
 set -x
 set -e
 
-mkdir -p ACL/conceptnet
+mkdir -p LiACL/conceptnet
+mkdir -p embeddings/LiACL
 
 wget http://ttic.uchicago.edu/~kgimpel/comsense_resources/train100k.txt.gz
 wget http://ttic.uchicago.edu/~kgimpel/comsense_resources/train300k.txt.gz
@@ -24,5 +25,5 @@ gunzip test.txt.gz
 gunzip embeddings.txt.gz
 
 mv train100k.txt train300k.txt dev1.txt dev2.txt test.txt ACL/conceptnet
-mv embeddings.txt ACL/conceptnet/embeddings_OMCS.txt
+mv embeddings.txt embeddings/LiACL/embeddings_OMCS.txt
 

@@ -3,10 +3,11 @@
 """
 Trains MaxSim and save predictions
 
-Run like: python scripts/train_maxsim.py results/MaxSim/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/commonsense.txt
+Run like: python scripts/train_maxsim.py results/MaxSim/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/ACL/embeddings_OMCS.txt
 """
 
 from src.utils.vegab import wrap_no_config_registry, MetaSaver
+from src import DATA_DIR
 
 import pandas as pd
 import os
@@ -15,14 +16,15 @@ import pandas as pd
 import numpy as np
 import tqdm
 import sys
+import json
 
 from dnn_ce.utils import getWordmap
 
 def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt"):
-    train = pd.read_csv("../ACL_CKBC/commonsendata/Training/new_omcs100.txt", sep="\t", header=None)
-    dev = pd.read_csv("../ACL_CKBC/commonsendata/Eval/conceptnet/new_omcs_dev1.txt", sep="\t", header=None)
-    dev2 = pd.read_csv("../ACL_CKBC/commonsendata/Eval/conceptnet/new_omcs_dev2.txt", sep="\t", header=None)
-    test = pd.read_csv("../ACL_CKBC/commonsendata/Eval/conceptnet/new_omcs_test.txt", sep="\t", header=None)
+    train = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/train100k.txt"), sep="\t", header=None)
+    dev = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev1.txt"), sep="\t", header=None)
+    dev2 = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev2.txt"), sep="\t", header=None)
+    test = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/test.txt"), sep="\t", header=None)
 
     train.columns = dev2.columns = dev.columns = test.columns = ['rel', 'head', 'tail', 'score']
 
@@ -79,11 +81,9 @@ def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt"):
     print "Picked ", threshold, " with acc ", np.max(threshold_acc)
     print "Acc test", np.mean((scores_test > threshold) == test.values[:, -1])
 
-    import json
-
     eval_results = {"scores_dev": list(scores_dev), "scores_dev2": list(scores_dev2), "scores_test": list(scores_test),
         "threshold": threshold}
-    json.dump(eval_results, open("20_08_maxsim/maxsim_glove.json", "w"))
+    json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
 
 if __name__ == "__main__":
     wrap_no_config_registry(train, plugins=[MetaSaver()])

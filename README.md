@@ -16,12 +16,30 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 * Notes: https://www.evernote.com/Home.action?login=true#b=65f15629-2909-42a0-97c3-0def3cd3e8f5&ses=4&sh=1&sds=5&
 
 ## Setup
+ 
+1. Configure PYTHONPATH to include root folder of the project. Configure DATA_DIR to point to data directory
+ 
+2. Go to DATA_DIR and run `scripts/fetch_LiACL_data.sh`
 
-0. (Optional if you want to run baselines) Clone https://github.com/Lorraine333/ACL_CKBC repository and add to your PYTHONPATH
+3. (Optional if you want to run baselines) Clone https://github.com/Lorraine333/ACL_CKBC repository and add to your PYTHONPATH. Add
+`__init__.py` file to `ACL_CKBC` and `dnn_ce` folders.
 
-1. Go to any folder you wish to use as data and run `scripts/fetch_LiACL_data.sh`
+For example you can have `env.sh` file that you source before running scripts. In my case it is
 
-2. Configure PYTHONPATH to include root folder of the project. Configure DATA_DIR to point to data directory
+```
+#!/usr/bin/env bash
+
+export PYTHONPATH=$PYTHONPATH:$HOME/l2lwe
+export DATA_DIR=$HOME/l2lwe/data
+export ACL_ROOT_DIR=$HOME/l2lwe/ACL_CKBC
+export PYTHONPATH=$PYTHONPATH:$ACL_ROOT_DIR
+```
+
+## Data
+
+* `LiACL/conceptnet` - all files used in ACL models
+
+* `embeddings` - embeddings (kept separately as tend to be big)
 
 ## Notes
 
