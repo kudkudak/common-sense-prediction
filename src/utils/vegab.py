@@ -34,6 +34,7 @@ from __future__ import print_function
 import traceback
 import logging
 import argparse
+import optparse
 import datetime
 import sys
 import pprint
@@ -295,7 +296,7 @@ def add_arguments_from_func_signature(func, parser):
     for varname in fnc_arg_spec:
         if varname in ['save_path']:
             continue
-        parser.add_option("--" + varname, type="str" if arg_types.get(varname, "str") == "json"
+        parser.add_argument("--" + varname, type="str" if arg_types.get(varname, "str") == "json"
         else arg_types.get(varname, "str"), default=defaults.get(varname, None))
 
 def add_config_arguments(config, parser):
@@ -389,7 +390,7 @@ def wrap_no_config_registry(func, plugins=[]):
 
     # Create parser and get config
     parser = argparse.ArgumentParser()
-    parser.add_argument("save_path", help="The destination for saving")
+    parser.add_argument("--save_path", help="The destination for saving")
     add_arguments_from_func_signature(func, parser)
 
     args = parser.parse_args()
@@ -401,7 +402,7 @@ def wrap_no_config_registry(func, plugins=[]):
     # Do some configurations, then run with redirection
     def call_training_func():
         logger.info("Calling function {}".format(func.__name__))
-        func(args.save_path, **args.__dict__)
+        func(**args.__dict__)
         logger.info("Finished {}".format(func.__name__))
 
         for p in plugins:

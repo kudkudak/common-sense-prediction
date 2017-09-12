@@ -20,3 +20,10 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 0. (Optional if you want code) https://github.com/Lorraine333/ACL_CKBC
 
 1. (Optional if you want to run baselines) Download data from http://ttic.uchicago.edu/~kgimpel/commonsense.html
+
+2. Make sure root folder is on PYTHONPATH
+
+## Notes
+
+We use vegab, it is similar to argh, but adds convention that each run necessarily has its own folder, that
+after execution will have serialized stdout, stderr, python file and config used.
