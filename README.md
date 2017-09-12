@@ -17,11 +17,11 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
 ## Setup
 
-0. (Optional if you want code) https://github.com/Lorraine333/ACL_CKBC
+0. (Optional if you want to run baselines) Clone https://github.com/Lorraine333/ACL_CKBC repository and add to your PYTHONPATH
 
-1. (Optional if you want to run baselines) Download data from http://ttic.uchicago.edu/~kgimpel/commonsense.html
+1. Go to any folder you wish to use as data and run `scripts/fetch_LiACL_data.sh`
 
-2. Make sure root folder is on PYTHONPATH
+2. Configure PYTHONPATH to include root folder of the project. Configure DATA_DIR to point to data directory
 
 ## Notes
 
