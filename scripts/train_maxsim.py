@@ -54,9 +54,6 @@ def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt"):
     dev_feat = featurize_df(dev)
     dev2_feat = featurize_df(dev2)
 
-    k = -200
-    test.values[k], train.values[train_feat.dot(test_feat[k, :].T).argmax()], train_feat.dot(test_feat[k, :].T).max()
-
     ## Computes scores
     scores_dev = []
     scores_test = []

@@ -1,9 +1,12 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Trains MaxSim3.6 (neg sample + NN + careful init) and save predictions. Should get to circa 84.5 dev2 acc.
+Trains MaxSim3.6 (neg sample + NN + careful init) and save predictions. Should get to circa 84 dev2 acc.
 
 Run like: python scripts/train_maxsim3.py results/MaxSim3/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/ACL/embeddings_OMCS.txt
+
+TODO: all_positive" negative sampling from train_maxargsim.py is just better (84.7) worth
+copying over
 """
 
 from src.utils.vegab import wrap_no_config_registry, MetaSaver
@@ -244,8 +247,10 @@ def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt",
     scores_test = model.predict([test_feat, X_test_all]).reshape((-1,))
 
     # Evaluate on dev, dev2, test and save eval_results.json
-    eval_results = {"scores_dev": list(scores_dev), "scores_dev2": list(scores_dev2),
-        "scores_test": list(scores_test),
+    eval_results = {
+        "scores_dev": [float(a) for a in list(scores_dev)],
+        "scores_dev2": [float(a) for a in list(scores_dev2)],
+        "scores_test": [float(a) for a in list(scores_test)],
         "threshold": threshold}
     json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
 
