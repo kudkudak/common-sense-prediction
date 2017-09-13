@@ -402,7 +402,12 @@ def wrap_no_config_registry(func, plugins=[]):
     # Do some configurations, then run with redirection
     def call_training_func():
         logger.info("Calling function {}".format(func.__name__))
+
+        if not os.path.exists(args.__dict__['save_path']):
+            os.system("mkdir -p " + args.__dict__['save_path'])
+
         func(**args.__dict__)
+
         logger.info("Finished {}".format(func.__name__))
 
         for p in plugins:
