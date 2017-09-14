@@ -3,6 +3,8 @@
 """
 Trains MaxArgSim. Should get to circa 85.5%
 
+Note: very sensitive to constants
+
 Run like: python scripts/train_maxargsim.py results/MaxArgSim/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/ACL/embeddings_OMCS.txt
 
 """
@@ -92,7 +94,7 @@ def featurize_df(df, dim, featurizer=featurize_triplet):
     return feat
 
 def train(save_path, embeddings="commonsendata/embeddings.txt",
-    n_neighbours=2, L_1=3e-3, batchsize=300, negative_sampling="all", use_rel=0, use_argsim=1):
+    n_neighbours=2, L_1=3e-3, batchsize=300, negative_sampling="all_positive", use_rel=0, use_argsim=1):
     train = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/train100k.txt"), sep="\t", header=None)
     dev = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev1.txt"), sep="\t", header=None)
     dev2 = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev2.txt"), sep="\t", header=None)
@@ -104,7 +106,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
     (words, We) = getWordmap(embeddings)
     We = We / (1e-4 + np.linalg.norm(We, axis=1, keepdims=True))
     dim = We.shape[1]
-    V_rel = list(set(test['rel'].values)) + ['random']
+    V_rel = list(set(train['rel'].values)) + ['random']
     We_rel = {v: np.random.uniform(-0.1, 0.1, size=We[0].shape) for v in V_rel}
     for v in We_rel:
         We_rel[v] = We_rel[v] / np.linalg.norm(We_rel[v]) * np.linalg.norm(We[0])
@@ -153,13 +155,13 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
     for t in thresholds:
         threshold_acc.append(np.mean((scores_dev > t) == dev.values[:, -1]))
     threshold_argsim = thresholds[np.argmax(threshold_acc)]
-    print "Picked ", threshold, " with acc ", np.max(threshold_acc)
+    print "Picked ", threshold_argsim, " with acc ", np.max(threshold_acc)
     print "Acc test", np.mean((scores_test > threshold_argsim) == test.values[:, -1])
 
     # Fetches top K. Will require some fixes to get into form required
-    X_dev1, y_dev1, closest_dev1 = create_X_y(dev, train_feat=train_feat, K=n_neighbours)
-    X_dev2, y_dev2, closest_dev2 = create_X_y(dev2, train_feat=train_feat, K=n_neighbours)
-    X_test, y_test, closest_test = create_X_y(test, train_feat=train_feat, K=n_neighbours)
+    X_dev1, y_dev1, closest_dev1 = create_X_y(dev_feat, dev, train_feat=train_feat, K=n_neighbours)
+    X_dev2, y_dev2, closest_dev2 = create_X_y(dev2_feat, dev2, train_feat=train_feat, K=n_neighbours)
+    X_test, y_test, closest_test = create_X_y(test_feat, test, train_feat=train_feat, K=n_neighbours)
 
     def data_gen_all_resample(feat, df, y, closest, train_feat, K=5, batchsize=50, sample_negative=True,
             sample_negative_from_train_also=False, n_epochs=100000):
@@ -274,7 +276,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
                 break
 
     x = Input(shape=(3 * dim,))
-    closest = Input(shape=(KK, 3 * dim))
+    closest = Input(shape=(n_neighbours, 3 * dim))
 
     x_Drop = Dropout(0.1)(x)
     closest_Drop = Dropout(0.1)(closest)
@@ -297,13 +299,13 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
         trainable=True)
 
     Ax = embedder(x_Drop)
-    Aclosest = TimeDistributed(embedder2, input_shape=(KK, 3 * dim))(closest_Drop)
+    Aclosest = TimeDistributed(embedder2, input_shape=(n_neighbours, 3 * dim))(closest_Drop)
     Bx = embedder3(x_Drop2)
-    Bclosest = TimeDistributed(embedder4, input_shape=(KK, 3 * dim))(closest_Drop2)
+    Bclosest = TimeDistributed(embedder4, input_shape=(n_neighbours, 3 * dim))(closest_Drop2)
 
     def scorer_fnc(zzz):
         scores = []
-        for i in range(KK - n_neighbours, KK):
+        for i in range(n_neighbours):
             assert zzz[0].ndim == 2
             assert zzz[1][i].ndim == 2
             scores.append(T.batched_dot(zzz[0], zzz[1][:, i]).reshape((-1, 1)))
@@ -313,13 +315,13 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
     score = Lambda(scorer_fnc, output_shape=(1,))([Ax, Aclosest])
 
     def score_argsim_fnc(zzz):
-        return np.float32(use_argsim * 2.1 * 0.05 * (1. / threshold_argsim)) * T.batched_dot(zzz[:, 0:dim],
+        return np.float32(use_argsim * 2.0 * 0.05 * (1. / (1.7*threshold_argsim))) * T.batched_dot(zzz[:, 0:dim],
             zzz[:, -dim:]).reshape((-1, 1))
 
     score_argsim_x = Lambda(score_argsim_fnc, output_shape=(1,))(Bx)
 
     def score_argsim_fnc2(zzz):
-        return np.float32(use_argsim * 2.1 * 0.05 / 4. * (1. / threshold_argsim)) * T.batched_dot(zzz[:, -1, 0:dim],
+        return np.float32(use_argsim * 2.0 * 0.05 / 4. * (1. / (1.7*threshold_argsim))) * T.batched_dot(zzz[:, -1, 0:dim],
             zzz[:, -1, -dim:]).reshape((-1, 1))
 
     score_argsim_closest1 = Lambda(score_argsim_fnc2, output_shape=(1,))(Bclosest)
@@ -340,10 +342,6 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
     if use_rel:
         clf3 = Lambda(pick_score_based_on_rel, output_shape=(1,))([clf3, relation])
 
-    X_dev1_all = X_dev1.reshape(-1, n_neighbours, 3 * dim)
-    X_dev2_all = X_dev2.reshape(-1, n_neighbours, 3 * dim)
-    X_test_all = X_test.reshape(-1, n_neighbours, 3 * dim)
-
     model = Model(inputs=[x, closest, relation], output=clf3)
     model.compile(loss="binary_crossentropy", optimizer=Adam(0.0001), metrics=['accuracy'])
 
@@ -354,7 +352,6 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
         model.total_loss += L_1 * T.sum(T.pow(embedder3.kernel - T.eye(3 * dim), 2.0))
     if hasattr(embedder4, "kernel"):
         model.total_loss += L_1 * T.sum(T.pow(embedder4.kernel - T.eye(3 * dim), 2.0))
-
 
     ds = data_gen_all_resample(dev_feat, dev, y_dev1, closest_dev1, train_feat, K=n_neighbours,
         sample_negative=negative_sampling, batchsize=batchsize)
@@ -370,7 +367,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
     assert len(X_dev_ds[0]) == len(dev)
 
     ds_test = data_gen_all_resample(test_feat, test, y_test, closest_test, train_feat, K=n_neighbours, n_epochs=1,
-        sample_negative=False, batchsize=len(test))
+        sample_negative="no", batchsize=len(test))
     X_test_ds, y_test_ds = next(ds_test)
     assert len(X_test_ds[0]) == len(test)
 
@@ -392,8 +389,10 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
     scores_test = model.predict(X_test_ds).reshape((-1,))
 
     # Evaluate on dev, dev2, test and save eval_results.json
-    eval_results = {"scores_dev": list(scores_dev), "scores_dev2": list(scores_dev2),
-        "scores_test": list(scores_test),
+    eval_results = {
+        "scores_dev": [float(a) for a in list(scores_dev)],
+        "scores_dev2": [float(a) for a in list(scores_dev2)],
+        "scores_test": [float(a) for a in list(scores_test)],
         "threshold": threshold}
     json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
 
