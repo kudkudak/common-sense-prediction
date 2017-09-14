@@ -13,7 +13,7 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
 * ACL paper: http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf
 
-* Notes: https://www.evernote.com/Home.action?login=true#b=65f15629-2909-42a0-97c3-0def3cd3e8f5&ses=4&sh=1&sds=5&
+* Notes: https://www.evernote.com/pub/kudkudak/projektl2lwe
 
 ## Setup
  
