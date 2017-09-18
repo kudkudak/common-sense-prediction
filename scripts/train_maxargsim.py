@@ -164,7 +164,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
     X_test, y_test, closest_test = create_X_y(test_feat, test, train_feat=train_feat, K=n_neighbours)
 
     def data_gen_all_resample(feat, df, y, closest, train_feat, K=5, batchsize=50, sample_negative=True,
-            sample_negative_from_train_also=False, n_epochs=100000):
+            sample_negative_from_train_also=False, n_epochs=100000, shuffle=True):
         # TODO: FIx bug in sample_gative=True
         assert len(feat) == len(closest)
         assert len(closest[0]) == K
@@ -181,7 +181,10 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
         epoch = 0
         while True:
 
-            ids = rng.choice(len(feat), len(feat), replace=False)
+            if shuffle:
+                ids = rng.choice(len(feat), len(feat), replace=False)
+            else:
+                ids = list(range(len(feat)))
             ids_target = rng.choice(len(feat), len(feat), replace=False)  # TODO: From train set as well?
 
             for id in ids:
@@ -357,17 +360,17 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
         sample_negative=negative_sampling, batchsize=batchsize)
 
     ds_dev2 = data_gen_all_resample(dev2_feat, dev2, y_dev2, closest_dev2, train_feat, K=n_neighbours, n_epochs=1,
-        sample_negative="no", batchsize=len(dev2))
+        sample_negative="no", batchsize=len(dev2), shuffle=False)
     X_dev2_ds, y_dev2_ds = next(ds_dev2)
     assert len(X_dev2_ds[0]) == len(dev2)
 
     ds_dev = data_gen_all_resample(dev_feat, dev, y_dev1, closest_dev1, train_feat, K=n_neighbours, n_epochs=1,
-        sample_negative="no", batchsize=len(dev))
+        sample_negative="no", batchsize=len(dev), shuffle=False)
     X_dev_ds, y_dev_ds = next(ds_dev)
     assert len(X_dev_ds[0]) == len(dev)
 
     ds_test = data_gen_all_resample(test_feat, test, y_test, closest_test, train_feat, K=n_neighbours, n_epochs=1,
-        sample_negative="no", batchsize=len(test))
+        sample_negative="no", batchsize=len(test), shuffle=False)
     X_test_ds, y_test_ds = next(ds_test)
     assert len(X_test_ds[0]) == len(test)
 
