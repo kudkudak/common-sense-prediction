@@ -31,8 +31,9 @@ from keras.optimizers import SGD, Adam
 
 from dnn_ce.utils import getWordmap
 
+
 def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt",
-    n_neighbours=2, L_1=3e-3, batchsize=100):
+        n_neighbours=2, L_1=3e-3, batchsize=100):
     train = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/train100k.txt"), sep="\t", header=None)
     dev = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev1.txt"), sep="\t", header=None)
     dev2 = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev2.txt"), sep="\t", header=None)
@@ -104,7 +105,6 @@ def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt",
             closest.append(id_closets)
 
         return closest
-
 
     def create_X_y(df, train_feat, K=10):
         feat = featurize_df(df)
@@ -183,62 +183,61 @@ def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt",
                         np.concatenate(batch[1], axis=0)]
                     batch = [[], []], []
 
-    x = Input(shape=(3*dim,))
-    closest = Input(shape=(n_neighbours, 3*dim))
+    x = Input(shape=(3 * dim,))
+    closest = Input(shape=(n_neighbours, 3 * dim))
 
     x_Drop = Dropout(0.1)(x)
     closest_Drop = Dropout(0.1)(closest)
 
-    embedder = Dense(3*dim, activation="linear",
-                     kernel_initializer="identity", bias_initializer="zeros",
-                     trainable=True)
-    embedder2 = Dense(3*dim, activation="linear",
-                      kernel_initializer="identity", bias_initializer="zeros",
-                     trainable=True)
+    embedder = Dense(3 * dim, activation="linear",
+        kernel_initializer="identity", bias_initializer="zeros",
+        trainable=True)
+    embedder2 = Dense(3 * dim, activation="linear",
+        kernel_initializer="identity", bias_initializer="zeros",
+        trainable=True)
 
     Ax = embedder(x_Drop)
-    Aclosest = TimeDistributed(embedder2, input_shape=(n_neighbours, 3*dim))(closest_Drop)
+    Aclosest = TimeDistributed(embedder2, input_shape=(n_neighbours, 3 * dim))(closest_Drop)
 
     def scorer_fnc(zzz):
         scores = []
         for i in range(n_neighbours):
             assert zzz[0].ndim == 2
             assert zzz[1][i].ndim == 2
-            scores.append(10.*T.batched_dot(zzz[0], zzz[1][:, i]).reshape((-1, 1)))
+            scores.append(10. * T.batched_dot(zzz[0], zzz[1][:, i]).reshape((-1, 1)))
         return T.max(T.concatenate(scores, axis=1), axis=1, keepdims=True)
 
     score = Lambda(scorer_fnc, output_shape=(1,))([Ax, Aclosest])
     clf = Dense(1, kernel_initializer="ones", \
-                bias_initializer=constant(np.float32(-10*threshold)))(score)
+        bias_initializer=constant(np.float32(-10 * threshold)))(score)
     clf2 = BatchNormalization()(clf)
     clf3 = Activation("sigmoid")(clf2)
 
-    X_dev1_all = X_dev1.reshape(-1, n_neighbours, 3*dim)
-    X_dev2_all = X_dev2.reshape(-1, n_neighbours, 3*dim)
-    X_test_all = X_test.reshape(-1, n_neighbours, 3*dim)
-
+    X_dev1_all = X_dev1.reshape(-1, n_neighbours, 3 * dim)
+    X_dev2_all = X_dev2.reshape(-1, n_neighbours, 3 * dim)
+    X_test_all = X_test.reshape(-1, n_neighbours, 3 * dim)
 
     ## 81.2 test
     model = Model(inputs=[x, closest], output=clf3)
     model.compile(loss="binary_crossentropy", optimizer=Adam(0.0001), metrics=['accuracy'])
 
-    model.total_loss += L_1*T.sum(T.pow(embedder.kernel - T.eye(3*dim), 2.0))
-    model.total_loss += L_1*T.sum(T.pow(embedder2.kernel - T.eye(3*dim), 2.0))
+    model.total_loss += L_1 * T.sum(T.pow(embedder.kernel - T.eye(3 * dim), 2.0))
+    model.total_loss += L_1 * T.sum(T.pow(embedder2.kernel - T.eye(3 * dim), 2.0))
 
     ds = data_gen_all_resample(dev_feat, y_dev1, closest_dev1, train_feat, K=n_neighbours,
-                               sample_negative=True, batchsize=batchsize)
+        sample_negative=True, batchsize=batchsize)
 
     print("Start training")
 
     model.fit_generator(ds,
-                        epochs=50,
-                        max_queue_size=10000,
-                        steps_per_epoch=1*len(dev)/batchsize,
-                        callbacks=[EarlyStopping(patience=8, monitor="val_acc" ),
-                            ModelCheckpoint(save_best_only=True, save_weights_only=True,
-                                filepath=os.path.join(save_path, "model_best_epoch.h5"))
-                                  ],
-                        validation_data=[[dev2_feat, X_dev2_all], y_dev2], verbose=2)
+        epochs=50,
+        max_queue_size=10000,
+        steps_per_epoch=1 * len(dev) / batchsize,
+        callbacks=[EarlyStopping(patience=8, monitor="val_acc"),
+            ModelCheckpoint(save_best_only=True, save_weights_only=True,
+                filepath=os.path.join(save_path, "model_best_epoch.h5"))
+        ],
+        validation_data=[[dev2_feat, X_dev2_all], y_dev2], verbose=2)
 
     model.load_weights(os.path.join(save_path, "model_best_epoch.h5"))
 
@@ -251,7 +250,11 @@ def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt",
         "scores_dev": [float(a) for a in list(scores_dev)],
         "scores_dev2": [float(a) for a in list(scores_dev2)],
         "scores_test": [float(a) for a in list(scores_test)],
-        "threshold": threshold}
+        "acc_dev2": np.mean((scores_dev2 > 0.5) == y_dev2),
+        "acc_dev": np.mean((scores_dev > 0.5) == y_dev1),
+        "acc_test": np.mean((scores_test > 0.5) == y_test),
+        "threshold_maxsim": threshold,
+        "threshold": 0.5}
     json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
 
 

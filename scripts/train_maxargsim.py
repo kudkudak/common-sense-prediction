@@ -93,8 +93,9 @@ def featurize_df(df, dim, featurizer=featurize_triplet):
         feat[row_id] = featurizer(row)
     return feat
 
+
 def train(save_path, embeddings="commonsendata/embeddings.txt",
-    n_neighbours=2, L_1=3e-3, batchsize=300, negative_sampling="all_positive", use_rel=0, use_argsim=1):
+        n_neighbours=2, L_1=3e-3, batchsize=300, negative_sampling="all_positive", use_rel=0, use_argsim=1):
     train = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/train100k.txt"), sep="\t", header=None)
     dev = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev1.txt"), sep="\t", header=None)
     dev2 = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev2.txt"), sep="\t", header=None)
@@ -318,13 +319,14 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
     score = Lambda(scorer_fnc, output_shape=(1,))([Ax, Aclosest])
 
     def score_argsim_fnc(zzz):
-        return np.float32(use_argsim * 2.0 * 0.05 * (1. / (1.7*threshold_argsim))) * T.batched_dot(zzz[:, 0:dim],
+        return np.float32(use_argsim * 2.0 * 0.05 * (1. / (1.7 * threshold_argsim))) * T.batched_dot(zzz[:, 0:dim],
             zzz[:, -dim:]).reshape((-1, 1))
 
     score_argsim_x = Lambda(score_argsim_fnc, output_shape=(1,))(Bx)
 
     def score_argsim_fnc2(zzz):
-        return np.float32(use_argsim * 2.0 * 0.05 / 4. * (1. / (1.7*threshold_argsim))) * T.batched_dot(zzz[:, -1, 0:dim],
+        return np.float32(use_argsim * 2.0 * 0.05 / 4. * (1. / (1.7 * threshold_argsim))) * T.batched_dot(
+            zzz[:, -1, 0:dim],
             zzz[:, -1, -dim:]).reshape((-1, 1))
 
     score_argsim_closest1 = Lambda(score_argsim_fnc2, output_shape=(1,))(Bclosest)
@@ -396,7 +398,11 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
         "scores_dev": [float(a) for a in list(scores_dev)],
         "scores_dev2": [float(a) for a in list(scores_dev2)],
         "scores_test": [float(a) for a in list(scores_test)],
-        "threshold": threshold}
+        "acc_dev2": np.mean((scores_dev2 > 0.5) == y_dev2),
+        "acc_dev": np.mean((scores_dev > 0.5) == y_dev1),
+        "acc_test": np.mean((scores_test > 0.5) == y_test),
+        "threshold_maxsim": threshold,
+        "threshold": 0.5}
     json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
 
 

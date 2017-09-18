@@ -20,6 +20,7 @@ import json
 
 from dnn_ce.utils import getWordmap
 
+
 def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt"):
     train = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/train100k.txt"), sep="\t", header=None)
     dev = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev1.txt"), sep="\t", header=None)
@@ -81,6 +82,7 @@ def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt"):
     eval_results = {"scores_dev": list(scores_dev), "scores_dev2": list(scores_dev2), "scores_test": list(scores_test),
         "threshold": threshold}
     json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
+
 
 if __name__ == "__main__":
     wrap_no_config_registry(train, plugins=[MetaSaver()])
