@@ -68,6 +68,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt"):
     print("Featurizing dataset")
     featurizer = partial(featurize_triplet, We=We, We_rel=We_rel, words=words)
     test_feat = featurize_df(test, dim=3 * We.shape[1], featurizer=featurizer)
+    train_feat = featurize_df(train, dim=3 * We.shape[1], featurizer=featurizer)
     dev_feat = featurize_df(dev, dim=3 * We.shape[1], featurizer=featurizer)
     dev2_feat = featurize_df(dev2, dim=3 * We.shape[1], featurizer=featurizer)
 
@@ -89,34 +90,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt"):
     y_dev = np.array(dev['score'] > 0).astype("int32")
     y_dev2 = np.array(dev2['score'] > 0).astype("int32")
     y_test = np.array(test['score'] > 0).astype("int32")
-
-    def compute_closests(feat, df, train_feat, K=10):
-        closest = []
-        scores = []
-        for id in tqdm.tqdm(range(len(feat)), total=len(feat)):
-            scores.append(train_feat.dot(feat[id, :].T))
-        scores = np.array(scores)
-        for id in range(len(df)):
-            id_closets = np.argsort(scores[id])[-K:]
-            closest.append(id_closets)
-
-        return closest
-
-    def create_X_y(feat, df, train_feat, K=10):
-        closest = []
-        scores = []
-        for id in tqdm.tqdm(range(len(feat)), total=len(feat)):
-            scores.append(train_feat.dot(feat[id, :].T))
-        scores = np.array(scores)
-        X, y = [], []
-        for id in range(len(feat)):
-            id_closets = np.argsort(scores[id])[-K:]
-            closest.append(id_closets)
-            X.append(np.concatenate([train_feat[id2].reshape(1, -1) for id2 in id_closets], axis=1))
-            # TODO: A bit ugly
-            y.append(df.iloc[id].values[-1])
-
-        return np.concatenate(X, axis=0), np.array(y), closest
+    y_train = np.array(train['score'] > 0).astype("int32")
 
     def data_gen(feat, df, y, batchsize=50, sample_negative=True,
             sample_negative_from_train_also=False, n_epochs=100000, shuffle=True):
@@ -267,7 +241,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt"):
     score_dense.kernel.set_value(np.array([[1,0,0],[0,0.1,0],[0,0,0.1]]).astype("float32"))
 
     ## Get data
-    ds = data_gen(dev_feat, dev, y_dev, sample_negative=negative_sampling, batchsize=batchsize, shuffle=True)
+    ds = data_gen(train_feat, train, y_train, sample_negative=negative_sampling, batchsize=batchsize, shuffle=True)
     ds_dev = data_gen(dev_feat, dev, y_dev, n_epochs=1, sample_negative=False, batchsize=len(dev),
         shuffle=False)
     ds_dev2 = data_gen(dev2_feat, dev2, y_dev2, n_epochs=1, sample_negative=False, batchsize=len(dev2), shuffle=False)
@@ -283,7 +257,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt"):
     model.fit_generator(ds,
         epochs=500,
         max_queue_size=10000,
-        steps_per_epoch=1 * len(dev) / batchsize,
+        steps_per_epoch=1 * len(train) / batchsize,
         callbacks=[EarlyStopping(patience=30, monitor="acc"),
             ModelCheckpoint(save_best_only=True, save_weights_only=True,
                 filepath=os.path.join(save_path, "model_best_epoch.h5")),
