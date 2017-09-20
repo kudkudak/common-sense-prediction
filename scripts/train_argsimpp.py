@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Trains ArgSim. Should get to circa 79% test, 77% dev2.
+Trains ArgSim++. Should get to circa 80.1% test, 78% dev2.
 
 Note: very sensitive to constants
 
