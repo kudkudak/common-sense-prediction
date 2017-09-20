@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Trains ArgSim. Should get to circa 79% test, 77% dev2. 
+Trains ArgSim. Should get to circa 79% test, 77% dev2.
 
 Note: very sensitive to constants
 
@@ -192,7 +192,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt"):
                 break
 
     use_rel = False
-    negative_sampling = "all"
+    negative_sampling = "all_positive"
     L_1 = 3e-3
     dim = dev_feat.shape[1] / 3
     batchsize = 100
