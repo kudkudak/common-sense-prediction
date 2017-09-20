@@ -173,7 +173,8 @@ def train(save_path, embeddings="commonsendata/embeddings.txt"):
                     # We construct neg sample ourselves
                     continue
 
-                batch[0][0].append(example_feat_x.reshape(1, -1))
+                # Exclude relation
+                batch[0][0].append(np.array([example_feat_x[0:dim], example_feat_x[-dim:]]).reshape(1, -1))
                 batch[0][1].append(V_rel.index(df.iloc[id]['rel']))
                 batch[1].append(example_y)
 
@@ -197,11 +198,11 @@ def train(save_path, embeddings="commonsendata/embeddings.txt"):
     dim = dev_feat.shape[1] / 3
     batchsize = 100
     print (use_rel, negative_sampling)
-    x = Input(shape=(3 * dim,))
+    x = Input(shape=(2 * dim,))
     x_Drop = Dropout(0.1)(x)
     relation = Input(shape=(1,), dtype="int32")
 
-    embedder = Dense(3 * dim, activation="linear",
+    embedder = Dense(2 * dim, activation="linear",
         kernel_initializer="identity", bias_initializer="zeros",
         trainable=True)
     Ax = embedder(x_Drop)
@@ -218,7 +219,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt"):
 
     model = Model(inputs=[x, relation], output=clf3)
     model.compile(loss="binary_crossentropy", optimizer=Adam(0.0001), metrics=['accuracy'])
-    model.total_loss += L_1 * T.sum(T.pow(embedder.kernel - T.eye(3 * dim), 2.0))
+    model.total_loss += L_1 * T.sum(T.pow(embedder.kernel - T.eye(2 * dim), 2.0))
 
     ## Get data
     ds = data_gen(dev_feat, dev, y_dev, sample_negative=negative_sampling, batchsize=batchsize, shuffle=True)
@@ -260,6 +261,10 @@ def train(save_path, embeddings="commonsendata/embeddings.txt"):
         "acc_test": np.mean((scores_test > 0.5) == y_test),
         "threshold_argsim": threshold_argsim,
         "threshold": 0.5}
+
+    print(eval_results['acc_test'])
+    print(eval_results['acc_dev2'])
+
     json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
 
 
