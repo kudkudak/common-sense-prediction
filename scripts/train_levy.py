@@ -262,7 +262,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt"):
             ModelCheckpoint(save_best_only=True, save_weights_only=True,
                 filepath=os.path.join(save_path, "model_best_epoch.h5")),
         ],
-        validation_data=[X_dev2_ds, y_dev2_ds], verbose=2)
+        validation_data=[X_dev_ds, y_dev_ds], verbose=2)
 
     model.load_weights(os.path.join(save_path, "model_best_epoch.h5"))
 
