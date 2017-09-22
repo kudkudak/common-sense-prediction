@@ -11,13 +11,13 @@
 from data import Dataset
 
 DATA_DIR = '/home/mnoukhov/common-sense-prediction/data'
+BATCH_SIZE = 10
 
 def main(data_dir):
     dataset = Dataset(data_dir)
     embeddings = dataset.embeddings
-    data_stream = dataset.data_stream()
+    data_stream = dataset.data_stream(BATCH_SIZE)
 
-    import pdb;pdb.set_trace()
     for data in data_stream.get_epoch_iterator():
         print(data)
 
