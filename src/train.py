@@ -1,25 +1,37 @@
-# get dataset
-# tokenize
-# pad sequences
-#
-# get embeddings
-# generate random negative examples on the fly
-# embed training data
-# pass through model
-# get CE loss between negative examples and truth
+#TODO:
+# connect data loading to model
+# create config for model call
+# create input with vegab
+# validation data?
+# double-check consistency with original
+
+import keras
+from keras.optimizers import Adagrad
 
 from data import Dataset
+from model import dnn_ce
 
 DATA_DIR = '/home/mnoukhov/common-sense-prediction/data'
-BATCH_SIZE = 10
+BATCH_SIZE = 600
+ACTIVATION = 'relu'
+HIDDEN_UNITS = 1000
+REL_VEC_SIZE = 200
+LAMBDA = 0.001
+LEARNING_RATE = 0.01
+
 
 def main(data_dir):
     dataset = Dataset(data_dir)
     embeddings = dataset.embeddings
     data_stream = dataset.data_stream(BATCH_SIZE)
-
-    for data in data_stream.get_epoch_iterator():
-        print(data)
+    model = dnn_ce()
+    model.compile(Adagrad(LEARNING_RATE),
+                  'binary_crossentropy',
+                  metrics = ['accuracy'])
+    model.fit(something,
+              target,
+              batch_size,
+              epochs=1)
 
 
 if __name__ == '__main__':

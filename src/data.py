@@ -74,6 +74,10 @@ class NegativeSampling(Transformer):
                                                **kwargs)
         np.random.seed(random_seed)
 
+    @property
+    def sources(self):
+        return self.data_stream.sources + ('target')
+
     def transform_batch(self, batch):
         rel, head, tail = batch
         batch_size = rel.size
@@ -89,7 +93,8 @@ class NegativeSampling(Transformer):
         rel = np.concatenate([rel, neg_rel, rel, rel], axis=0)
         head = np.concatenate([head, head, neg_head, head], axis=0)
         tail = np.concatenate([tail, tail, tail, neg_tail], axis=0)
+        target = np.array([1]*batch_size + [0]*batch_size*3)
 
-        return (rel, head, tail)
+        return (rel, head, tail, target)
 
 
