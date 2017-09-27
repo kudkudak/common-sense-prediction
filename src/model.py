@@ -1,12 +1,13 @@
 import keras
-from keras.models import Sequential
+import keras.backend as K
+from keras.models import Model
 from keras.layers import (Input,
                           Dense,
                           Embedding,
-                          Average,
-                          Masking,
+                          Lambda,
+                          Multiply,
+                          Flatten,
                           Concatenate)
-
 
 def dnn_ce(max_sequence_length, embedding_init, vocab_size,
            rel_embedding_init, rel_vocab_size, hidden_units,
@@ -15,36 +16,38 @@ def dnn_ce(max_sequence_length, embedding_init, vocab_size,
     rel_embedding_layer = Embedding(rel_vocab_size,
                                     rel_embedding_size,
                                     weights=[rel_embedding_init],
-                                    trainable=True,
-                                    input_shape=(max_sequence_length,))
+                                    trainable=True)
     embedding_size = embedding_init.shape[1]
     embedding_layer = Embedding(vocab_size,
                                 embedding_size,
                                 weights=[embedding_init],
-                                trainable=True,
-                                mask_zero=True,
-                                input_shape=(max_sequence_length,))
+                                trainable=True)
+                                # mask_zero=True,
 
-    rel_input = Sequential()
-    # rel_input.add(Input(shape=(1,), dtype='int32'))
-    rel_input.add(rel_embedding_layer)
+    rel_input = Input(shape=(1,), dtype='int32', name='rel')
+    rel = rel_embedding_layer(rel_input)
+    rel = Flatten()(rel)
 
-    head_input = Sequential()
-    # head_input.add(Input(shape=(max_sequence_length,), dtype='int32'))
-    # head_input.add(Masking(mask_value=0))
-    head_input.add(embedding_layer)
-    head_input.add(Average())
+    head_input = Input(shape=(None,), dtype='int32', name='head')
+    head = embedding_layer(head_input)
+    head = Lambda(lambda x: K.sum(x, axis=1))(head)
+    head_mask_input  = Input(shape=(None,), dtype='float32', name='head_mask')
+    head_mask = Lambda(lambda x: K.sum(x, axis=1))(head_mask_input)
+    head_mask = Lambda(lambda x: 1. / x)(head_mask)
+    head_avg = Multiply()([head_mask, head])
 
-    tail_input = Sequential()
-    # tail_input.add(Input(shape=(max_sequence_length,), dtype='int32'))
-    # tail_input.add(Masking(mask_value=0))
-    tail_input.add(embedding_layer)
-    tail_input.add(Average())
+    tail_input = Input(shape=(None,), dtype='int32', name='tail')
+    tail = embedding_layer(tail_input)
+    tail = Lambda(lambda x: K.sum(x, axis=1))(tail)
+    tail_mask_input = Input(shape=(None,), dtype='float32', name='tail_mask')
+    tail_mask = Lambda(lambda x: K.sum(x, axis=1))(tail_mask_input)
+    tail_mask = Lambda(lambda x: 1. / x)(tail_mask)
+    tail_avg = Multiply()([tail_mask, tail])
 
-    model = Sequential()
-    model.add(Concatenate([head_input, tail_input, rel_input], axis=1))
-    model.add(Dense(hidden_units, activation=hidden_activation))
-    model.add(Dense(1, activation='sigmoid'))
+    vin = Concatenate(axis=1)([head_avg, tail_avg, rel])
+    u = Dense(hidden_units, activation=hidden_activation)(vin)
+    output = Dense(1, activation='sigmoid')(u)
+    model = Model([rel_input, head_input, head_mask_input, tail_input, tail_mask_input], [output])
 
     # head_emb = embedding_layer(head)
     # tail_emb = embedding_layer(tail)

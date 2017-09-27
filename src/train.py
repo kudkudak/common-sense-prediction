@@ -48,6 +48,7 @@ def main(data_dir):
     num_batches = dataset.dataset.num_examples / BATCH_SIZE
 
     model.fit_generator(data_stream.get_epoch_iterator(),
+                        steps_per_epoch=10,
                         epochs=1)
 
 

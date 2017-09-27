@@ -45,10 +45,10 @@ class Dataset(object):
 
     def load_embeddings(self):
         embedding_file = os.path.join(self.data_dir, 'LiACL/embeddings/embeddings.txt')
-        # word2index = {'PADDING-WORD':0}
-        # embeddings = [0]
-        word2index = {}
-        embeddings = []
+        word2index = {'PADDING-WORD':0}
+        embeddings = [0]
+        # word2index = {}
+        # embeddings = []
         with open(embedding_file,'r') as f:
             for index, line in enumerate(f):
                 values = line.split()
@@ -57,7 +57,7 @@ class Dataset(object):
                 word2index[word] = index + 1
                 embeddings.append(emb)
 
-        # embeddings[0] = [0]*len(embeddings[1])
+        embeddings[0] = [0]*len(embeddings[1])
 
         self.word2index = word2index
         self.embeddings = np.matrix(embeddings)
@@ -69,8 +69,8 @@ class Dataset(object):
         data_stream = NumberizeWords(data_stream, self.word2index, default=self.word2index[UNKNOWN_TOKEN], which_sources=('head', 'tail'))
         data_stream = NumberizeWords(data_stream, self.rel2index, which_sources=('rel'))
         data_stream = NegativeSampling(data_stream)
-        data_stream = Padding(data_stream)
-        # data_stream = Padding(data_stream, mask_sources=('head, tail'), mask_dtype=np.int)
+        # data_stream = Padding(data_stream)
+        data_stream = Padding(data_stream, mask_sources=('head, tail'), mask_dtype=np.float32)
         data_stream = MergeSource(data_stream, merge_sources=('head', 'tail', 'head_mask', 'tail_mask', 'rel'),
                                   merge_name='input')
         return data_stream
