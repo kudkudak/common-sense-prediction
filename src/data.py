@@ -83,12 +83,7 @@ class Dataset(object):
     def dev2_data_stream(self, batch_size):
         return self.data_stream(self.dev2_dataset, batch_size,  sample_negative=False)
 
-<<<<<<< HEAD
     def data_stream(self, dataset, batch_size, sample_negative=True):
-=======
-    def data_stream(self, dataset, batch_size):
-        print(self.data_dir)
->>>>>>> commented out testing, made other stuff work
         data_stream = DataStream(dataset, iteration_scheme=ShuffledScheme(dataset.num_examples, batch_size))
         data_stream = NumberizeWords(data_stream, self.word2index, default=self.word2index[UNKNOWN_TOKEN], which_sources=('head', 'tail'))
         data_stream = NumberizeWords(data_stream, self.rel2index, which_sources=('rel'))
