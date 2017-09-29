@@ -4,6 +4,7 @@ Implementatons of data streams
 """
 
 import os
+import logging
 
 import fuel
 from fuel import config
@@ -14,14 +15,10 @@ from fuel.transformers import (SourcewiseTransformer,
                                Transformer,
                                AgnosticTransformer,
                                Padding)
-
-
 import numpy as np
 import pandas as pd
 
-import logging
 logger = logging.getLogger(__name__)
-
 UNKNOWN_TOKEN = 'UUUNKKK'
 EMBEDDING_FILE = 'embeddings/LiACL/embeddings_OMCS.txt'
 TRAIN_FILE = 'LiACL/conceptnet/train100k.txt'
@@ -95,6 +92,7 @@ class Dataset(object):
                                   merge_name='input')
         return data_stream
 
+
 class NumberizeWords(SourcewiseTransformer):
     def __init__(self, data_stream, dictionary, default=None, *args, **kwargs):
         super(NumberizeWords, self).__init__(data_stream,
@@ -131,12 +129,14 @@ class NegativeSampling(Transformer):
 
     def transform_batch(self, batch):
         rel, head, tail = batch
-        batch_size = rel.size
+        batch_size = len(head)
 
         neg_rels_idx = np.random.randint(batch_size, size=batch_size)
         neg_head_idx = np.random.randint(batch_size, size=batch_size)
         neg_tail_idx = np.random.randint(batch_size, size=batch_size)
 
+        import pdb
+        pdb.set_trace()
         neg_rel = rel[neg_rels_idx]
         neg_head = head[neg_head_idx]
         neg_tail = tail[neg_tail_idx]
@@ -173,9 +173,10 @@ class MergeSource(AgnosticTransformer):
 
 
 if __name__ == '__main__':
-    DATA_DIR = '/home/mnoukhov/common-sense-prediction/data'
+    from src import DATA_DIR
     BATCH_SIZE = 2
     data = Dataset(DATA_DIR)
-    x = data.train_data_stream(BATCH_SIZE).get_epoch_iterator()
+    epochs = data.dev2_data_stream(BATCH_SIZE).iterate_epochs()
+    x = next(epochs)
     print(next(x))
 

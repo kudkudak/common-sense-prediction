@@ -42,7 +42,7 @@ class DumpTensorflowSummaries(Callback):
             summary, epoch)
 
 
-def training_loop(model, train, n_epochs, steps_per_epoch, valid=None, valid_steps=None,
+def training_loop(model, train, epochs, steps_per_epoch, valid=None, valid_steps=None,
                   save_path=None, learning_rate_schedule=None, callbacks=[]):
     if os.path.exists(os.path.join(save_path, "loop_state.pkl")):
         logger.info("Reloading loop state")
@@ -91,10 +91,10 @@ def training_loop(model, train, n_epochs, steps_per_epoch, valid=None, valid_ste
             pickle.dump(loop_state, open(os.path.join(save_path, "loop_state.pkl"), "w"))
         callbacks.append(LambdaCallback(on_epoch_end=save_loop_state))
 
-    model.fit_generator(train,
-                        initial_epoch=loop_state['last_epoch_done_id'] + 1,
+    model.fit_generator(generator=train,
                         steps_per_epoch=steps_per_epoch,
-                        nb_epoch=n_epochs,
+                        epochs=epochs,
+                        initial_epoch=loop_state['last_epoch_done_id'] + 1,
                         verbose=1,
                         validation_data=valid,
                         validation_steps=valid_steps,

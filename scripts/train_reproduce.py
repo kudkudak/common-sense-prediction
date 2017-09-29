@@ -26,17 +26,17 @@ from src.callbacks import LambdaCallbackPickable
 from src.model import dnn_ce
 from src import DATA_DIR
 
-def _collect_fuel_iterator(it):
-    data = next(it)
-    data = [[d] for d in data]
-    while True:
-        data_next = next(it)
-        for id in range(len(data)):
-            data[id].append(data_next[id])
-    return [np.concatenate(d, axis=0) for d in data]
+# def _collect_fuel_iterator(it):
+    # data = next(it)
+    # data = [[d] for d in data]
+    # while True:
+        # data_next = next(it)
+        # for id in range(len(data)):
+            # data[id].append(data_next[id])
+    # return [np.concatenate(d, axis=0) for d in data]
 
-def _evaluate(epoch, logs, model, data, prefix):
-    metric_values = model.evaluate(data)
+def _evaluate(epoch, logs, model, data_stream, prefix):
+    metric_values = model.evaluate(data_stream)
     for mk, mv in zip(model.metric_names, metric_values):
         logs[prefix + mk] = mv
 
@@ -59,11 +59,13 @@ def train(config, save_path):
                   'binary_crossentropy',
                   metrics = ['accuracy'])
 
-    train_iterator = dataset.train_data_stream(config['batch_size']).get_epoch_iterator()
-    test_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
-    dev_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
-    dev2_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
+    train_iterator = dataset.train_data_stream(config['batch_size']).iterate_epochs()
+    test_iterator = dataset.test_data_stream(config['batch_size']).iterate_epochs()
+    dev_iterator = dataset.test_data_stream(config['batch_size']).iterate_epochs()
+    dev2_iterator = dataset.test_data_stream(config['batch_size']).iterate_epochs()
 
+    # import pdb
+    # pdb.set_trace()
     # test = _collect_fuel_iterator(test_iterator)
     # dev = _collect_fuel_iterator(dev_iterator)
     # dev2 = _collect_fuel_iterator(dev2_iterator)
@@ -74,12 +76,12 @@ def train(config, save_path):
 
     # TODO(kudkudak): Add dev & dev2 manual evaluation callback with adaptive threshold
     callbacks = []
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate(model=model, data=dev, prefix="dev_"))))
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate(model=model, data=dev2, prefix="dev2_"))))
+    callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_stream=dev_iterator, prefix="dev_")))
+    callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_stream=dev2_iterator, prefix="dev2_")))
 
     training_loop(model=model,
-                  train=train_iterator,
-                  n_epochs=config['epochs'],
+                  train=next(train_iterator),
+                  epochs=config['epochs'],
                   steps_per_epoch=num_batches,
                   save_path=save_path,
                   callbacks=callbacks,

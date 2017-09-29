@@ -1,2 +1,5 @@
 *.swp
-__*
+*.pyc
+results/*
+data/*
+
