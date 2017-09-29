@@ -24,8 +24,14 @@ from src.data import Dataset
 from src.model import dnn_ce
 from src import DATA_DIR
 
-def _collect_iterator(it):
-
+def _collect_fuel_iterator(it):
+    data = next(it)
+    data = [[d] for d in data]
+    while True:
+        data_next = next(it)
+        for id in range(len(data)):
+            data[id].append(data_next[id])
+    return [np.concatenate(d, axis=0) for d in data]
 
 def train(config, save_path):
     dataset = Dataset(DATA_DIR)
@@ -43,9 +49,14 @@ def train(config, save_path):
                   metrics = ['accuracy'])
 
     train_iterator = dataset.train_data_stream(config['batch_size']).get_epoch_iterator()
+
     test_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
     dev_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
     dev2_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
+
+    test = _collect_fuel_iterator(test_iterator)
+    dev = _collect_fuel_iterator(dev_iterator)
+    dev2 = _collect_fuel_iterator(dev2_iterator)
 
     # TODO(kudkudak): How to collect this data more cleanly?
 

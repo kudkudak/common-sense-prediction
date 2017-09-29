@@ -19,6 +19,9 @@ from fuel.transformers import (SourcewiseTransformer,
 import numpy as np
 import pandas as pd
 
+import logging
+logger = logging.getLogger(__name__)
+
 UNKNOWN_TOKEN = 'UUUNKKK'
 
 
@@ -70,19 +73,21 @@ class Dataset(object):
         return self.data_stream(self.train_dataset, batch_size)
 
     def test_data_stream(self, batch_size):
-        return self.data_stream(self.test_dataset, batch_size)
+        return self.data_stream(self.test_dataset, batch_size, sample_negative=False)
 
     def dev_data_stream(self, batch_size):
-        return self.data_stream(self.dev_dataset, batch_size)
+        return self.data_stream(self.dev_dataset, batch_size,  sample_negative=False)
 
     def dev2_data_stream(self, batch_size):
-        return self.data_stream(self.dev2_dataset, batch_size)
+        return self.data_stream(self.dev2_dataset, batch_size,  sample_negative=False)
 
-    def data_stream(self, dataset, batch_size):
+    def data_stream(self, dataset, batch_size, sample_negative=True):
         data_stream = DataStream(dataset, iteration_scheme=ShuffledScheme(dataset.num_examples, batch_size))
         data_stream = NumberizeWords(data_stream, self.word2index, default=self.word2index[UNKNOWN_TOKEN], which_sources=('head', 'tail'))
         data_stream = NumberizeWords(data_stream, self.rel2index, which_sources=('rel'))
-        data_stream = NegativeSampling(data_stream)
+        if sample_negative:
+            logger.info("Sampling negatives")
+            data_stream = NegativeSampling(data_stream)
         data_stream = Padding(data_stream, mask_sources=('head, tail'), mask_dtype=np.float32)
         data_stream = MergeSource(data_stream, merge_sources=('head', 'tail', 'head_mask', 'tail_mask', 'rel'),
                                   merge_name='input')
