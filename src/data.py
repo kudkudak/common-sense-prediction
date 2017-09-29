@@ -40,7 +40,7 @@ class Dataset(object):
         self.rel_vocab_size = len(rel2index)
 
     def load_embeddings(self):
-        embedding_file = os.path.join(self.data_dir, 'LiACL/embeddings/embeddings.txt')
+        embedding_file = os.path.join(self.data_dir, 'embeddings/LiACL/embeddings_OMCS.txt')
         word2index = {'PADDING-WORD':0}
         embeddings = [0]
         with open(embedding_file,'r') as f:
