@@ -13,9 +13,7 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
 * ACL paper: http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf
 
-* Notes: https://www.evernote.com/pub/kudkudak/projektl2lwe
-
-* Notes (google doc): https://drive.google.com/drive/folders/0B8-M39RV4diKVlBvTEZidnJNYm8 . We will depreciate Evernote over next few days
+* Note: https://drive.google.com/drive/folders/0B8-M39RV4diKVlBvTEZidnJNYm8 
 
 ## Setup
  
