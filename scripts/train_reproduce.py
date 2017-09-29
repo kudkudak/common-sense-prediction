@@ -80,7 +80,7 @@ def train(config, save_path):
     training_loop(model=model,
                   train=train_iterator,
                   epochs=config['epochs'],
-                  steps_per_epoch=5,
+                  steps_per_epoch=train_steps,
                   save_path=save_path,
                   callbacks=callbacks,
                   learning_rate_schedule=None)
