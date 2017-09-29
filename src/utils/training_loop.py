@@ -16,6 +16,7 @@ from keras.callbacks import (ModelCheckpoint,
 logger = logging.getLogger(__name__)
 
 
+#TODO(mnuke): change to tensorboard callback
 class DumpTensorflowSummaries(Callback):
     def __init__(self, save_path):
         self._save_path = save_path

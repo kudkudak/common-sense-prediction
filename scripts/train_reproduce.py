@@ -26,23 +26,17 @@ from src.callbacks import LambdaCallbackPickable
 from src.model import dnn_ce
 from src import DATA_DIR
 
-# def _collect_fuel_iterator(it):
-    # data = next(it)
-    # data = [[d] for d in data]
-    # while True:
-        # data_next = next(it)
-        # for id in range(len(data)):
-            # data[id].append(data_next[id])
-    # return [np.concatenate(d, axis=0) for d in data]
 
-def _evaluate(epoch, logs, model, data_stream, prefix):
-    metric_values = model.evaluate(data_stream)
+def _evaluate(epoch, logs, model, data_iterator, steps, prefix):
+    metric_values = model.evaluate_generator(data_iterator, steps)
     for mk, mv in zip(model.metric_names, metric_values):
         logs[prefix + mk] = mv
+
 
 def _evaluate_with_threshold_fitting(epoch, logs, model, data_threshold, data, prefix):
     # TODO(kudkudak): Implement
     raise NotImplementedError()
+
 
 def train(config, save_path):
     dataset = Dataset(DATA_DIR)
@@ -59,10 +53,15 @@ def train(config, save_path):
                   'binary_crossentropy',
                   metrics = ['accuracy'])
 
-    train_iterator = dataset.train_data_stream(config['batch_size']).iterate_epochs()
-    test_iterator = dataset.test_data_stream(config['batch_size']).iterate_epochs()
-    dev_iterator = dataset.test_data_stream(config['batch_size']).iterate_epochs()
-    dev2_iterator = dataset.test_data_stream(config['batch_size']).iterate_epochs()
+    train_stream, train_steps  = dataset.train_data_stream(config['batch_size'])
+    test_stream, test_steps = dataset.test_data_stream(config['batch_size'])
+    dev_stream, dev_steps = dataset.test_data_stream(config['batch_size'])
+    dev2_stream, dev2_steps = dataset.test_data_stream(config['batch_size'])
+
+    train_iterator = next(train_stream.iterate_epochs())
+    test_iterator = next(test_stream.iterate_epochs())
+    dev_iterator = next(dev_stream.iterate_epochs())
+    dev2_iterator = next(dev2_stream.iterate_epochs())
 
     # import pdb
     # pdb.set_trace()
@@ -72,17 +71,16 @@ def train(config, save_path):
 
     # TODO(kudkudak): How to collect this data more cleanly?
 
-    num_batches = dataset.train_dataset.num_examples / config['batch_size']
 
     # TODO(kudkudak): Add dev & dev2 manual evaluation callback with adaptive threshold
     callbacks = []
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_stream=dev_iterator, prefix="dev_")))
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_stream=dev2_iterator, prefix="dev2_")))
+    # callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev_iterator, steps=dev_steps, prefix="dev_")))
+    # callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev2_iterator, steps=dev2_steps, prefix="dev2_")))
 
     training_loop(model=model,
-                  train=next(train_iterator),
+                  train=train_iterator,
                   epochs=config['epochs'],
-                  steps_per_epoch=num_batches,
+                  steps_per_epoch=5,
                   save_path=save_path,
                   callbacks=callbacks,
                   learning_rate_schedule=None)

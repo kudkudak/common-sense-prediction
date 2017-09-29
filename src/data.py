@@ -14,6 +14,8 @@ from fuel.schemes import ShuffledScheme
 from fuel.transformers import (SourcewiseTransformer,
                                Transformer,
                                AgnosticTransformer,
+                               FilterSources,
+                               Rename,
                                Padding)
 import numpy as np
 import pandas as pd
@@ -21,28 +23,30 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 UNKNOWN_TOKEN = 'UUUNKKK'
 EMBEDDING_FILE = 'embeddings/LiACL/embeddings_OMCS.txt'
+REL_FILE = 'LiACL/conceptnet/rel.txt'
 TRAIN_FILE = 'LiACL/conceptnet/train100k.txt'
 TEST_FILE = 'LiACL/conceptnet/test.txt'
+DEV_FILE = 'LiACL/conceptnet/dev.txt'
+DEV2_FILE = 'LiACL/conceptnet/dev2.txt'
 
 class Dataset(object):
     def __init__(self, data_dir):
         self.data_dir = data_dir
         self.load_embeddings()
         self.load_rel2index()
-        self.train_dataset = self.load_data("LiACL/conceptnet/train100k.txt")
-        self.dev_dataset = self.load_data("LiACL/conceptnet/dev.txt")
-        self.dev2_dataset = self.load_data("LiACL/conceptnet/dev2.txt")
-        self.test_dataset = self.load_data("LiACL/conceptnet/test.txt")
+        self.train_dataset = self.load_data(TRAIN_FILE)
+        self.dev_dataset = self.load_data(DEV_FILE)
+        self.dev2_dataset = self.load_data(DEV2_FILE)
+        self.test_dataset = self.load_data(TEST_FILE)
 
     def load_data(self, data_path):
         data = pd.read_csv(os.path.join(self.data_dir, data_path), sep="\t", header=None)
         data.columns = ['rel', 'head', 'tail', 'score']
-        data = data.drop(['score'], axis=1)
         return IndexableDataset(data.to_dict('list'))
 
     def load_rel2index(self):
         rel2index = {}
-        rel_file = os.path.join(self.data_dir, 'LiACL/conceptnet/rel.txt')
+        rel_file = os.path.join(self.data_dir, REL_FILE)
         with open(rel_file, 'r') as f:
             for index, line in enumerate(f):
                 rel2index[line.strip()] = index
@@ -69,28 +73,40 @@ class Dataset(object):
         self.vocab_size = self.embeddings.shape[0]
 
     def train_data_stream(self, batch_size):
-        return self.data_stream(self.train_dataset, batch_size)
+        return self.data_stream(self.train_dataset, batch_size, target='negative_sampling')
 
     def test_data_stream(self, batch_size):
-        return self.data_stream(self.test_dataset, batch_size, sample_negative=False)
+        return self.data_stream(self.test_dataset, batch_size, target='score')
 
     def dev_data_stream(self, batch_size):
-        return self.data_stream(self.dev_dataset, batch_size,  sample_negative=False)
+        return self.data_stream(self.dev_dataset, batch_size, target='score')
 
     def dev2_data_stream(self, batch_size):
-        return self.data_stream(self.dev2_dataset, batch_size,  sample_negative=False)
+        return self.data_stream(self.dev2_dataset, batch_size, target='score')
 
-    def data_stream(self, dataset, batch_size, sample_negative=True):
+    #TODO(mnuke): sample_negative and keep_score are mutually exclusive, combine them better than target var?
+    def data_stream(self, dataset, batch_size, target='negative_sampling'):
+        batches_per_epoch = dataset.num_examples / batch_size
         data_stream = DataStream(dataset, iteration_scheme=ShuffledScheme(dataset.num_examples, batch_size))
         data_stream = NumberizeWords(data_stream, self.word2index, default=self.word2index[UNKNOWN_TOKEN], which_sources=('head', 'tail'))
         data_stream = NumberizeWords(data_stream, self.rel2index, which_sources=('rel'))
-        if sample_negative:
-            logger.info("Sampling negatives")
+
+        #TODO(mnuke): get name of dataset in log
+        if target == 'negative_sampling':
+            logger.info("target is negative sampling")
+            data_stream = FilterSources(data_stream, sources=('head', 'tail', 'rel'))
             data_stream = NegativeSampling(data_stream)
+        elif target == 'score':
+            logger.info("target is score")
+            data_stream = Rename(data_stream, {'score': 'target'})
+        else:
+            raise NotImplementedError('target ', target, ' must be one of "score" or "negative_sampling"')
+
         data_stream = Padding(data_stream, mask_sources=('head, tail'), mask_dtype=np.float32)
         data_stream = MergeSource(data_stream, merge_sources=('head', 'tail', 'head_mask', 'tail_mask', 'rel'),
                                   merge_name='input')
-        return data_stream
+
+        return data_stream, batches_per_epoch
 
 
 class NumberizeWords(SourcewiseTransformer):
@@ -135,8 +151,6 @@ class NegativeSampling(Transformer):
         neg_head_idx = np.random.randint(batch_size, size=batch_size)
         neg_tail_idx = np.random.randint(batch_size, size=batch_size)
 
-        import pdb
-        pdb.set_trace()
         neg_rel = rel[neg_rels_idx]
         neg_head = head[neg_head_idx]
         neg_tail = tail[neg_tail_idx]
