@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Implementatons of data streams
+"""
+
 import os
 
 import fuel
@@ -9,6 +14,8 @@ from fuel.transformers import (SourcewiseTransformer,
                                Transformer,
                                AgnosticTransformer,
                                Padding)
+
+
 import numpy as np
 import pandas as pd
 
@@ -21,6 +28,8 @@ class Dataset(object):
         self.load_embeddings()
         self.load_rel2index()
         self.train_dataset = self.load_data("LiACL/conceptnet/train100k.txt")
+        self.dev_dataset = self.load_data("LiACL/conceptnet/dev.txt")
+        self.dev2_dataset = self.load_data("LiACL/conceptnet/dev2.txt")
         self.test_dataset = self.load_data("LiACL/conceptnet/test.txt")
 
     def load_data(self, data_path):
@@ -62,6 +71,12 @@ class Dataset(object):
 
     def test_data_stream(self, batch_size):
         return self.data_stream(self.test_dataset, batch_size)
+
+    def dev_data_stream(self, batch_size):
+        return self.data_stream(self.dev_dataset, batch_size)
+
+    def dev2_data_stream(self, batch_size):
+        return self.data_stream(self.dev2_dataset, batch_size)
 
     def data_stream(self, dataset, batch_size):
         data_stream = DataStream(dataset, iteration_scheme=ShuffledScheme(dataset.num_examples, batch_size))

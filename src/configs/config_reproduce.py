@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Implementatons of configs used in ACL model
+"""
+
 from src.utils.vegab import ConfigRegistry
 
 config = ConfigRegistry()

@@ -43,7 +43,7 @@ class DumpTensorflowSummaries(Callback):
 
 
 def training_loop(model, train, valid, n_epochs, steps_per_epoch,
-                  valid_steps, save_path=None, learning_rate_schedule=None):
+                  valid_steps, save_path=None, learning_rate_schedule=None, callbacks=[]):
     if os.path.exists(os.path.join(save_path, "loop_state.pkl")):
         logger.info("Reloading loop state")
         loop_state = pickle.load(open(os.path.join(save_path, "loop_state.pkl")))
@@ -52,8 +52,6 @@ def training_loop(model, train, valid, n_epochs, steps_per_epoch,
 
     if os.path.exists(os.path.join(save_path, "model.h5")):
         model.load_weights(os.path.join(save_path, "model.h5"))
-
-    callbacks = []
 
     if learning_rate_schedule is not None:
         def lr_schedule(epoch, logs):

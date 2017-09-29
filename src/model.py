@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Implementatons of keras models
+"""
+
 import keras
 import keras.backend as K
 from keras.models import Model
@@ -47,19 +52,6 @@ def dnn_ce(embedding_init, vocab_size, rel_embedding_init,
     u = Dense(hidden_units, activation=hidden_activation)(vin)
     output = Dense(1, activation='sigmoid')(u)
     model = Model([rel_input, head_input, head_mask_input, tail_input, tail_mask_input], [output])
-
-    # head_emb = embedding_layer(head)
-    # tail_emb = embedding_layer(tail)
-    # v1 = average(head_emb, input_mask=head_mask, axis=1)
-    # v2 = average(tail_emb, input_mask=tail_mask, axis=1)
-    # vr = rel_embedding_layer(rel)
-    # vin = concatenate([v1, vr, v2], axis=1)
-
-    # u = Dense(hidden_units, activation=hidden_activation)(vin)
-    # output = Dense(1, activation='sigmoid')(u)
-
-    # model = Model([rel, head, head_mask, tail, tail_mask],
-                  # [output])
 
     return model
 
