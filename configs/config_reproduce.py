@@ -11,4 +11,5 @@ config.set_root_config({
     'hidden_units': 1000,
     'lambda': 0.001,
     'learning_rate': 0.01,
+    'valid_steps': 5,
 })

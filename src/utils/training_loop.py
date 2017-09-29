@@ -3,20 +3,18 @@
 Simple data getters. Each returns iterator for train and dataset for test/valid
 """
 
-from keras.callbacks import ModelCheckpoint, LambdaCallback, Callback
-
-# Might misbehave with tensorflow-gpu, make sure u use tensorflow-cpu if using Theano for keras
-try:
-    import tensorflow
-except:
-    pass
+import os
+import pickle
+import logging
 
 import pandas as pd
-import os
-import cPickle as pickle
+import tensorflow
+from keras.callbacks import (ModelCheckpoint,
+                             LambdaCallback,
+                             Callback)
 
-import logging
 logger = logging.getLogger(__name__)
+
 
 class DumpTensorflowSummaries(Callback):
     def __init__(self, save_path):
@@ -44,8 +42,8 @@ class DumpTensorflowSummaries(Callback):
             summary, epoch)
 
 
-def training_loop(model, train, valid, n_epochs, samples_per_epoch,
-                  save_path=None, learning_rate_schedule=None):
+def training_loop(model, train, valid, n_epochs, steps_per_epoch,
+                  valid_steps, save_path=None, learning_rate_schedule=None):
     if os.path.exists(os.path.join(save_path, "loop_state.pkl")):
         logger.info("Reloading loop state")
         loop_state = pickle.load(open(os.path.join(save_path, "loop_state.pkl")))
@@ -97,8 +95,9 @@ def training_loop(model, train, valid, n_epochs, samples_per_epoch,
 
     model.fit_generator(train,
                         initial_epoch=loop_state['last_epoch_done_id'] + 1,
-                        samples_per_epoch=samples_per_epoch,
+                        steps_per_epoch=steps_per_epoch,
                         nb_epoch=n_epochs,
                         verbose=1,
                         validation_data=valid,
+                        validation_steps=valid_steps,
                         callbacks=callbacks)

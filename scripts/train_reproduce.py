@@ -34,9 +34,10 @@ def train(config, save_path):
 
     training_loop(model=model,
                   train=train_iterator,
-                  valid=test_iterator,
+                  valid=None,
                   n_epochs=config['n_epochs'],
-                  samples_per_epoch=num_batches,
+                  steps_per_epoch=num_batches,
+                  valid_steps=config['valid_steps'],
                   save_path=save_path,
                   learning_rate_schedule=None)
 

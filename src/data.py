@@ -154,8 +154,7 @@ class MergeSource(AgnosticTransformer):
 if __name__ == '__main__':
     DATA_DIR = '/home/mnoukhov/common-sense-prediction/data'
     BATCH_SIZE = 2
-    dataset = Dataset(DATA_DIR)
-    data_stream = dataset.data_stream(BATCH_SIZE)
-    for batch in data_stream.get_epoch_iterator():
-        print(batch)
+    data = Dataset(DATA_DIR)
+    x = data.train_data_stream(BATCH_SIZE).get_epoch_iterator()
+    print(next(x))
 
