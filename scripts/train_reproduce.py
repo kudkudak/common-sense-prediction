@@ -6,8 +6,9 @@ Reproduces ACL DNN CE model
 TODO:
 1. Validation data
 2. Add threshold adaptation based on dev
-3. Reproduce numbers
-4. Add resumabili
+3. Overfit train
+4. Reproduce numbers
+5. Add resumabili
 
 """
 
