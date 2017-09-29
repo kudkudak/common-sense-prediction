@@ -42,8 +42,8 @@ class DumpTensorflowSummaries(Callback):
             summary, epoch)
 
 
-def training_loop(model, train, valid, n_epochs, steps_per_epoch,
-                  valid_steps, save_path=None, learning_rate_schedule=None, callbacks=[]):
+def training_loop(model, train, n_epochs, steps_per_epoch, valid=None, valid_steps=None,
+                  save_path=None, learning_rate_schedule=None, callbacks=[]):
     if os.path.exists(os.path.join(save_path, "loop_state.pkl")):
         logger.info("Reloading loop state")
         loop_state = pickle.load(open(os.path.join(save_path, "loop_state.pkl")))

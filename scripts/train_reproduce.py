@@ -59,7 +59,6 @@ def train(config, save_path):
                   metrics = ['accuracy'])
 
     train_iterator = dataset.train_data_stream(config['batch_size']).get_epoch_iterator()
-
     test_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
     dev_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
     dev2_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
@@ -79,10 +78,8 @@ def train(config, save_path):
 
     training_loop(model=model,
                   train=train_iterator,
-                  valid=None,
-                  n_epochs=config['n_epochs'],
+                  n_epochs=config['epochs'],
                   steps_per_epoch=num_batches,
-                  valid_steps=config['valid_steps'],
                   save_path=save_path,
                   callbacks=callbacks,
                   learning_rate_schedule=None)

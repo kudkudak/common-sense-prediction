@@ -23,7 +23,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 UNKNOWN_TOKEN = 'UUUNKKK'
-
+EMBEDDING_FILE = 'embeddings/LiACL/embeddings_OMCS.txt'
+TRAIN_FILE = 'LiACL/conceptnet/train100k.txt'
+TEST_FILE = 'LiACL/conceptnet/test.txt'
 
 class Dataset(object):
     def __init__(self, data_dir):
@@ -52,7 +54,7 @@ class Dataset(object):
         self.rel_vocab_size = len(rel2index)
 
     def load_embeddings(self):
-        embedding_file = os.path.join(self.data_dir, 'embeddings/LiACL/embeddings_OMCS.txt')
+        embedding_file = os.path.join(self.data_dir, EMBEDDING_FILE)
         word2index = {'PADDING-WORD':0}
         embeddings = [0]
         with open(embedding_file,'r') as f:
@@ -81,7 +83,12 @@ class Dataset(object):
     def dev2_data_stream(self, batch_size):
         return self.data_stream(self.dev2_dataset, batch_size,  sample_negative=False)
 
+<<<<<<< HEAD
     def data_stream(self, dataset, batch_size, sample_negative=True):
+=======
+    def data_stream(self, dataset, batch_size):
+        print(self.data_dir)
+>>>>>>> commented out testing, made other stuff work
         data_stream = DataStream(dataset, iteration_scheme=ShuffledScheme(dataset.num_examples, batch_size))
         data_stream = NumberizeWords(data_stream, self.word2index, default=self.word2index[UNKNOWN_TOKEN], which_sources=('head', 'tail'))
         data_stream = NumberizeWords(data_stream, self.rel2index, which_sources=('rel'))
