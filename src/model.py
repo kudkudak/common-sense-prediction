@@ -16,6 +16,9 @@ from keras.layers import (Input,
 
 def dnn_ce(embedding_init, vocab_size, rel_embedding_init,
            rel_vocab_size, hidden_units, hidden_activation):
+
+    # TODO(kudkudak): Add scaling
+
     rel_embedding_size = rel_embedding_init.shape[1]
     rel_embedding_layer = Embedding(rel_vocab_size,
                                     rel_embedding_size,

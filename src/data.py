@@ -93,7 +93,6 @@ class Dataset(object):
                                   merge_name='input')
         return data_stream
 
-
 class NumberizeWords(SourcewiseTransformer):
     def __init__(self, data_stream, dictionary, default=None, *args, **kwargs):
         super(NumberizeWords, self).__init__(data_stream,
