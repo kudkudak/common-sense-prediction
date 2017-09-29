@@ -24,6 +24,6 @@ gunzip dev2.txt.gz
 gunzip test.txt.gz
 gunzip embeddings.txt.gz
 
-mv train100k.txt train300k.txt dev1.txt dev2.txt test.txt ACL/conceptnet
+mv train100k.txt train300k.txt dev1.txt dev2.txt test.txt LiACL/conceptnet
 mv embeddings.txt embeddings/LiACL/embeddings_OMCS.txt
 
