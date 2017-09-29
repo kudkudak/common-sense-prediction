@@ -63,9 +63,9 @@ def train(config, save_path):
     dev_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
     dev2_iterator = dataset.test_data_stream(config['batch_size']).get_epoch_iterator()
 
-    test = _collect_fuel_iterator(test_iterator)
-    dev = _collect_fuel_iterator(dev_iterator)
-    dev2 = _collect_fuel_iterator(dev2_iterator)
+    # test = _collect_fuel_iterator(test_iterator)
+    # dev = _collect_fuel_iterator(dev_iterator)
+    # dev2 = _collect_fuel_iterator(dev2_iterator)
 
     # TODO(kudkudak): How to collect this data more cleanly?
 
