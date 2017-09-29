@@ -9,9 +9,8 @@ from keras.layers import (Input,
                           Flatten,
                           Concatenate)
 
-def dnn_ce(max_sequence_length, embedding_init, vocab_size,
-           rel_embedding_init, rel_vocab_size, hidden_units,
-           hidden_activation):
+def dnn_ce(embedding_init, vocab_size, rel_embedding_init,
+           rel_vocab_size, hidden_units, hidden_activation):
     rel_embedding_size = rel_embedding_init.shape[1]
     rel_embedding_layer = Embedding(rel_vocab_size,
                                     rel_embedding_size,

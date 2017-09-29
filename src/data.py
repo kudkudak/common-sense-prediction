@@ -12,7 +12,6 @@ from fuel.transformers import (SourcewiseTransformer,
 import numpy as np
 import pandas as pd
 
-
 UNKNOWN_TOKEN = 'UUUNKKK'
 
 
@@ -21,17 +20,14 @@ class Dataset(object):
         self.data_dir = data_dir
         self.load_embeddings()
         self.load_rel2index()
-        self.load_train_data()
+        self.train_dataset = self.load_data("LiACL/conceptnet/train100k.txt")
+        self.test_dataset = self.load_data("LiACL/conceptnet/test.txt")
 
-    def load_train_data(self):
-        data = pd.read_csv(os.path.join(self.data_dir, "LiACL/conceptnet/train100k.txt"), sep="\t", header=None)
+    def load_data(self, data_path):
+        data = pd.read_csv(os.path.join(self.data_dir, data_path), sep="\t", header=None)
         data.columns = ['rel', 'head', 'tail', 'score']
         data = data.drop(['score'], axis=1)
-        self.max_sequence_length = max(
-            data['head'].map(str.split).map(len).max(),
-            data['tail'].map(str.split).map(len).max()
-        )
-        self.dataset = IndexableDataset(data.to_dict('list'))
+        return IndexableDataset(data.to_dict('list'))
 
     def load_rel2index(self):
         rel2index = {}
@@ -47,8 +43,6 @@ class Dataset(object):
         embedding_file = os.path.join(self.data_dir, 'LiACL/embeddings/embeddings.txt')
         word2index = {'PADDING-WORD':0}
         embeddings = [0]
-        # word2index = {}
-        # embeddings = []
         with open(embedding_file,'r') as f:
             for index, line in enumerate(f):
                 values = line.split()
@@ -63,13 +57,17 @@ class Dataset(object):
         self.embeddings = np.matrix(embeddings)
         self.vocab_size = self.embeddings.shape[0]
 
-    def data_stream(self, batch_size):
-        data_stream = DataStream(self.dataset,
-                                 iteration_scheme=ShuffledScheme(self.dataset.num_examples, batch_size))
+    def train_data_stream(self, batch_size):
+        return self.data_stream(self.train_dataset, batch_size)
+
+    def test_data_stream(self, batch_size):
+        return self.data_stream(self.test_dataset, batch_size)
+
+    def data_stream(self, dataset, batch_size):
+        data_stream = DataStream(dataset, iteration_scheme=ShuffledScheme(dataset.num_examples, batch_size))
         data_stream = NumberizeWords(data_stream, self.word2index, default=self.word2index[UNKNOWN_TOKEN], which_sources=('head', 'tail'))
         data_stream = NumberizeWords(data_stream, self.rel2index, which_sources=('rel'))
         data_stream = NegativeSampling(data_stream)
-        # data_stream = Padding(data_stream)
         data_stream = Padding(data_stream, mask_sources=('head, tail'), mask_dtype=np.float32)
         data_stream = MergeSource(data_stream, merge_sources=('head', 'tail', 'head_mask', 'tail_mask', 'rel'),
                                   merge_name='input')
