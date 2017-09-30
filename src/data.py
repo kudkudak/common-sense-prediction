@@ -26,7 +26,7 @@ EMBEDDING_FILE = 'embeddings/LiACL/embeddings_OMCS.txt'
 REL_FILE = 'LiACL/conceptnet/rel.txt'
 TRAIN_FILE = 'LiACL/conceptnet/train100k.txt'
 TEST_FILE = 'LiACL/conceptnet/test.txt'
-DEV_FILE = 'LiACL/conceptnet/dev.txt'
+DEV1_FILE = 'LiACL/conceptnet/dev1.txt'
 DEV2_FILE = 'LiACL/conceptnet/dev2.txt'
 
 class Dataset(object):
@@ -35,7 +35,7 @@ class Dataset(object):
         self.load_embeddings()
         self.load_rel2index()
         self.train_dataset = self.load_data(TRAIN_FILE)
-        self.dev_dataset = self.load_data(DEV_FILE)
+        self.dev1_dataset = self.load_data(DEV1_FILE)
         self.dev2_dataset = self.load_data(DEV2_FILE)
         self.test_dataset = self.load_data(TEST_FILE)
 
@@ -78,8 +78,8 @@ class Dataset(object):
     def test_data_stream(self, batch_size):
         return self.data_stream(self.test_dataset, batch_size, target='score')
 
-    def dev_data_stream(self, batch_size):
-        return self.data_stream(self.dev_dataset, batch_size, target='score')
+    def dev1_data_stream(self, batch_size):
+        return self.data_stream(self.dev1_dataset, batch_size, target='score')
 
     def dev2_data_stream(self, batch_size):
         return self.data_stream(self.dev2_dataset, batch_size, target='score')
@@ -190,7 +190,8 @@ if __name__ == '__main__':
     from src import DATA_DIR
     BATCH_SIZE = 2
     data = Dataset(DATA_DIR)
-    epochs = data.dev2_data_stream(BATCH_SIZE).iterate_epochs()
+    data_stream, batches = data.dev2_data_stream(BATCH_SIZE)
+    epochs = data_stream.iterate_epochs()
     x = next(epochs)
     print(next(x))
 

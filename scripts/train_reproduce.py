@@ -55,17 +55,17 @@ def train(config, save_path):
 
     train_stream, train_steps  = dataset.train_data_stream(config['batch_size'])
     test_stream, test_steps = dataset.test_data_stream(config['batch_size'])
-    dev_stream, dev_steps = dataset.test_data_stream(config['batch_size'])
+    dev1_stream, dev1_steps = dataset.test_data_stream(config['batch_size'])
     dev2_stream, dev2_steps = dataset.test_data_stream(config['batch_size'])
 
     train_iterator = next(train_stream.iterate_epochs())
     test_iterator = next(test_stream.iterate_epochs())
-    dev_iterator = next(dev_stream.iterate_epochs())
+    dev1_iterator = next(dev1_stream.iterate_epochs())
     dev2_iterator = next(dev2_stream.iterate_epochs())
 
     # TODO(kudkudak): Add dev & dev2 manual evaluation callback with adaptive threshold
     callbacks = []
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev_iterator, steps=dev_steps, prefix="dev_")))
+    callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev1_iterator, steps=dev1_steps, prefix="dev1_")))
     # callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev2_iterator, steps=dev2_steps, prefix="dev2_")))
 
     training_loop(model=model,
