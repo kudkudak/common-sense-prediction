@@ -39,12 +39,12 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, data_threshold, data, p
 
 
 def endless_data_stream(data_stream):
-    while True:
-        iterator = data_stream.get_epoch_iterator()
-        try:
-            yield next(iterator)
-        except StopIteration:
-            pass
+    for iterator in data_stream.iterate_epochs():
+        while True:
+            try:
+                yield next(iterator)
+            except StopIteration:
+                break
 
 
 def train(config, save_path):
