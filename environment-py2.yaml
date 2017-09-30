@@ -3,6 +3,7 @@ name: common-sense-prediction-py2
 dependencies:
     - python=2.7
     - numpy
+    - tqdm
     - pandas
     - fuel
     - keras

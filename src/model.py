@@ -35,26 +35,28 @@ def dnn_ce(embedding_init, vocab_size, rel_embedding_init,
     rel = rel_embedding_layer(rel_input)
     rel = Flatten()(rel)
 
+    def mask_avg(inputs):
+        x, mask = inputs
+        assert K.ndim(x) == 3 # (n_batch, len, dim)
+        assert K.ndim(mask) == 2 # (n_batch, len)
+        return K.sum(x, axis=1) / K.sum(mask, axis=1, keepdims=True)
+
     head_input = Input(shape=(None,), dtype='int32', name='head')
+    head_mask_input = Input(shape=(None,), dtype='float32', name='head_mask')
     head = embedding_layer(head_input)
-    head = Lambda(lambda x: K.sum(x, axis=1))(head)
-    head_mask_input  = Input(shape=(None,), dtype='float32', name='head_mask')
-    head_mask = Lambda(lambda x: K.sum(x, axis=1))(head_mask_input)
-    head_mask = Lambda(lambda x: 1. / x)(head_mask)
-    head_avg = Multiply()([head_mask, head])
+    head_avg = Lambda(mask_avg, output_shape=(embedding_size,))([head, head_mask_input])
 
     tail_input = Input(shape=(None,), dtype='int32', name='tail')
-    tail = embedding_layer(tail_input)
-    tail = Lambda(lambda x: K.sum(x, axis=1))(tail)
     tail_mask_input = Input(shape=(None,), dtype='float32', name='tail_mask')
-    tail_mask = Lambda(lambda x: K.sum(x, axis=1))(tail_mask_input)
-    tail_mask = Lambda(lambda x: 1. / x)(tail_mask)
-    tail_avg = Multiply()([tail_mask, tail])
+    tail = embedding_layer(tail_input)
+    tail_avg = Lambda(mask_avg, output_shape=(embedding_size,))([tail, tail_mask_input])
 
     vin = Concatenate(axis=1)([head_avg, tail_avg, rel])
     u = Dense(hidden_units, activation=hidden_activation)(vin)
     output = Dense(1, activation='sigmoid')(u)
     model = Model([rel_input, head_input, head_mask_input, tail_input, tail_mask_input], [output])
+
+    model.summary()
 
     return model
 
