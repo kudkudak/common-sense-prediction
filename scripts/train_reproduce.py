@@ -38,6 +38,15 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, data_threshold, data, p
     raise NotImplementedError()
 
 
+def endless_data_stream(data_stream):
+    while True:
+        iterator = data_stream.get_epoch_iterator()
+        try:
+            yield next(iterator)
+        except StopIteration:
+            pass
+
+
 def train(config, save_path):
     dataset = Dataset(DATA_DIR)
     rel_embeddings_init = np.random.uniform(-config['rel_init'], config['rel_init'],
@@ -58,14 +67,14 @@ def train(config, save_path):
     dev1_stream, dev1_steps = dataset.test_data_stream(config['batch_size'])
     dev2_stream, dev2_steps = dataset.test_data_stream(config['batch_size'])
 
-    train_iterator = next(train_stream.iterate_epochs())
+    train_iterator = endless_data_stream(train_stream)
     test_iterator = next(test_stream.iterate_epochs())
     dev1_iterator = next(dev1_stream.iterate_epochs())
     dev2_iterator = next(dev2_stream.iterate_epochs())
 
     # TODO(kudkudak): Add dev & dev2 manual evaluation callback with adaptive threshold
     callbacks = []
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev1_iterator, steps=dev1_steps, prefix="dev1_")))
+    # callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev1_iterator, steps=dev1_steps, prefix="dev1_")))
     # callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev2_iterator, steps=dev2_steps, prefix="dev2_")))
 
     training_loop(model=model,

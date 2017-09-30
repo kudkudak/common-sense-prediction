@@ -47,7 +47,7 @@ def training_loop(model, train, epochs, steps_per_epoch, valid=None, valid_steps
                   save_path=None, learning_rate_schedule=None, callbacks=[]):
     if os.path.exists(os.path.join(save_path, "loop_state.pkl")):
         logger.info("Reloading loop state")
-        loop_state = pickle.load(open(os.path.join(save_path, "loop_state.pkl")))
+        loop_state = pickle.load(open(os.path.join(save_path, "loop_state.pkl"), 'rb'))
     else:
         loop_state = {'last_epoch_done_id': -1}
 
@@ -89,7 +89,7 @@ def training_loop(model, train, epochs, steps_per_epoch, valid=None, valid_steps
 
         def save_loop_state(epoch, logs):
             loop_state = {"last_epoch_done_id": epoch}
-            pickle.dump(loop_state, open(os.path.join(save_path, "loop_state.pkl"), "w"))
+            pickle.dump(loop_state, open(os.path.join(save_path, "loop_state.pkl"), "wb"))
         callbacks.append(LambdaCallback(on_epoch_end=save_loop_state))
 
     model.fit_generator(generator=train,
