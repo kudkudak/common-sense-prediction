@@ -63,18 +63,9 @@ def train(config, save_path):
     dev_iterator = next(dev_stream.iterate_epochs())
     dev2_iterator = next(dev2_stream.iterate_epochs())
 
-    # import pdb
-    # pdb.set_trace()
-    # test = _collect_fuel_iterator(test_iterator)
-    # dev = _collect_fuel_iterator(dev_iterator)
-    # dev2 = _collect_fuel_iterator(dev2_iterator)
-
-    # TODO(kudkudak): How to collect this data more cleanly?
-
-
     # TODO(kudkudak): Add dev & dev2 manual evaluation callback with adaptive threshold
     callbacks = []
-    # callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev_iterator, steps=dev_steps, prefix="dev_")))
+    callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev_iterator, steps=dev_steps, prefix="dev_")))
     # callbacks.append(LambdaCallbackPickable(on_epoch_end=partial(_evaluate, model=model, data_iterator=dev2_iterator, steps=dev2_steps, prefix="dev2_")))
 
     training_loop(model=model,
