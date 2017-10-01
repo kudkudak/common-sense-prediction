@@ -17,6 +17,8 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
 ## Setup
  
+0. Project uses primarly python2.7, but should work without issues in python3.
+ 
 1. Configure PYTHONPATH to include root folder of the project. Configure DATA_DIR to point to data directory
  
 2. Go to DATA_DIR and run `scripts/fetch_LiACL_data.sh`
@@ -24,6 +26,8 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 3. (Optional if you want to run baselines) Clone https://github.com/Lorraine333/ACL_CKBC repository and add to your PYTHONPATH. Add
 `__init__.py` file to `ACL_CKBC` and `dnn_ce` folders.
 
+4. (Optional) We provide conda environment. To install it fire `conda env create -f environment-py2.yaml` and add
+`source activate common-sense-prediction-py2` to you env file.
 For example you can have `env.sh` file that you source before running scripts. In my case it is
 
 ```
