@@ -93,6 +93,7 @@ def training_loop(model, train, epochs, steps_per_epoch, valid=None, valid_steps
         callbacks.append(LambdaCallback(on_epoch_end=save_loop_state))
 
     model.fit_generator(generator=train,
+                        #max_queue_size=150,
                         steps_per_epoch=steps_per_epoch,
                         epochs=epochs,
                         initial_epoch=loop_state['last_epoch_done_id'] + 1,

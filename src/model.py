@@ -23,13 +23,12 @@ def dnn_ce(embedding_init, vocab_size, rel_embedding_init, l2,
     rel_embedding_size = rel_embedding_init.shape[1]
     rel_embedding_layer = Embedding(rel_vocab_size,
         rel_embedding_size,
-        embedding_regularizer=l2_reg(l2),
         weights=[rel_embedding_init],
         trainable=True)
     embedding_size = embedding_init.shape[1]
     embedding_layer = Embedding(vocab_size,
         embedding_size,
-        embedding_regularizer=l2_reg(l2),
+        embeddings_regularizer=l2_reg(l2),
         weights=[embedding_init],
         trainable=True)
     # mask_zero=True,
@@ -55,7 +54,7 @@ def dnn_ce(embedding_init, vocab_size, rel_embedding_init, l2,
     tail_avg = Lambda(mask_avg, output_shape=(embedding_size,))([tail, tail_mask_input])
 
     vin = Concatenate(axis=1)([head_avg, tail_avg, rel])
-    u = Dense(hidden_units, activation=hidden_activation, embedding_regularizer=l2_reg(l2))(vin)
+    u = Dense(hidden_units, activation=hidden_activation, kernel_regularizer=l2_reg(l2))(vin)
     output = Dense(1, activation='sigmoid')(u)
     model = Model([rel_input, head_input, head_mask_input, tail_input, tail_mask_input], [output])
 

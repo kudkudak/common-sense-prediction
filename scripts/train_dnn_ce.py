@@ -112,9 +112,6 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
         y_thr = np.argmax(y_thr, axis=1)
         y_val = np.argmax(y_val, axis=1)
 
-    print(scores)
-    print(y_thr)
-
     # We pick as candidate thresholds all scores
     thresholds = sorted(scores_thr)
     acc_thresholds = [np.mean((scores_thr >= thr) == y_thr) for thr in tqdm.tqdm(thresholds, total=len(thresholds))]
@@ -123,12 +120,11 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
     logs['thr'] = optimal_threshold
     logs['acc_thr'] = np.max(acc_thresholds)
 
-    print((scores_thr >= optimal_threshold) == y_thr)
-    print((scores >= optimal_threshold) == y_val)
-
     # Evaluate on valid
     logs['val_acc'] = np.mean((scores >= optimal_threshold) == y_val)
     logging.info("Finished evaluation, val_acc=" + str(logs['val_acc']))
+
+    # Evaluae on test
     if test_data is not None:
         X_tst, y_tst = _collect(_to_list(test_data.get_epoch_iterator()))
         y_tst = np.concatenate(y_tst, axis=0)
@@ -156,7 +152,7 @@ def train(config, save_path):
         (dataset.rel_vocab_size, config['rel_vec_size']))
     model = dnn_ce(embedding_init=dataset.embeddings,
         vocab_size=dataset.vocab_size,
-        l2=config['lambda_1'],
+        l2=config['l2'],
         rel_embedding_init=rel_embeddings_init,
         rel_vocab_size=dataset.rel_vocab_size,
         hidden_units=config['hidden_units'],
