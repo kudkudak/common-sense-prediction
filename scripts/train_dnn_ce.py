@@ -8,12 +8,9 @@ Run as:
 python scripts/train_dnn_ce.py root results/test1
 
 TODO:
-1. [DONE] Validation data
-2. [DONE] Add threshold adaptation based on dev
-3. [DONE] Overfit train
-4. Reproduce numbers
-5. Add resumability (missing dumping callbacks)
-6. TODO: Use lambda
+1. Find out why missing 0.6%
+2. Speed up parallel data loading
+3. Full snapshoting (including callbacks)
 """
 
 import keras
