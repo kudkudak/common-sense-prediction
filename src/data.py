@@ -86,9 +86,10 @@ class Dataset(object):
 
     #TODO(mnuke): sample_negative and keep_score are mutually exclusive, combine them better than target var?
     def data_stream(self, dataset, batch_size, target='negative_sampling'):
-        batches_per_epoch = dataset.num_examples / batch_size
+        batches_per_epoch = int(np.ceil(dataset.num_examples / float(batch_size)))
         data_stream = DataStream(dataset, iteration_scheme=ShuffledScheme(dataset.num_examples, batch_size))
-        data_stream = NumberizeWords(data_stream, self.word2index, default=self.word2index[UNKNOWN_TOKEN], which_sources=('head', 'tail'))
+        data_stream = NumberizeWords(data_stream, self.word2index, default=self.word2index[UNKNOWN_TOKEN],
+            which_sources=('head', 'tail'))
         data_stream = NumberizeWords(data_stream, self.rel2index, which_sources=('rel'))
 
         #TODO(mnuke): get name of dataset in log
