@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Implementatons of keras layers
+"""
+
 import keras
 import keras.backend as K
 from keras import initializers

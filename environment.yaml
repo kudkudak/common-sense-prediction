@@ -1,0 +1,9 @@
+name: common-sense-prediction
+
+dependencies:
+    - python=3.6
+    - numpy
+    - pandas
+    - fuel
+    - keras
+    - tensorflow
