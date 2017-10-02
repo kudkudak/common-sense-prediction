@@ -41,20 +41,17 @@ def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
     epoch_it = data_stream.get_epoch_iterator()
     metrics_values = defaultdict(list)
     n = 0
-    while True:
-        try:
-            x, y = next(epoch_it)
+    for x, y in epoch_it:
+        x, y = next(epoch_it)
 
-            assert all([len(x[k]) == len(x.values()[0]) for k in x]), "Not all inputs have same length"
-            batch_size = len(x.values()[0])
-            n += batch_size
+        assert all([len(x[k]) == len(x.values()[0]) for k in x]), "Not all inputs have same length"
+        batch_size = len(x.values()[0])
+        n += batch_size
 
-            metrics_values_batch = model.evaluate(x, y)
-            for mk, mv in zip(model.metrics_names, metrics_values_batch):
-                # Compensation for average by model
-                metrics_values[mk].append(mv * batch_size)
-        except StopIteration:
-            break
+        metrics_values_batch = model.evaluate(x, y)
+        for mk, mv in zip(model.metrics_names, metrics_values_batch):
+            # Compensation for average by model
+            metrics_values[mk].append(mv * batch_size)
 
     logging.info("")
     logging.info("Evaluated on {} examples".format(n))
@@ -66,41 +63,33 @@ def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
 
     logging.info("")
 
-def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data, test_data=None):
 
+# Keras2 doesn't accept list of dicts in predict_generator
+def _to_list(it, model):
+    while True:
+        x, y = next(it)
+        yield [x[inp.name.split(":")[0]] for inp in model.inputs], y
+
+
+def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data, test_data=None):
     # TODO(kudkudak): _collect_y can be replace by itertools.islice I think
     def _collect(epoch_it):
-        # This assumes it returns [dict, target] tuple on each next call
-        X = []
-        target = []
-
-        while True:
-
-            try:
-                x, y = next(epoch_it)
-                X.append(x)
-                target.append(y)
-            except StopIteration:
-                break
-
+        X, target = [], []
+        for x, y in epoch_it:
+            X.append(x)
+            target.append(y)
         return X, target
-
-    # Keras2 doesn't accept list of dicts in predict_generator
-    def _to_list(it):
-        while True:
-            x, y = next(it)
-            yield [x[inp.name.split(":")[0]] for inp in model.inputs], y
 
     logging.info("")
     logging.info("Calculating threshold")
 
     # Predict
     # NOTE(kudkudak): Using manual looping, because Keras2 has issues
-    X_thr, y_thr = _collect(_to_list(val_data_thr.get_epoch_iterator()))
-    X_val, y_val = _collect(_to_list(val_data.get_epoch_iterator()))
+    X_thr, y_thr = _collect(_to_list(val_data_thr.get_epoch_iterator(), model=model))
+    X_val, y_val = _collect(_to_list(val_data.get_epoch_iterator(), model=model))
     scores_thr = np.concatenate([model.predict_on_batch(x) \
-        for x in tqdm.tqdm(X_thr, total=len(X_thr))], axis=0).reshape(-1,)
-    scores = np.concatenate([model.predict_on_batch(x) for x in X_val], axis=0).reshape(-1,)
+        for x in tqdm.tqdm(X_thr, total=len(X_thr))], axis=0).reshape(-1, )
+    scores = np.concatenate([model.predict_on_batch(x) for x in X_val], axis=0).reshape(-1, )
 
     y_thr, y_val = np.concatenate(y_thr, axis=0), np.concatenate(y_val, axis=0)
 
@@ -123,7 +112,7 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
 
     # Evaluae on test
     if test_data is not None:
-        X_tst, y_tst = _collect(_to_list(test_data.get_epoch_iterator()))
+        X_tst, y_tst = _collect(_to_list(test_data.get_epoch_iterator(), model=model))
         y_tst = np.concatenate(y_tst, axis=0)
         if y_tst.ndim == 2:
             y_tst = np.argmax(y_thr, axis=1)
@@ -143,7 +132,6 @@ def endless_data_stream(data_stream):
 
 
 def train(config, save_path):
-
     dataset = Dataset(DATA_DIR)
     rel_embeddings_init = np.random.uniform(-config['rel_init'], config['rel_init'],
         (dataset.rel_vocab_size, config['rel_vec_size']))
@@ -161,7 +149,7 @@ def train(config, save_path):
 
     # Get data
     train_stream, train_steps = dataset.train_data_stream(int(config['batch_size']))
-    train_iterator = endless_data_stream(train_stream)
+    train_iterator = _to_list(endless_data_stream(train_stream), model=model)
     test_stream, _ = dataset.test_data_stream(int(config['batch_size']))
     dev1_stream, _ = dataset.dev1_data_stream(int(config['batch_size']))
     dev2_stream, _ = dataset.dev2_data_stream(int(config['batch_size']))
