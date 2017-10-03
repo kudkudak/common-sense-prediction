@@ -303,7 +303,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
         trainable=True)
 
     Ax = embedder(x_Drop)
-    LiACLosest = TimeDistributed(embedder2, input_shape=(n_neighbours, 3 * dim))(closest_Drop)
+    Aclosest = TimeDistributed(embedder2, input_shape=(n_neighbours, 3 * dim))(closest_Drop)
     Bx = embedder3(x_Drop2)
     Bclosest = TimeDistributed(embedder4, input_shape=(n_neighbours, 3 * dim))(closest_Drop2)
 
@@ -316,7 +316,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
         return np.float32(1. / threshold) * T.max(T.concatenate(scores, axis=1), axis=1, keepdims=True)
         #     return np.float32((1./threshold))*T.max(T.concatenate(scores, axis=1), axis=1, keepdims=True)
 
-    score = Lambda(scorer_fnc, output_shape=(1,))([Ax, LiACLosest])
+    score = Lambda(scorer_fnc, output_shape=(1,))([Ax, Aclosest])
 
     def score_argsim_fnc(zzz):
         return np.float32(use_argsim * 2.0 * 0.05 * (1. / (1.7 * threshold_argsim))) * T.batched_dot(zzz[:, 0:dim],
