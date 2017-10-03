@@ -5,7 +5,7 @@ Trains Levy inspired model (wasn't sure how to call it)
 
 Note: very sensitive to constants
 
-Run like: python scripts/train_levy.py results/Levy/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/ACL/embeddings_OMCS.txt
+Run like: python scripts/train_levy.py results/Levy/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/LiACL/embeddings_OMCS.txt
 
 """
 
@@ -49,10 +49,10 @@ def featurize_df(df, dim, featurizer=featurize_triplet):
 
 
 def train(save_path, embeddings="commonsendata/embeddings.txt"):
-    train = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/train100k.txt"), sep="\t", header=None)
-    dev = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev1.txt"), sep="\t", header=None)
-    dev2 = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev2.txt"), sep="\t", header=None)
-    test = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/test.txt"), sep="\t", header=None)
+    train = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/train100k.txt"), sep="\t", header=None)
+    dev = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/dev1.txt"), sep="\t", header=None)
+    dev2 = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/dev2.txt"), sep="\t", header=None)
+    test = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/test.txt"), sep="\t", header=None)
 
     train.columns = dev2.columns = dev.columns = test.columns = ['rel', 'head', 'tail', 'score']
 

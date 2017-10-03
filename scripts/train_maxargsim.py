@@ -5,7 +5,7 @@ Trains MaxArgSim. Should get to circa 85.5%
 
 Note: very sensitive to constants
 
-Run like: python scripts/train_maxargsim.py results/MaxArgSim/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/ACL/embeddings_OMCS.txt
+Run like: python scripts/train_maxargsim.py results/MaxArgSim/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/LiACL/embeddings_OMCS.txt
 
 """
 
@@ -96,10 +96,10 @@ def featurize_df(df, dim, featurizer=featurize_triplet):
 
 def train(save_path, embeddings="commonsendata/embeddings.txt",
         n_neighbours=2, L_1=3e-3, batchsize=300, negative_sampling="all_positive", use_rel=0, use_argsim=1):
-    train = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/train100k.txt"), sep="\t", header=None)
-    dev = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev1.txt"), sep="\t", header=None)
-    dev2 = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev2.txt"), sep="\t", header=None)
-    test = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/test.txt"), sep="\t", header=None)
+    train = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/train100k.txt"), sep="\t", header=None)
+    dev = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/dev1.txt"), sep="\t", header=None)
+    dev2 = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/dev2.txt"), sep="\t", header=None)
+    test = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/test.txt"), sep="\t", header=None)
 
     train.columns = dev2.columns = dev.columns = test.columns = ['rel', 'head', 'tail', 'score']
 
@@ -303,7 +303,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
         trainable=True)
 
     Ax = embedder(x_Drop)
-    Aclosest = TimeDistributed(embedder2, input_shape=(n_neighbours, 3 * dim))(closest_Drop)
+    LiACLosest = TimeDistributed(embedder2, input_shape=(n_neighbours, 3 * dim))(closest_Drop)
     Bx = embedder3(x_Drop2)
     Bclosest = TimeDistributed(embedder4, input_shape=(n_neighbours, 3 * dim))(closest_Drop2)
 
@@ -316,7 +316,7 @@ def train(save_path, embeddings="commonsendata/embeddings.txt",
         return np.float32(1. / threshold) * T.max(T.concatenate(scores, axis=1), axis=1, keepdims=True)
         #     return np.float32((1./threshold))*T.max(T.concatenate(scores, axis=1), axis=1, keepdims=True)
 
-    score = Lambda(scorer_fnc, output_shape=(1,))([Ax, Aclosest])
+    score = Lambda(scorer_fnc, output_shape=(1,))([Ax, LiACLosest])
 
     def score_argsim_fnc(zzz):
         return np.float32(use_argsim * 2.0 * 0.05 * (1. / (1.7 * threshold_argsim))) * T.batched_dot(zzz[:, 0:dim],

@@ -3,7 +3,7 @@
 """
 Trains MaxSim and save predictions
 
-Run like: python scripts/train_maxsim.py results/MaxSim/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/ACL/embeddings_OMCS.txt
+Run like: python scripts/train_maxsim.py results/MaxSim/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/LiACL/embeddings_OMCS.txt
 """
 
 from src.utils.vegab import wrap_no_config_registry, MetaSaver
@@ -22,10 +22,10 @@ from dnn_ce.utils import getWordmap
 
 
 def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt"):
-    train = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/train100k.txt"), sep="\t", header=None)
-    dev = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev1.txt"), sep="\t", header=None)
-    dev2 = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev2.txt"), sep="\t", header=None)
-    test = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/test.txt"), sep="\t", header=None)
+    train = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/train100k.txt"), sep="\t", header=None)
+    dev = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/dev1.txt"), sep="\t", header=None)
+    dev2 = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/dev2.txt"), sep="\t", header=None)
+    test = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/test.txt"), sep="\t", header=None)
 
     train.columns = dev2.columns = dev.columns = test.columns = ['rel', 'head', 'tail', 'score']
 

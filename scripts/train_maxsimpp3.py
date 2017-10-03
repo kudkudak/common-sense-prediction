@@ -3,7 +3,7 @@
 """
 Trains MaxSim3.6 (neg sample + NN + careful init) and save predictions. Should get to circa 84 dev2 acc.
 
-Run like: python scripts/train_maxsim3.py results/MaxSim3/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/ACL/embeddings_OMCS.txt
+Run like: python scripts/train_maxsim3.py results/MaxSim3/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/LiACL/embeddings_OMCS.txt
 
 TODO: all_positive" negative sampling from train_maxargsim.py is just better (84.7) worth
 copying over
@@ -34,10 +34,10 @@ from dnn_ce.utils import getWordmap
 
 def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt",
         n_neighbours=2, L_1=3e-3, batchsize=100):
-    train = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/train100k.txt"), sep="\t", header=None)
-    dev = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev1.txt"), sep="\t", header=None)
-    dev2 = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/dev2.txt"), sep="\t", header=None)
-    test = pd.read_csv(os.path.join(DATA_DIR, "ACL/conceptnet/test.txt"), sep="\t", header=None)
+    train = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/train100k.txt"), sep="\t", header=None)
+    dev = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/dev1.txt"), sep="\t", header=None)
+    dev2 = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/dev2.txt"), sep="\t", header=None)
+    test = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/test.txt"), sep="\t", header=None)
 
     train.columns = dev2.columns = dev.columns = test.columns = ['rel', 'head', 'tail', 'score']
 
@@ -197,7 +197,7 @@ def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt",
         trainable=True)
 
     Ax = embedder(x_Drop)
-    Aclosest = TimeDistributed(embedder2, input_shape=(n_neighbours, 3 * dim))(closest_Drop)
+    LiACLosest = TimeDistributed(embedder2, input_shape=(n_neighbours, 3 * dim))(closest_Drop)
 
     def scorer_fnc(zzz):
         scores = []
@@ -207,7 +207,7 @@ def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt",
             scores.append(10. * T.batched_dot(zzz[0], zzz[1][:, i]).reshape((-1, 1)))
         return T.max(T.concatenate(scores, axis=1), axis=1, keepdims=True)
 
-    score = Lambda(scorer_fnc, output_shape=(1,))([Ax, Aclosest])
+    score = Lambda(scorer_fnc, output_shape=(1,))([Ax, LiACLosest])
     clf = Dense(1, kernel_initializer="ones", \
         bias_initializer=constant(np.float32(-10 * threshold)))(score)
     clf2 = BatchNormalization()(clf)
