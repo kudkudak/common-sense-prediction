@@ -33,6 +33,12 @@ from src.callbacks import LambdaCallbackPickable
 from src.model import dnn_ce
 from src import DATA_DIR
 
+# Keras2 doesn't accept list of dicts in predict_generator
+def _to_list(it, model):
+    while True:
+        x, y = next(it)
+        yield [x[inp.name.split(":")[0]] for inp in model.inputs], y
+
 
 def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
     # This is a bit complicated on purpose, because we expect
@@ -41,17 +47,13 @@ def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
     epoch_it = data_stream.get_epoch_iterator()
     metrics_values = defaultdict(list)
     n = 0
-    for x, y in epoch_it:
-        x, y = next(epoch_it)
-
-        assert all([len(x[k]) == len(x.values()[0]) for k in x]), "Not all inputs have same length"
-        batch_size = len(x.values()[0])
-        n += batch_size
+    for x, y in _to_list(epoch_it, model=model):
+        n += len(x[0])
 
         metrics_values_batch = model.evaluate(x, y)
         for mk, mv in zip(model.metrics_names, metrics_values_batch):
             # Compensation for average by model
-            metrics_values[mk].append(mv * batch_size)
+            metrics_values[mk].append(mv * len(x[0]))
 
     logging.info("")
     logging.info("Evaluated on {} examples".format(n))
@@ -62,14 +64,6 @@ def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
         logging.info("{}={}".format(prefix + mk, logs[prefix + mk]))
 
     logging.info("")
-
-
-# Keras2 doesn't accept list of dicts in predict_generator
-def _to_list(it, model):
-    while True:
-        x, y = next(it)
-        yield [x[inp.name.split(":")[0]] for inp in model.inputs], y
-
 
 def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data, test_data=None):
     # TODO(kudkudak): _collect_y can be replace by itertools.islice I think
