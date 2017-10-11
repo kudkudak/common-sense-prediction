@@ -33,12 +33,6 @@ from src.callbacks import LambdaCallbackPickable
 from src.model import dnn_ce
 from src import DATA_DIR
 
-# Keras2 doesn't accept list of dicts in predict_generator
-def _to_list(it, model):
-    while True:
-        x, y = next(it)
-        yield [x[inp.name.split(":")[0]] for inp in model.inputs], y
-
 
 def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
     # This is a bit complicated on purpose, because we expect
@@ -47,13 +41,14 @@ def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
     epoch_it = data_stream.get_epoch_iterator()
     metrics_values = defaultdict(list)
     n = 0
-    for x, y in _to_list(epoch_it, model=model):
-        n += len(x[0])
+    for x, y in epoch_it:
+        num_examples = len(x['rel'])
+        n += num_examples
 
         metrics_values_batch = model.evaluate(x, y)
         for mk, mv in zip(model.metrics_names, metrics_values_batch):
             # Compensation for average by model
-            metrics_values[mk].append(mv * len(x[0]))
+            metrics_values[mk].append(mv * num_examples)
 
     logging.info("")
     logging.info("Evaluated on {} examples".format(n))
@@ -64,6 +59,7 @@ def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
         logging.info("{}={}".format(prefix + mk, logs[prefix + mk]))
 
     logging.info("")
+
 
 def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data, test_data=None):
     # TODO(kudkudak): _collect_y can be replace by itertools.islice I think
@@ -79,8 +75,8 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
 
     # Predict
     # NOTE(kudkudak): Using manual looping, because Keras2 has issues
-    X_thr, y_thr = _collect(_to_list(val_data_thr.get_epoch_iterator(), model=model))
-    X_val, y_val = _collect(_to_list(val_data.get_epoch_iterator(), model=model))
+    X_thr, y_thr = _collect(val_data_thr.get_epoch_iterator())
+    X_val, y_val = _collect(val_data.get_epoch_iterator())
     scores_thr = np.concatenate([model.predict_on_batch(x) \
         for x in tqdm.tqdm(X_thr, total=len(X_thr))], axis=0).reshape(-1, )
     scores = np.concatenate([model.predict_on_batch(x) for x in X_val], axis=0).reshape(-1, )
@@ -106,7 +102,7 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
 
     # Evaluae on test
     if test_data is not None:
-        X_tst, y_tst = _collect(_to_list(test_data.get_epoch_iterator(), model=model))
+        X_tst, y_tst = _collect(test_data.get_epoch_iterator())
         y_tst = np.concatenate(y_tst, axis=0)
         if y_tst.ndim == 2:
             y_tst = np.argmax(y_thr, axis=1)
@@ -143,7 +139,7 @@ def train(config, save_path):
 
     # Get data
     train_stream, train_steps = dataset.train_data_stream(int(config['batch_size']))
-    train_iterator = _to_list(endless_data_stream(train_stream), model=model)
+    train_iterator = endless_data_stream(train_stream)
     test_stream, _ = dataset.test_data_stream(int(config['batch_size']))
     dev1_stream, _ = dataset.dev1_data_stream(int(config['batch_size']))
     dev2_stream, _ = dataset.dev2_data_stream(int(config['batch_size']))

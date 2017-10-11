@@ -2,9 +2,9 @@ name: common-sense-prediction-py2
 
 dependencies:
     - python=2.7
-    - numpy
-    - tqdm
-    - pandas
-    - fuel
-    - keras
-    - tensorflow
+    - numpy=1.13.*
+    - pandas=0.20.*
+    - fuel=0.2.*
+    - keras=2.*
+    - tensorflow=1.2.*
+    - tqdm=4.*
