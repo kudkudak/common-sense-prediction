@@ -1,6 +1,6 @@
 #TODO(mnuke): make this real unittest?
-# from keras.models import Model
-# from keras.layers import Input, Embedding, Flatten
+from keras.models import Model
+from keras.layers import Input, Embedding, Flatten
 
 from src import DATA_DIR
 from src.data import Dataset
