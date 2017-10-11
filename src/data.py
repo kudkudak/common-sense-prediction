@@ -40,8 +40,10 @@ class Dataset(object):
         self.test_dataset = self.load_data(TEST_FILE)
 
     def load_data(self, data_path):
-        data = pd.read_csv(os.path.join(self.data_dir, data_path), sep="\t", header=None)
+        data = pd.read_csv(os.path.join(self.data_dir, data_path),
+                           sep="\t", header=None)
         data.columns = ['rel', 'head', 'tail', 'score']
+        assert(not data.empty)
         return IndexableDataset(data.to_dict('list'))
 
     def load_rel2index(self):
