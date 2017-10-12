@@ -22,7 +22,6 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 UNKNOWN_TOKEN = 'UUUNKKK'
-EMBEDDING_FILE = 'embeddings/LiACL/embeddings_OMCS.txt'
 REL_FILE = 'LiACL/conceptnet/rel.txt'
 TRAIN_FILE = 'LiACL/conceptnet/train100k.txt'
 TEST_FILE = 'LiACL/conceptnet/test.txt'
@@ -32,7 +31,6 @@ DEV2_FILE = 'LiACL/conceptnet/dev2.txt'
 class Dataset(object):
     def __init__(self, data_dir):
         self.data_dir = data_dir
-        self.load_embeddings()
         self.load_rel2index()
         self.train_dataset = self.load_data(TRAIN_FILE)
         self.dev1_dataset = self.load_data(DEV1_FILE)
@@ -56,41 +54,27 @@ class Dataset(object):
         self.rel2index = rel2index
         self.rel_vocab_size = len(rel2index)
 
-    def load_embeddings(self):
-        embedding_file = os.path.join(self.data_dir, EMBEDDING_FILE)
-        word2index = {'PADDING-WORD':0}
-        embeddings = [0]
-        with open(embedding_file,'r') as f:
-            for index, line in enumerate(f):
-                values = line.split()
-                word = values[0]
-                emb = [float(val) for val in values[1:]]
-                word2index[word] = index + 1
-                embeddings.append(emb)
+    def train_data_stream(self, batch_size, word2index):
+        return self.data_stream(self.train_dataset, batch_size, word2index,
+                                target='negative_sampling')
 
-        embeddings[0] = [0]*len(embeddings[1])
+    def test_data_stream(self, batch_size, word2index):
+        return self.data_stream(self.test_dataset, batch_size, word2index,
+                                target='score')
 
-        self.word2index = word2index
-        self.embeddings = np.matrix(embeddings)
-        self.vocab_size = self.embeddings.shape[0]
+    def dev1_data_stream(self, batch_size, word2index):
+        return self.data_stream(self.dev1_dataset, batch_size, word2index,
+                                target='score')
 
-    def train_data_stream(self, batch_size):
-        return self.data_stream(self.train_dataset, batch_size, target='negative_sampling')
-
-    def test_data_stream(self, batch_size):
-        return self.data_stream(self.test_dataset, batch_size, target='score')
-
-    def dev1_data_stream(self, batch_size):
-        return self.data_stream(self.dev1_dataset, batch_size, target='score')
-
-    def dev2_data_stream(self, batch_size):
-        return self.data_stream(self.dev2_dataset, batch_size, target='score')
+    def dev2_data_stream(self, batch_size, word2index):
+        return self.data_stream(self.dev2_dataset, batch_size, word2index,
+                                target='score')
 
     #TODO(mnuke): sample_negative and keep_score are mutually exclusive, combine them better than target var?
-    def data_stream(self, dataset, batch_size, target='negative_sampling'):
+    def data_stream(self, dataset, batch_size, word2index, target='negative_sampling'):
         batches_per_epoch = int(np.ceil(dataset.num_examples / float(batch_size)))
         data_stream = DataStream(dataset, iteration_scheme=ShuffledScheme(dataset.num_examples, batch_size))
-        data_stream = NumberizeWords(data_stream, self.word2index, default=self.word2index[UNKNOWN_TOKEN],
+        data_stream = NumberizeWords(data_stream, word2index, default=word2index[UNKNOWN_TOKEN],
             which_sources=('head', 'tail'))
         data_stream = NumberizeWords(data_stream, self.rel2index, which_sources=('rel'))
 
