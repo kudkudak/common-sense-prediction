@@ -25,13 +25,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+from src import DATA_DIR
+from src.callbacks import LambdaCallbackPickable
 from src.configs import configs_dnn_ce
+from src.data import Dataset
+from src.model import dnn_ce
+from src.utils.data_loading import load_embeddings, endless_data_stream
 from src.utils.training_loop import training_loop
 from src.utils.vegab import wrap, MetaSaver
-from src.data import Dataset
-from src.callbacks import LambdaCallbackPickable
-from src.model import dnn_ce
-from src import DATA_DIR
 
 
 def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
@@ -112,37 +113,30 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
         logging.info("Finished evaluation, tst_acc=" + str(logs['test_acc']))
 
 
-def endless_data_stream(data_stream):
-    for iterator in data_stream.iterate_epochs():
-        while True:
-            try:
-                yield next(iterator)
-            except StopIteration:
-                break
-
-
 def train(config, save_path):
+    word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
     dataset = Dataset(DATA_DIR)
     rel_embeddings_init = np.random.uniform(-config['rel_init'], config['rel_init'],
-        (dataset.rel_vocab_size, config['rel_vec_size']))
-    model = dnn_ce(embedding_init=dataset.embeddings,
-        vocab_size=dataset.vocab_size,
+                                            (dataset.rel_vocab_size, config['rel_vec_size']))
+
+    model = dnn_ce(embedding_init=embeddings,
+        vocab_size=embeddings.shape[0],
         l2=config['l2'],
         rel_embedding_init=rel_embeddings_init,
         rel_vocab_size=dataset.rel_vocab_size,
         hidden_units=config['hidden_units'],
         hidden_activation=config['activation'])
-
     model.compile(Adagrad(config['learning_rate']),
         'binary_crossentropy',
         metrics=['binary_crossentropy', 'accuracy'])
 
     # Get data
-    train_stream, train_steps = dataset.train_data_stream(int(config['batch_size']))
+    train_stream, train_steps = dataset.train_data_stream(int(config['batch_size']),
+                                                          word2index)
     train_iterator = endless_data_stream(train_stream)
-    test_stream, _ = dataset.test_data_stream(int(config['batch_size']))
-    dev1_stream, _ = dataset.dev1_data_stream(int(config['batch_size']))
-    dev2_stream, _ = dataset.dev2_data_stream(int(config['batch_size']))
+    test_stream, _ = dataset.test_data_stream(int(config['batch_size']), word2index)
+    dev1_stream, _ = dataset.dev1_data_stream(int(config['batch_size']), word2index)
+    dev2_stream, _ = dataset.dev2_data_stream(int(config['batch_size']), word2index)
 
     # Prepare callbacks
     callbacks = []
