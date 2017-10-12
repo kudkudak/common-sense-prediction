@@ -40,8 +40,10 @@ class Dataset(object):
         self.test_dataset = self.load_data(TEST_FILE)
 
     def load_data(self, data_path):
-        data = pd.read_csv(os.path.join(self.data_dir, data_path), sep="\t", header=None)
+        data = pd.read_csv(os.path.join(self.data_dir, data_path),
+                           sep="\t", header=None)
         data.columns = ['rel', 'head', 'tail', 'score']
+        assert(not data.empty)
         return IndexableDataset(data.to_dict('list'))
 
     def load_rel2index(self):
@@ -187,24 +189,3 @@ class MergeSource(AgnosticTransformer):
                                 if s not in self.merge_sources]
 
 
-if __name__ == '__main__':
-    from src import DATA_DIR
-    from scripts.train_reproduce import endless_data_stream
-    from keras.models import Model
-    from keras.layers import Input, Embedding, Flatten
-
-    BATCH_SIZE = 600
-    data = Dataset(DATA_DIR)
-    data_stream, batches = data.train_data_stream(BATCH_SIZE)
-    endless = endless_data_stream(data_stream)
-
-    rel_input = Input(shape=(1,), dtype='int32', name='rel')
-    rel = Embedding(34, 1, trainable=True)(rel_input)
-    rel = Flatten()(rel)
-    model = Model([rel_input], [rel])
-    model.compile('sgd', 'mean_squared_error')
-
-    model.fit_generator(generator=endless,
-                        steps_per_epoch=batches,
-                        epochs=2,
-                        verbose=1)
