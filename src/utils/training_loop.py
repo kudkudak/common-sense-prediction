@@ -41,6 +41,8 @@ def save_loop_state(epoch, logs, save_path):
 
 def training_loop(model, train, epochs, steps_per_epoch, monitor='val_acc', valid=None, valid_steps=None,
                   save_path=None, acc_monitor='val_acc', callbacks=[]):
+    loop_state = {'last_epoch_done_id': -1}
+
     if save_path is not None:
         # resumability
         if os.path.exists(os.path.join(save_path, "model.h5")):
@@ -48,8 +50,6 @@ def training_loop(model, train, epochs, steps_per_epoch, monitor='val_acc', vali
             if os.path.exists(os.path.join(save_path, "loop_state.pkl")):
                 logger.info("Reloading loop state")
                 loop_state = pickle.load(open(os.path.join(save_path, "loop_state.pkl"), 'rb'))
-            else:
-                loop_state = {'last_epoch_done_id': -1}
 
 
         # saving history, model, logs

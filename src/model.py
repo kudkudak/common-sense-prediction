@@ -7,13 +7,15 @@ import keras
 import keras.backend as K
 from keras.regularizers import l2 as l2_reg
 from keras.models import Model
-from keras.layers import (Input,
+from keras.layers import (Activation,
+                          Input,
                           Dense,
                           Embedding,
                           Lambda,
                           Multiply,
                           Flatten,
                           Concatenate)
+from keras.layers.normalization import BatchNormalization
 
 
 def dnn_ce(embedding_init, vocab_size, rel_embedding_init, l2,
@@ -59,7 +61,7 @@ def dnn_ce(embedding_init, vocab_size, rel_embedding_init, l2,
     u = Activation(hidden_activation)(u)
     output = Dense(1)(u)
     output = BatchNormalization()(output)
-    output = Activation('sigmoid')(u)
+    output = Activation('sigmoid')(output)
 
     model = Model([rel_input, head_input, head_mask_input, tail_input, tail_mask_input],
                   [output])
