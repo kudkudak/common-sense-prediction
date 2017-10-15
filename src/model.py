@@ -5,10 +5,11 @@ Implementatons of keras models
 
 import keras
 import keras.backend as K
-from keras.regularizers import l2 as l2_reg
-from keras.models import Model
+from keras.initializers import (Constant,
+                                RandomUniform)
 from keras.layers import (Activation,
                           Add,
+                          BatchNormalization,
                           Concatenate,
                           Dot,
                           Dense,
@@ -17,6 +18,8 @@ from keras.layers import (Activation,
                           Input,
                           Lambda,
                           Multiply)
+from keras.models import Model
+from keras.regularizers import l2 as l2_reg
 
 from src.layers import Bilinear
 
@@ -68,9 +71,8 @@ def dnn_ce(embedding_init, vocab_size, rel_embedding_init, l2,
     return model
 
 
-def simple_factorized(embedding_init, vocab_size, l2,
-                        rel_vocab_size, hidden_units,
-                        hidden_activation):
+def factorized(embedding_init, vocab_size, l2, rel_vocab_size,
+               rel_init_range, bias_init, hidden_units, hidden_activation):
     embedding_size = embedding_init.shape[1]
     embedding_layer = Embedding(vocab_size,
                                 embedding_size,
@@ -80,6 +82,7 @@ def simple_factorized(embedding_init, vocab_size, l2,
     rel_embedding_layer = Embedding(rel_vocab_size,
                                     hidden_units,
                                     embeddings_regularizer=l2_reg(l2),
+                                    embeddings_initializer=RandomUniform(-rel_init_range, rel_init_range),
                                     trainable=True)
 
     dense_layer = Dense(hidden_units, activation=hidden_activation)
@@ -111,7 +114,10 @@ def simple_factorized(embedding_init, vocab_size, l2,
     head_tail = Dot(1, normalize=True)([head_u, tail_u])
 
     score = Add()([head_rel, rel_tail, head_tail])
-    output = Activation(activation='sigmoid')(score)
+    # stan's bias trick
+    bias = Dense(1, kernel_initializer='ones', bias_initializer=Constant(bias_init))(score)
+    bias = BatchNormalization()(bias)
+    output = Activation(activation='sigmoid')(bias)
 
     model = Model([rel_input, head_input, head_mask_input,
                    tail_input, tail_mask_input], [output])

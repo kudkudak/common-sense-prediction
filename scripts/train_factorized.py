@@ -25,8 +25,9 @@ from src import DATA_DIR
 from src.callbacks import LambdaCallbackPickable
 from src.configs import configs_factorized
 from src.data import Dataset
-from src.model import simple_factorized
+from src.model import factorized
 from src.utils.data_loading import load_embeddings, endless_data_stream
+from src.utils.tools import argsim_threshold
 from src.utils.training_loop import training_loop
 from src.utils.vegab import wrap, MetaSaver
 
@@ -113,16 +114,6 @@ def train(config, save_path):
     word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
     dataset = Dataset(DATA_DIR)
 
-    model = simple_factorized(embedding_init=embeddings,
-                              vocab_size=embeddings.shape[0],
-                              l2=config['l2'],
-                              rel_vocab_size=dataset.rel_vocab_size,
-                              hidden_units=config['hidden_units'],
-                              hidden_activation=config['activation'])
-    model.compile(Adagrad(config['learning_rate']),
-                  'binary_crossentropy',
-                  metrics=['binary_crossentropy', 'accuracy'])
-
     # Get data
     train_stream, train_steps = dataset.train_data_stream(int(config['batch_size']),
                                                           word2index)
@@ -130,6 +121,21 @@ def train(config, save_path):
     test_stream, _ = dataset.test_data_stream(int(config['batch_size']), word2index)
     dev1_stream, _ = dataset.dev1_data_stream(int(config['batch_size']), word2index)
     dev2_stream, _ = dataset.dev2_data_stream(int(config['batch_size']), word2index)
+
+
+    # Initialize Model
+    threshold = argsim_threshold(train_stream, embeddings)
+    model = factorized(embedding_init=embeddings,
+                       vocab_size=embeddings.shape[0],
+                       l2=config['l2'],
+                       rel_vocab_size=dataset.rel_vocab_size,
+                       rel_init_range=config['rel_init'],
+                       bias_init=threshold,
+                       hidden_units=config['hidden_units'],
+                       hidden_activation=config['activation'])
+    model.compile(Adagrad(config['learning_rate']),
+                  'binary_crossentropy',
+                  metrics=['binary_crossentropy', 'accuracy'])
 
     # Prepare callbacks
     callbacks = []
