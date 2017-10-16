@@ -9,6 +9,7 @@ from keras.initializers import (Constant,
                                 RandomUniform)
 from keras.layers import (Activation,
                           Add,
+                          Average,
                           BatchNormalization,
                           Concatenate,
                           Dot,
@@ -75,7 +76,8 @@ def dnn_ce(embedding_init, vocab_size, rel_init, rel_embed_size,
 
 
 def factorized(embedding_init, vocab_size, l2, rel_vocab_size,
-               rel_init, bias_init, hidden_units, hidden_activation, merge):
+               rel_init, bias_init, hidden_units, hidden_activation,
+               merge, merge_weight):
     #TODO(mnuke): batchnorm after embeddings as well?
     embedding_size = embedding_init.shape[1]
     embedding_layer = Embedding(vocab_size,
@@ -117,15 +119,23 @@ def factorized(embedding_init, vocab_size, l2, rel_vocab_size,
     rel_tail = Dot(1, normalize=True)([rel, tail_u])
     head_tail = Dot(1, normalize=True)([head_u, tail_u])
 
+    if merge_weight == True:
+        head_rel = Dense(1, kernel_initializer='ones')(head_rel)
+        rel_tail = Dense(1, kernel_initializer='ones')(rel_tail)
+        head_tail = Dense(1, kernel_initializer='ones')(head_tail)
+
     if merge == 'add':
         score = Add()([head_rel, rel_tail, head_tail])
     elif merge == 'max':
         score = Maximum()([head_rel, rel_tail, head_tail])
+    elif merge == 'avg':
+        score = Average()([head_rel, rel_tail, head_tail])
     else:
         raise NotImplementedError('Merge function ', merge, ' must be one of ["add","maximum"]')
 
     # stan's bias trick
-    bias = Dense(1, kernel_initializer='ones', bias_initializer=Constant(bias_init))(score)
+    bias = Dense(1, kernel_initializer='ones', bias_initializer=Constant(bias_init), trainable=True)(score)
+
     bias = BatchNormalization()(bias)
     output = Activation(activation='sigmoid')(bias)
 

@@ -50,7 +50,8 @@ def train(config, save_path):
                        bias_init=threshold,
                        hidden_units=config['hidden_units'],
                        hidden_activation=config['activation'],
-                       merge=config['merge'])
+                       merge=config['merge'],
+                       merge_weight=config['merge_weight'])
 
     if config['optimizer'] == 'adagrad':
         optimizer = Adagrad(config['learning_rate'])
