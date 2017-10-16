@@ -62,8 +62,8 @@ def training_loop(model, train, epochs, steps_per_epoch, monitor='val_acc', vali
                                          mode='max',
                                          filepath=os.path.join(save_path, "model.h5")))
         #optimization
-        callbacks.append(EarlyStopping(monitor=acc_monitor, patience=10))
-        callbacks.append(ReduceLROnPlateau(monitor=acc_monitor, patience=8))
+        # callbacks.append(EarlyStopping(monitor=acc_monitor, patience=10))
+        callbacks.append(ReduceLROnPlateau(monitor=acc_monitor, patience=10))
 
     model.fit_generator(generator=train,
                         steps_per_epoch=steps_per_epoch,
