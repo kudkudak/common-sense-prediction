@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+source activate csp
 export PROJECT_DIR=$HOME/common_sense_prediction
 export PYTHONPATH=$PYTHONPATH:$PROJECT_DIR
 export DATA_DIR=/data/lisatmp4/common_sense_prediction
