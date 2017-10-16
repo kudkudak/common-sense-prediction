@@ -8,14 +8,13 @@ Run as:
 python scripts/train_factorized.py root results/test1
 
 """
+from collections import defaultdict
+from functools import partial
 
 import keras
-from keras.optimizers import Adagrad
-
-import tqdm
+from keras.optimizers import Adagrad, Adam
 import numpy as np
-from functools import partial
-from collections import defaultdict
+import tqdm
 
 from src import DATA_DIR
 from src.callbacks import (LambdaCallbackPickable,
@@ -52,7 +51,15 @@ def train(config, save_path):
                        hidden_units=config['hidden_units'],
                        hidden_activation=config['activation'],
                        merge=config['merge'])
-    model.compile(optimizer=Adagrad(config['learning_rate']),
+
+    if config['optimizer'] == 'adagrad':
+        optimizer = Adagrad(config['learning_rate'])
+    elif config['optimizer'] == 'adam':
+        optimizer = Adam(config['learning_rate'])
+    else:
+        raise NotImplementedError('optimizer ', optimizer, ' must be one of ["adagrad", "adam"]')
+
+    model.compile(optimizer=optimizer,
                   loss='binary_crossentropy',
                   metrics=['binary_crossentropy', 'accuracy'])
 
