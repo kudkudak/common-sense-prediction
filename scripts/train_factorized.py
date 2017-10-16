@@ -12,7 +12,9 @@ from collections import defaultdict
 from functools import partial
 
 import keras
-from keras.optimizers import Adagrad, Adam
+from keras.optimizers import (Adagrad,
+                              Adam,
+                              RMSprop)
 import numpy as np
 import tqdm
 
@@ -57,6 +59,8 @@ def train(config, save_path):
         optimizer = Adagrad(config['learning_rate'])
     elif config['optimizer'] == 'adam':
         optimizer = Adam(config['learning_rate'])
+    elif config['optimizer'] == 'rmsprop':
+        optimizer = RMSprop(lr=config['learning_rate'])
     else:
         raise NotImplementedError('optimizer ', optimizer, ' must be one of ["adagrad", "adam"]')
 
