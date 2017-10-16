@@ -19,4 +19,3 @@ config.set_root_config({
     'learning_rate': 0.01,
     'embedding_file': 'embeddings/LiACL/embeddings_OMCS.txt',
 })
-
