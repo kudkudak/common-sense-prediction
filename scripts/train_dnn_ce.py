@@ -63,7 +63,7 @@ def train(config, save_path):
                   train=endless_data_stream(train_stream),
                   epochs=config['epochs'],
                   steps_per_epoch=train_steps,
-                  acc_monitor='dev2/acc',
+                  acc_monitor='dev2/acc_thr',
                   save_path=save_path,
                   callbacks=callbacks)
 
