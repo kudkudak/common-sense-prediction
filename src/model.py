@@ -27,11 +27,10 @@ from keras.regularizers import l2 as l2_reg
 def dnn_ce(embedding_init, vocab_size, rel_init, rel_embed_size,
            rel_vocab_size, l2, hidden_units, hidden_activation):
     # TODO(kudkudak): Add scaling
-
-    # TODO(mnuke): try l2 on rel embedding as well
     rel_embedding_layer = Embedding(rel_vocab_size,
                                     rel_embed_size,
                                     embeddings_initializer=RandomUniform(-rel_init, rel_init),
+                                    embeddings_regularizer=l2_reg(l2),
                                     trainable=True)
     embedding_size = embedding_init.shape[1]
     embedding_layer = Embedding(vocab_size,
