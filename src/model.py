@@ -74,7 +74,8 @@ def dnn_ce(embedding_init, vocab_size, rel_init, rel_embed_size,
 
 
 def factorized(embedding_init, vocab_size, l2, rel_vocab_size,
-               rel_init_range, bias_init, hidden_units, hidden_activation):
+               rel_init, bias_init, hidden_units, hidden_activation):
+    #TODO(mnuke): batchnorm after embeddings as well?
     embedding_size = embedding_init.shape[1]
     embedding_layer = Embedding(vocab_size,
                                 embedding_size,
@@ -84,7 +85,7 @@ def factorized(embedding_init, vocab_size, l2, rel_vocab_size,
     rel_embedding_layer = Embedding(rel_vocab_size,
                                     hidden_units,
                                     embeddings_regularizer=l2_reg(l2),
-                                    embeddings_initializer=RandomUniform(-rel_init_range, rel_init_range),
+                                    embeddings_initializer=RandomUniform(-rel_init, rel_init),
                                     trainable=True)
 
     dense_layer = Dense(hidden_units, activation=hidden_activation)
