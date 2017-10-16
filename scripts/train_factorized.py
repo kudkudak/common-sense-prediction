@@ -50,7 +50,8 @@ def train(config, save_path):
                        rel_init=config['rel_init'],
                        bias_init=threshold,
                        hidden_units=config['hidden_units'],
-                       hidden_activation=config['activation'])
+                       hidden_activation=config['activation'],
+                       merge=config['merge'])
     model.compile(optimizer=Adagrad(config['learning_rate']),
                   loss='binary_crossentropy',
                   metrics=['binary_crossentropy', 'accuracy'])
