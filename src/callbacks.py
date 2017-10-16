@@ -55,15 +55,15 @@ def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
             # Compensation for average by model
             metrics_values[mk].append(mv * num_examples)
 
-    logging.info("")
-    logging.info("Evaluated on {} examples".format(n))
+    logger.info("")
+    logger.info("Evaluated on {} examples".format(n))
 
     for mk in model.metrics_names:
         mv = metrics_values[mk]
         logs[prefix + mk] = np.sum(mv) / float(n)
-        logging.info("{}={}".format(prefix + mk, logs[prefix + mk]))
+        logger.info("{}={}".format(prefix + mk, logs[prefix + mk]))
 
-    logging.info("")
+    logger.info("")
 
 
 def evaluate_on_data_stream(model, data_stream, prefix):
@@ -82,8 +82,8 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
             target.append(y)
         return X, target
 
-    logging.info("")
-    logging.info("Calculating threshold")
+    logger.info("")
+    logger.info("Calculating threshold")
 
     # Predict
     # NOTE(kudkudak): Using manual looping, because Keras2 has issues
@@ -104,14 +104,13 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
     thresholds = sorted(scores_thr)
     acc_thresholds = [np.mean((scores_thr >= thr) == y_thr) for thr in tqdm.tqdm(thresholds, total=len(thresholds))]
     optimal_threshold = thresholds[np.argmax(acc_thresholds)]
-    logging.info("Found acc {} for thr {}".format(np.max(acc_thresholds), optimal_threshold))
+    logger.info("dev1/acc_thr {} for dev1/thr {}".format(np.max(acc_thresholds), optimal_threshold))
     logs['dev1/thr'] = optimal_threshold
     logs['dev1/acc_thr'] = np.max(acc_thresholds)
 
     # Evaluate on valid
-    logs['dev2/acc'] = np.mean((scores >= optimal_threshold) == y_val)
-    logs['dev2/acc_0.5'] = np.mean((scores >= 0.5) == y_val)
-    logging.info("Finished evaluation, val_acc=" + str(logs['dev2/acc']))
+    logs['dev2/acc_thr'] = np.mean((scores >= optimal_threshold) == y_val)
+    logger.info("Finished validation, dev2/acc_thr =" + str(logs['dev2/acc_thr']))
 
     # Evaluate on test
     if test_data is not None:
@@ -121,8 +120,8 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
             y_tst = np.argmax(y_thr, axis=1)
         scores_tst = np.concatenate([model.predict_on_batch(x) for x in X_tst], axis=0).reshape(-1, )
         y_test_pred = (scores_tst >= optimal_threshold) == y_tst
-        logs['test/acc'] = np.mean(y_test_pred)
-        logging.info("Finished evaluation, tst_acc=" + str(logs['test/acc']))
+        logs['test/acc_thr'] = np.mean(y_test_pred)
+        logger.info("Finished testing, test/acc_thr=" + str(logs['test/acc_thr']))
 
 
 def evaluate_with_threshold_fitting(model, dev1, dev2, test=None):

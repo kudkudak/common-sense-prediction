@@ -32,8 +32,7 @@ class Bilinear(keras.layers.Layer):
     def build(self, input_shape):
         assert len(input_shape) >= 2
         input_dim = input_shape[0][1]
-        self.dim = input_dim / 2
-
+        self.dim = int(input_dim / 2)
         self.kernel = self.add_weight(shape=(self.num_relations, self.dim, self.dim),
                                       initializer=self.kernel_initializer,
                                       name='matrices')
