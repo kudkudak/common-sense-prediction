@@ -31,27 +31,24 @@ from src.utils.vegab import wrap, MetaSaver
 def train(config, save_path):
     word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
     dataset = Dataset(DATA_DIR)
-    rel_embeddings_init = np.random.uniform(-config['rel_init'], config['rel_init'],
-                                            (dataset.rel_vocab_size, config['rel_vec_size']))
 
     model = dnn_ce(embedding_init=embeddings,
-        vocab_size=embeddings.shape[0],
-        l2=config['l2'],
-        rel_embedding_init=rel_embeddings_init,
-        rel_vocab_size=dataset.rel_vocab_size,
-        hidden_units=config['hidden_units'],
-        hidden_activation=config['activation'])
-    model.compile(Adagrad(config['learning_rate']),
-        'binary_crossentropy',
-        metrics=['binary_crossentropy', 'accuracy'])
+                   vocab_size=embeddings.shape[0],
+                   l2=config['l2'],
+                   rel_init=config['rel_init'],
+                   rel_vocab_size=dataset.rel_vocab_size,
+                   rel_embed_size=config['rel_vec_size'],
+                   hidden_units=config['hidden_units'],
+                   hidden_activation=config['activation'])
+    model.compile(optimizer=Adagrad(config['learning_rate']),
+                  loss='binary_crossentropy',
+                  metrics=['binary_crossentropy', 'accuracy'])
 
     # Get data
-    train_stream, train_steps = dataset.train_data_stream(int(config['batch_size']),
-                                                          word2index)
-    train_iterator = endless_data_stream(train_stream)
-    test_stream, _ = dataset.test_data_stream(int(config['batch_size']), word2index)
-    dev1_stream, _ = dataset.dev1_data_stream(int(config['batch_size']), word2index)
-    dev2_stream, _ = dataset.dev2_data_stream(int(config['batch_size']), word2index)
+    train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index)
+    test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
+    dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
+    dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
 
     # Prepare callbacks
     callbacks = []
@@ -63,7 +60,7 @@ def train(config, save_path):
         model=model, data_stream=dev2_stream, prefix="dev2/")))
 
     training_loop(model=model,
-                  train=train_iterator,
+                  train=endless_data_stream(train_stream),
                   epochs=config['epochs'],
                   steps_per_epoch=train_steps,
                   acc_monitor='dev2/acc',

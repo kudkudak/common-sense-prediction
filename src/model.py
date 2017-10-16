@@ -7,31 +7,33 @@ import keras
 import keras.backend as K
 from keras.regularizers import l2 as l2_reg
 from keras.models import Model
-from keras.layers import (Input,
+from keras.layers import (Activation,
+                          Input,
                           Dense,
                           Embedding,
                           Lambda,
                           Multiply,
                           Flatten,
                           Concatenate)
+from keras.layers.normalization import BatchNormalization
+from keras.initializers import RandomUniform
 
 
-def dnn_ce(embedding_init, vocab_size, rel_embedding_init, l2,
-        rel_vocab_size, hidden_units, hidden_activation):
+def dnn_ce(embedding_init, vocab_size, rel_init, rel_embed_size,
+           rel_vocab_size, l2, hidden_units, hidden_activation):
     # TODO(kudkudak): Add scaling
 
-    rel_embedding_size = rel_embedding_init.shape[1]
+    # TODO(mnuke): try l2 on rel embedding as well
     rel_embedding_layer = Embedding(rel_vocab_size,
-        rel_embedding_size,
-        weights=[rel_embedding_init],
-        trainable=True)
+                                    rel_embed_size,
+                                    embeddings_initializer=RandomUniform(-rel_init, rel_init),
+                                    trainable=True)
     embedding_size = embedding_init.shape[1]
     embedding_layer = Embedding(vocab_size,
-        embedding_size,
-        embeddings_regularizer=l2_reg(l2),
-        weights=[embedding_init],
-        trainable=True)
-    # mask_zero=True,
+                                embedding_size,
+                                embeddings_regularizer=l2_reg(l2),
+                                weights=[embedding_init],
+                                trainable=True)
 
     rel_input = Input(shape=(1,), dtype='int32', name='rel')
     rel = rel_embedding_layer(rel_input)
@@ -54,10 +56,15 @@ def dnn_ce(embedding_init, vocab_size, rel_embedding_init, l2,
     tail_avg = Lambda(mask_avg, output_shape=(embedding_size,))([tail, tail_mask_input])
 
     vin = Concatenate(axis=1)([head_avg, tail_avg, rel])
-    u = Dense(hidden_units, activation=hidden_activation, kernel_regularizer=l2_reg(l2))(vin)
-    output = Dense(1, activation='sigmoid')(u)
-    model = Model([rel_input, head_input, head_mask_input, tail_input, tail_mask_input], [output])
+    u = Dense(hidden_units, kernel_initializer='random_normal')(vin)
+    # u = BatchNormalization()(u)
+    u = Activation(hidden_activation)(u)
+    output = Dense(1, kernel_initializer='random_normal', kernel_regularizer=l2_reg(l2))(u)
+    # output = BatchNormalization()(output)
+    output = Activation('sigmoid')(output)
 
+    model = Model([rel_input, head_input, head_mask_input, tail_input, tail_mask_input],
+                  [output])
     model.summary()
 
     return model
