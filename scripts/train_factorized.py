@@ -16,10 +16,6 @@ import tqdm
 import numpy as np
 from functools import partial
 from collections import defaultdict
-from six import iteritems
-import logging
-
-logger = logging.getLogger(__name__)
 
 from src import DATA_DIR
 from src.callbacks import (LambdaCallbackPickable,
