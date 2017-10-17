@@ -146,6 +146,3 @@ def factorized(embedding_init, vocab_size, l2, rel_vocab_size,
     model.summary()
 
     return model
-
-
-
