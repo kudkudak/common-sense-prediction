@@ -7,6 +7,7 @@ import keras
 import keras.backend as K
 from keras import initializers
 from keras.engine import InputSpec
+from keras.layers import Lambda
 
 
 class Bilinear(keras.layers.Layer):
@@ -63,3 +64,14 @@ class Bilinear(keras.layers.Layer):
         }
         base_config = super(Bilinear, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
+
+
+def MaskAvg(output_shape, **args):
+    def _mask_avg(inputs):
+        x, mask = inputs
+        assert K.ndim(x) == 3  # (n_batch, len, dim)
+        assert K.ndim(mask) == 2  # (n_batch, len)
+        return K.sum(x, axis=1) / K.sum(mask, axis=1, keepdims=True)
+
+    return Lambda(_mask_avg, output_shape=output_shape, **args)
+

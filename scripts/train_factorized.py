@@ -46,6 +46,8 @@ def train(config, save_path):
     threshold = argsim_threshold(train_stream, embeddings)
     model = factorized(embedding_init=embeddings,
                        vocab_size=embeddings.shape[0],
+                       embedding_size=embeddings.shape[1],
+                       use_embedding=config['use_embedding'],
                        l2=config['l2'],
                        rel_vocab_size=dataset.rel_vocab_size,
                        rel_init=config['rel_init'],
