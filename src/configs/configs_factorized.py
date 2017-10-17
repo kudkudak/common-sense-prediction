@@ -20,4 +20,5 @@ config.set_root_config({
     'optimizer': 'adagrad',
     'learning_rate': 0.01,
     'embedding_file': 'embeddings/LiACL/embeddings_OMCS.txt',
+    'batch_norm': False,
 })
