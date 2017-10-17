@@ -63,6 +63,8 @@ def train(config, save_path):
         optimizer = Adam(config['learning_rate'])
     elif config['optimizer'] == 'rmsprop':
         optimizer = RMSprop(lr=config['learning_rate'])
+    elif config['optimizer'] == 'sgd':
+        optimizer = SGD(lr=config['learning_rate'], momentum=config['momentum'], nesterov=True)
     else:
         raise NotImplementedError('optimizer ', optimizer, ' must be one of ["adagrad", "adam"]')
 

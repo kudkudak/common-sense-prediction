@@ -25,7 +25,8 @@ from keras.regularizers import l2 as l2_reg
 
 
 def dnn_ce(embedding_init, vocab_size, rel_init, rel_embed_size,
-           rel_vocab_size, l2, hidden_units, hidden_activation):
+           rel_vocab_size, l2, hidden_units, hidden_activation,
+           batch_norm):
     # TODO(kudkudak): Add scaling
     rel_embedding_layer = Embedding(rel_vocab_size,
                                     rel_embed_size,
@@ -64,7 +65,10 @@ def dnn_ce(embedding_init, vocab_size, rel_init, rel_embed_size,
     # u = BatchNormalization()(u)
     u = Activation(hidden_activation)(u)
     output = Dense(1, kernel_initializer='random_normal', kernel_regularizer=l2_reg(l2))(u)
-    # output = BatchNormalization()(output)
+
+    if batch_norm:
+        output = BatchNormalization()(output)
+
     output = Activation('sigmoid')(output)
 
     model = Model([rel_input, head_input, head_mask_input, tail_input, tail_mask_input],
@@ -134,7 +138,15 @@ def factorized(embedding_init, vocab_size, l2, rel_vocab_size,
 
     if bias_trick:
         # stan's bias trick
-        score = Dense(1, kernel_initializer='ones', bias_initializer=Constant(bias_init), trainable=True)(score)
+        score = Dense(1,
+                      kernel_initializer='ones',
+                      bias_initializer=Constant(bias_init),
+                      kernel_regularizer=l2_reg(l2),
+                      trainable=True,)(score)
+    else:
+        score = Dense(1,
+                      kernel_regularizer=l2_reg(l2),
+                      trainable=True,)(score)
 
     if batch_norm:
         score = BatchNormalization()(score)

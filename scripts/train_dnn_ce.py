@@ -39,7 +39,8 @@ def train(config, save_path):
                    rel_vocab_size=dataset.rel_vocab_size,
                    rel_embed_size=config['rel_vec_size'],
                    hidden_units=config['hidden_units'],
-                   hidden_activation=config['activation'])
+                   hidden_activation=config['activation'],
+                   batch_norm=config['batch_norm'])
     model.compile(optimizer=Adagrad(config['learning_rate']),
                   loss='binary_crossentropy',
                   metrics=['binary_crossentropy', 'accuracy'])
