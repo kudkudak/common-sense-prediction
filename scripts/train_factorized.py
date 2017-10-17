@@ -54,7 +54,8 @@ def train(config, save_path):
                        hidden_activation=config['activation'],
                        merge=config['merge'],
                        merge_weight=config['merge_weight'],
-                       batch_norm=config['batch_norm'])
+                       batch_norm=config['batch_norm'],
+                       bias_trick=config['bias_trick'])
 
     if config['optimizer'] == 'adagrad':
         optimizer = Adagrad(config['learning_rate'])

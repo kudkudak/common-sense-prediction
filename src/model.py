@@ -76,7 +76,7 @@ def dnn_ce(embedding_init, vocab_size, rel_init, rel_embed_size,
 
 def factorized(embedding_init, vocab_size, l2, rel_vocab_size,
                rel_init, bias_init, hidden_units, hidden_activation,
-               merge, merge_weight, batch_norm):
+               merge, merge_weight, batch_norm, bias_trick):
     #TODO(mnuke): batchnorm after embeddings as well?
     embedding_size = embedding_init.shape[1]
     embedding_layer = Embedding(vocab_size,
@@ -132,13 +132,14 @@ def factorized(embedding_init, vocab_size, l2, rel_vocab_size,
     else:
         raise NotImplementedError('Merge function ', merge, ' must be one of ["add","maximum"]')
 
-    # stan's bias trick
-    bias = Dense(1, kernel_initializer='ones', bias_initializer=Constant(bias_init), trainable=True)(score)
+    if bias_trick:
+        # stan's bias trick
+        score = Dense(1, kernel_initializer='ones', bias_initializer=Constant(bias_init), trainable=True)(score)
 
-    if batch_norm == True:
-        bias = BatchNormalization()(bias)
+    if batch_norm:
+        score = BatchNormalization()(score)
 
-    output = Activation(activation='sigmoid')(bias)
+    output = Activation(activation='sigmoid')(score)
 
     model = Model([rel_input, head_input, head_mask_input,
                    tail_input, tail_mask_input], [output])
