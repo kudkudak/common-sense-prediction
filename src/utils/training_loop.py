@@ -39,7 +39,7 @@ def save_loop_state(epoch, logs, save_path):
     pickle.dump(loop_state, open(os.path.join(save_path, "loop_state.pkl"), "wb"))
 
 
-def training_loop(model, train, epochs, steps_per_epoch, monitor='val_acc', valid=None, valid_steps=None,
+def training_loop(model, train, epochs, steps_per_epoch, valid=None, valid_steps=None,
                   save_path=None, acc_monitor='val_acc', callbacks=[]):
     loop_state = {'last_epoch_done_id': -1}
 
@@ -62,8 +62,8 @@ def training_loop(model, train, epochs, steps_per_epoch, monitor='val_acc', vali
                                          mode='max',
                                          filepath=os.path.join(save_path, "model.h5")))
         #optimization
-        callbacks.append(EarlyStopping(monitor=acc_monitor, patience=5))
-        callbacks.append(ReduceLROnPlateau(monitor=acc_monitor, patience=5))
+        # callbacks.append(EarlyStopping(monitor=acc_monitor, patience=10))
+        callbacks.append(ReduceLROnPlateau(monitor=acc_monitor, patience=10))
 
     model.fit_generator(generator=train,
                         steps_per_epoch=steps_per_epoch,
