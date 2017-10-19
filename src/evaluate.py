@@ -22,12 +22,12 @@ def evaluate_fit_threshold(model, dev1_stream, dev2_stream, test_stream):
                       for thr in tqdm.tqdm(thresholds, total=len(thresholds))]
     optimal_threshold = thresholds[np.argmax(threshold_accs)]
 
-    eval_results = {
+    results = {
         "scores_dev": scores_dev1.flatten().tolist(),
         "scores_dev2": scores_dev2.flatten().tolist(),
         "scores_test": scores_test.flatten().tolist(),
         "threshold": optimal_threshold.item(),
     }
-    return eval_results
+    return results
 
 

@@ -21,7 +21,8 @@ from keras.optimizers import Adagrad
 from src import DATA_DIR
 from src.callbacks import (LambdaCallbackPickable,
                            evaluate_on_data_stream,
-                           evaluate_with_threshold_fitting)
+                           evaluate_with_threshold_fitting,
+                           SaveBestScore)
 from src.configs import configs_dnn_ce
 from src.data import Dataset
 from src.evaluate import evaluate_fit_threshold
@@ -64,6 +65,10 @@ def train(config, save_path):
         model=model, data_stream=dev1_stream, prefix="dev1/")))
     callbacks.append(LambdaCallbackPickable(on_epoch_end=evaluate_on_data_stream(
         model=model, data_stream=dev2_stream, prefix="dev2/")))
+    callbacks.append(SaveBestScore(save_path=save_path,
+                                   dev1_stream=dev1_stream,
+                                   dev2_stream=dev2_stream,
+                                   test_stream=test_stream))
 
     training_loop(model=model,
                   train=endless_data_stream(train_stream),
@@ -72,11 +77,6 @@ def train(config, save_path):
                   acc_monitor='dev2/acc_thr',
                   save_path=save_path,
                   callbacks=callbacks)
-
-    # Save best scores
-    model.load_weights(os.path.join(save_path, 'model.h5'))
-    eval_results = evaluate_fit_threshold(model, dev1_stream, dev2_stream, test_stream)
-    json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
 
 
 if __name__ == '__main__':
