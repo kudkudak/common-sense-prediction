@@ -19,9 +19,9 @@ import numpy as np
 import tqdm
 
 from src import DATA_DIR
-from src.callbacks import (LambdaCallbackPickable,
-                           evaluate_on_data_stream,
-                           evaluate_with_threshold_fitting)
+from src.callbacks import (EvaluateOnDataStream,
+                           EvaluateWithThresholdFitting,
+                           SaveBestScore)
 from src.configs import configs_factorized
 from src.data import Dataset
 from src.evaluate import evaluate_fit_threshold
@@ -33,6 +33,8 @@ from src.utils.vegab import wrap, MetaSaver
 
 
 def train(config, save_path):
+    np.random.seed(config['random_seed'])
+
     word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
     dataset = Dataset(DATA_DIR)
 
@@ -77,12 +79,16 @@ def train(config, save_path):
 
     # Prepare callbacks
     callbacks = []
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=evaluate_with_threshold_fitting(
-        model=model, dev2=dev2_stream, dev1=dev1_stream, test=test_stream)))
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=evaluate_on_data_stream(
-        model=model, data_stream=dev1_stream, prefix="dev1/")))
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=evaluate_on_data_stream(
-        model=model, data_stream=dev2_stream, prefix="dev2/")))
+    callbacks.append(EvaluateWithThresholdFitting(model=model,
+                                                  dev2=dev2_stream,
+                                                  dev1=dev1_stream,
+                                                  test=test_stream))
+    callbacks.append(EvaluateOnDataStream(model=model,
+                                          data_stream=dev1_stream,
+                                          prefix="dev1/"))
+    callbacks.append(EvaluateOnDataStream(model=model,
+                                          data_stream=dev2_stream,
+                                          prefix="dev2/"))
     callbacks.append(SaveBestScore(save_path=save_path,
                                    dev1_stream=dev1_stream,
                                    dev2_stream=dev2_stream,

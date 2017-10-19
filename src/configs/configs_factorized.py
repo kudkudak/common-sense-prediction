@@ -24,4 +24,5 @@ config.set_root_config({
     'batch_norm': True,
     'bias_trick': True,
     'momentum': True,
+    'random_seed': 0,
 })
