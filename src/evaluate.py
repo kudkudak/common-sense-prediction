@@ -23,7 +23,7 @@ def evaluate_fit_threshold(model, dev1_stream, dev2_stream, test_stream):
     optimal_threshold = thresholds[np.argmax(threshold_accs)]
 
     results = {
-        "scores_dev": scores_dev1.flatten().tolist(),
+        "scores_dev1": scores_dev1.flatten().tolist(),
         "scores_dev2": scores_dev2.flatten().tolist(),
         "scores_test": scores_test.flatten().tolist(),
         "threshold": optimal_threshold.item(),

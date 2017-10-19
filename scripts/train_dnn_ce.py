@@ -19,9 +19,8 @@ import keras
 from keras.optimizers import Adagrad
 
 from src import DATA_DIR
-from src.callbacks import (LambdaCallbackPickable,
-                           evaluate_on_data_stream,
-                           evaluate_with_threshold_fitting,
+from src.callbacks import (EvaluateOnDataStream,
+                           EvaluateWithThresholdFitting,
                            SaveBestScore)
 from src.configs import configs_dnn_ce
 from src.data import Dataset
@@ -33,6 +32,8 @@ from src.utils.vegab import wrap, MetaSaver
 
 
 def train(config, save_path):
+    np.random.seed(config['random_seed'])
+
     word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
     dataset = Dataset(DATA_DIR)
 
@@ -53,23 +54,28 @@ def train(config, save_path):
 
     # Get data
     train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index)
-    test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
-    dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
-    dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
+    test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index, shuffle=False)
+    dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index, shuffle=False)
+    dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index, shuffle=False)
 
-    # Prepare callbacks
+    # Evaluation callbacks
     callbacks = []
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=evaluate_with_threshold_fitting(
-        model=model, dev2=dev2_stream, dev1=dev1_stream, test=test_stream)))
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=evaluate_on_data_stream(
-        model=model, data_stream=dev1_stream, prefix="dev1/")))
-    callbacks.append(LambdaCallbackPickable(on_epoch_end=evaluate_on_data_stream(
-        model=model, data_stream=dev2_stream, prefix="dev2/")))
+    callbacks.append(EvaluateWithThresholdFitting(model=model,
+                                                  dev2=dev2_stream,
+                                                  dev1=dev1_stream,
+                                                  test=test_stream))
+    callbacks.append(EvaluateOnDataStream(model=model,
+                                          data_stream=dev1_stream,
+                                          prefix="dev1/"))
+    callbacks.append(EvaluateOnDataStream(model=model,
+                                          data_stream=dev2_stream,
+                                          prefix="dev2/"))
     callbacks.append(SaveBestScore(save_path=save_path,
                                    dev1_stream=dev1_stream,
                                    dev2_stream=dev2_stream,
                                    test_stream=test_stream))
 
+    # Train
     training_loop(model=model,
                   train=endless_data_stream(train_stream),
                   epochs=config['epochs'],

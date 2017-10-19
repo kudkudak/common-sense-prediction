@@ -10,7 +10,8 @@ import fuel
 from fuel import config
 from fuel.datasets import IndexableDataset
 from fuel.streams import DataStream
-from fuel.schemes import ShuffledScheme
+from fuel.schemes import (SequentialScheme,
+                          ShuffledScheme)
 from fuel.transformers import (SourcewiseTransformer,
                                Transformer,
                                AgnosticTransformer,
@@ -54,37 +55,39 @@ class Dataset(object):
         self.rel2index = rel2index
         self.rel_vocab_size = len(rel2index)
 
-    def train_data_stream(self, batch_size, word2index):
+    def train_data_stream(self, batch_size, word2index, **args):
         return self.data_stream(self.train_dataset, batch_size, word2index,
-                                target='negative_sampling')
+                                target='negative_sampling', name='train', **args)
 
-    def test_data_stream(self, batch_size, word2index):
+    def test_data_stream(self, batch_size, word2index, **args):
         return self.data_stream(self.test_dataset, batch_size, word2index,
-                                target='score')
+                                target='score', name='test', **args)
 
-    def dev1_data_stream(self, batch_size, word2index):
+    def dev1_data_stream(self, batch_size, word2index, **args):
         return self.data_stream(self.dev1_dataset, batch_size, word2index,
-                                target='score')
+                                target='score', name='dev1', **args)
 
-    def dev2_data_stream(self, batch_size, word2index):
+    def dev2_data_stream(self, batch_size, word2index, **args):
         return self.data_stream(self.dev2_dataset, batch_size, word2index,
-                                target='score')
+                                target='score', name='dev2', **args)
 
-    #TODO(mnuke): sample_negative and keep_score are mutually exclusive, combine them better than target var?
-    def data_stream(self, dataset, batch_size, word2index, target='negative_sampling'):
+    def data_stream(self, dataset, batch_size, word2index, target='negative_sampling', name=None, shuffle=True):
         batches_per_epoch = int(np.ceil(dataset.num_examples / float(batch_size)))
-        data_stream = DataStream(dataset, iteration_scheme=ShuffledScheme(dataset.num_examples, batch_size))
+        if shuffle:
+            iteration_scheme = ShuffledScheme(dataset.num_examples, batch_size)
+        else:
+            iteration_scheme = SequentialScheme(dataset.num_examples, batch_size)
+        data_stream = DataStream(dataset, iteration_scheme=iteration_scheme)
         data_stream = NumberizeWords(data_stream, word2index, default=word2index[UNKNOWN_TOKEN],
             which_sources=('head', 'tail'))
         data_stream = NumberizeWords(data_stream, self.rel2index, which_sources=('rel'))
 
-        #TODO(mnuke): get name of dataset in log
         if target == 'negative_sampling':
-            logger.info("target is negative sampling")
+            logger.info('target for data stream ' + name + ' is negative sampling')
             data_stream = FilterSources(data_stream, sources=('head', 'tail', 'rel'))
             data_stream = NegativeSampling(data_stream)
         elif target == 'score':
-            logger.info("target is score")
+            logger.info('target for data stream ' + name + ' is score')
             data_stream = Rename(data_stream, {'score': 'target'})
         else:
             raise NotImplementedError('target ', target, ' must be one of "score" or "negative_sampling"')
