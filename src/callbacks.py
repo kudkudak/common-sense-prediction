@@ -130,3 +130,13 @@ def evaluate_with_threshold_fitting(model, dev1, dev2, test=None):
                    val_data_thr=dev1,
                    val_data=dev2,
                    test_data=test)
+
+
+def _predict_scores(model, data_stream):
+    scores = []
+    targets = []
+    for x_batch, y_batch in data_stream.get_epoch_iterator():
+        scores.append(model.predict_on_batch(x_batch))
+        targets.append(y_batch)
+
+    return np.concatenate(scores), np.concatenate(targets)

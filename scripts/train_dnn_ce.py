@@ -12,6 +12,8 @@ TODO:
 2. Speed up parallel data loading
 3. Full snapshoting (including callbacks)
 """
+import os
+
 import numpy as np
 import keras
 from keras.optimizers import Adagrad
@@ -22,6 +24,7 @@ from src.callbacks import (LambdaCallbackPickable,
                            evaluate_with_threshold_fitting)
 from src.configs import configs_dnn_ce
 from src.data import Dataset
+from src.evaluate import evaluate_fit_threshold
 from src.model import dnn_ce
 from src.utils.data_loading import load_embeddings, endless_data_stream
 from src.utils.training_loop import training_loop
@@ -69,6 +72,11 @@ def train(config, save_path):
                   acc_monitor='dev2/acc_thr',
                   save_path=save_path,
                   callbacks=callbacks)
+
+    # Save best scores
+    model.load_weights(os.path.join(save_path, 'model.h5'))
+    eval_results = evaluate_fit_threshold(model, dev1_stream, dev2_stream, test_stream)
+    json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
 
 
 if __name__ == '__main__':

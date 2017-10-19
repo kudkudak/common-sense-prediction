@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Trains ACL Bilinear Factorized model
+Trains Factorized model
 
 Run as:
 
 python scripts/train_factorized.py root results/test1
 
 """
-from collections import defaultdict
-from functools import partial
+import json
+import os
 
 import keras
 from keras.optimizers import (Adagrad,
@@ -24,6 +24,7 @@ from src.callbacks import (LambdaCallbackPickable,
                            evaluate_with_threshold_fitting)
 from src.configs import configs_factorized
 from src.data import Dataset
+from src.evaluate import evaluate_fit_threshold
 from src.model import factorized
 from src.utils.data_loading import load_embeddings, endless_data_stream
 from src.utils.tools import argsim_threshold
@@ -90,6 +91,11 @@ def train(config, save_path):
                   acc_monitor='dev2/acc_thr',
                   save_path=save_path,
                   callbacks=callbacks)
+
+    # Save best scores
+    model.load_weights(os.path.join(save_path, 'model.h5'))
+    eval_results = evaluate_fit_threshold(model, dev1_stream, dev2_stream, test_stream)
+    json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
 
 
 if __name__ == '__main__':
