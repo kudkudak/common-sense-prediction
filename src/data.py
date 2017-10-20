@@ -71,7 +71,7 @@ class Dataset(object):
         return self.data_stream(self.dev2_dataset, batch_size, word2index,
                                 target='score', name='dev2', **args)
 
-    def data_stream(self, dataset, batch_size, word2index, target='negative_sampling', name=None, shuffle=True):
+    def data_stream(self, dataset, batch_size, word2index, target='negative_sampling', name=None, shuffle=False):
         batches_per_epoch = int(np.ceil(dataset.num_examples / float(batch_size)))
         if shuffle:
             iteration_scheme = ShuffledScheme(dataset.num_examples, batch_size)

@@ -39,7 +39,7 @@ def train(config, save_path):
     dataset = Dataset(DATA_DIR)
 
     # Get data
-    train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index)
+    train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True)
     test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
     dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
     dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)

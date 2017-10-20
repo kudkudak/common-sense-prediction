@@ -53,10 +53,10 @@ def train(config, save_path):
                   metrics=['binary_crossentropy', 'accuracy'])
 
     # Get data
-    train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index)
-    test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index, shuffle=False)
-    dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index, shuffle=False)
-    dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index, shuffle=False)
+    train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True)
+    test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
+    dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
+    dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
 
     # Evaluation callbacks
     callbacks = []

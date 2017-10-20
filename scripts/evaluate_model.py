@@ -18,16 +18,15 @@ def evaluate(save_path):
 
     word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
     dataset = Dataset(DATA_DIR)
-
     model = load_model(os.path.join(save_path, 'model.h5'))
 
-    # Get data
     dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
     dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
     test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
 
     eval_results = evaluate_fit_threshold(model, dev1_stream, dev2_stream, test_stream)
     json.dump(eval_results, open(os.path.join(save_path, "eval_results.json"), "w"))
+
 
 if __name__ == '__main__':
     wrap_no_config_registry(evaluate)
