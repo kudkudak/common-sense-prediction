@@ -51,6 +51,7 @@ def train(config, save_path):
                        vocab_size=embeddings.shape[0],
                        embedding_size=embeddings.shape[1],
                        use_embedding=config['use_embedding'],
+                       separate_dense=config['separate_dense'],
                        l2=config['l2'],
                        rel_vocab_size=dataset.rel_vocab_size,
                        rel_init=config['rel_init'],
