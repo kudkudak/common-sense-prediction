@@ -154,6 +154,7 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
         head_tail = Dense(1, kernel_initializer='ones')(head_tail)
 
     to_merge = []
+
     if use_headtail:
         to_merge.append(head_tail)
     if use_headrel:
@@ -161,17 +162,19 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
     if use_tailrel:
         to_merge.append(rel_tail)
 
-    if merge == 'add':
-        score = Add()(to_merge)
-    elif merge == 'max':
-        score = Maximum()([head_rel, rel_tail, head_tail])
-    elif merge == 'avg':
-        score = Average()([head_rel, rel_tail, head_tail])
+    if len(to_merge) > 1:
+        if merge == 'add':
+            score = Add()(to_merge)
+        elif merge == 'max':
+            score = Maximum()([head_rel, rel_tail, head_tail])
+        elif merge == 'avg':
+            score = Average()([head_rel, rel_tail, head_tail])
+        else:
+            raise NotImplementedError('Merge function ', merge, ' must be one of ["add","maximum"]')
     else:
-        raise NotImplementedError('Merge function ', merge, ' must be one of ["add","maximum"]')
+        score = to_merge[0]
 
     if bias_trick:
-        # stan's bias trick
         score = Dense(1,
                       kernel_initializer='ones',
                       bias_initializer=Constant(bias_init),

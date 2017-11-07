@@ -19,7 +19,7 @@ from keras.optimizers import (Adagrad,
 import numpy as np
 
 from src import DATA_DIR
-from src.callbacks import (EvaluateOnDataStream,
+from src.callbacks import (EvaluateOnDataStream, _evaluate_with_threshold_fitting,
                            EvaluateWithThresholdFitting,
                            SaveBestScore)
 from src.configs import configs_factorized
@@ -45,7 +45,8 @@ def train(config, save_path):
     dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
 
     # Initialize Model
-    threshold = argsim_threshold(train_stream, embeddings)
+    threshold = argsim_threshold(dev1_stream, embeddings, N=10000)
+    print("Found argsim threshold " + str(threshold))
     model = factorized(embedding_init=embeddings,
         vocab_size=embeddings.shape[0],
         embedding_size=embeddings.shape[1],
@@ -96,6 +97,15 @@ def train(config, save_path):
         dev1_stream=dev1_stream,
         dev2_stream=dev2_stream,
         test_stream=test_stream))
+
+    # Small hack to make sure threshold fitting works
+    _evaluate_with_threshold_fitting(
+        epoch=-1,
+        logs={},
+        model = model,
+        val_data_thr = dev1_stream,
+        val_data = dev2_stream,
+        test_data = test_stream)
 
     training_loop(model=model,
         train=endless_data_stream(train_stream),

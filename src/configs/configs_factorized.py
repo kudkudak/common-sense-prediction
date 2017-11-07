@@ -25,7 +25,7 @@ config.set_root_config({
     'embedding_file': 'embeddings/LiACL/embeddings_OMCS.txt',
     'use_embedding': True,
     'batch_norm': True,
-    'bias_trick': True,
+    'bias_trick': False,
     'momentum': True,
     'random_seed': 0,
 })
