@@ -79,7 +79,9 @@ def dnn_ce(embedding_init, embedding_size, vocab_size, use_embedding,
 
 def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
                l2, rel_vocab_size, rel_init, bias_init, hidden_units,
-               hidden_activation, merge, merge_weight, batch_norm, bias_trick, separate_dense=False):
+               hidden_activation, merge, merge_weight, batch_norm, bias_trick,
+               use_tailrel=True, use_headrel=True,
+               use_headtail=True, share_mode=False):
     """
     score(head, rel, tail) = s1(head, rel) + s2(rel, tail) + s3(tail, head)
     s1(head, rel) = <Ahead, Brel> = headA^TBrel
@@ -101,21 +103,32 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
                                     embeddings_initializer=RandomUniform(-rel_init, rel_init),
                                     trainable=True)
 
-    if separate_dense:
+    # How much are matrices in each term (e.g. score(head, tail)) shared?
+    if share_mode == 0:
+        # Least shared
         dense_layer_head1 = Dense(hidden_units, activation=hidden_activation)
         dense_layer_head2 = Dense(hidden_units, activation=hidden_activation)
         dense_layer_rel1 = Dense(hidden_units, activation=hidden_activation)
         dense_layer_rel2 = Dense(hidden_units, activation=hidden_activation)
         dense_layer_tail1 = Dense(hidden_units, activation=hidden_activation)
         dense_layer_tail2 = Dense(hidden_units, activation=hidden_activation)
-    else:
+    elif share_mode == 1:
         dense_layer_head1 = Dense(hidden_units, activation=hidden_activation)
         dense_layer_head2 = Dense(hidden_units, activation=hidden_activation)
         dense_layer_rel1 = dense_layer_head1
         dense_layer_rel2 = dense_layer_head2
         dense_layer_tail1 = dense_layer_head1
         dense_layer_tail2 = dense_layer_head2
-
+    elif share_mode == 2:
+        # Most shared
+        dense_layer_head1 = Dense(hidden_units, activation=hidden_activation)
+        dense_layer_head2 = dense_layer_head1
+        dense_layer_rel1 = dense_layer_head1
+        dense_layer_rel2 = dense_layer_head2
+        dense_layer_tail1 = dense_layer_head1
+        dense_layer_tail2 = dense_layer_head2
+    else:
+        raise NotImplementedError()
 
     head_input = Input(shape=(None,), dtype='int32', name='head')
     head_mask_input = Input(shape=(None,), dtype='float32', name='head_mask')
@@ -140,8 +153,16 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
         rel_tail = Dense(1, kernel_initializer='ones')(rel_tail)
         head_tail = Dense(1, kernel_initializer='ones')(head_tail)
 
+    to_merge = []
+    if use_headtail:
+        to_merge.append(head_tail)
+    if use_headrel:
+        to_merge.append(head_rel)
+    if use_tailrel:
+        to_merge.append(rel_tail)
+
     if merge == 'add':
-        score = Add()([head_rel, rel_tail, head_tail])
+        score = Add()(to_merge)
     elif merge == 'max':
         score = Maximum()([head_rel, rel_tail, head_tail])
     elif merge == 'avg':
