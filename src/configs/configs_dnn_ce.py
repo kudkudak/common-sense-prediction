@@ -18,4 +18,7 @@ config.set_root_config({
     # 'lambda_2': 0.0, # Matrix for relation matrix # No identity matrix in DNN CE
     'learning_rate': 0.01,
     'embedding_file': 'embeddings/LiACL/embeddings_OMCS.txt',
+    'use_embedding': True,
+    'batch_norm': False,
+    'random_seed': 0,
 })

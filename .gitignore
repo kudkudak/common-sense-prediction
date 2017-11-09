@@ -1,7 +1,9 @@
 *.swp
 *.pyc
 results/*
+results_old
 data/*
 notebooks/.ipynb_checkpoints/*
 .sync
 csp/
+slurm*

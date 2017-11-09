@@ -4,15 +4,21 @@ Implementatons of callbakcs
 """
 from collections import defaultdict
 from functools import partial
+import json
 import logging
 import numpy as np
+import os
 
 import tqdm
 from keras.callbacks import LambdaCallback
+from keras.models import load_model
+
+from src.evaluate import evaluate_fit_threshold
 
 
 logger = logging.getLogger(__name__)
 
+#TODO(mnuke): remove this?
 class LambdaCallbackPickable(LambdaCallback):
     """
     Plots image and saves each epoch
@@ -39,6 +45,7 @@ class LambdaCallbackPickable(LambdaCallback):
         self.__dict__.update(newstate)
 
 
+#TODO(mnuke): move this to src.evaluate
 def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
     # This is a bit complicated on purpose, because we expect
     # large models it uses batches. But we have small dataset
@@ -66,11 +73,11 @@ def _evaluate_on_data_stream(epoch, logs, model, data_stream, prefix):
     logger.info("")
 
 
-def evaluate_on_data_stream(model, data_stream, prefix):
-    return partial(_evaluate_on_data_stream,
-                   model=model,
-                   data_stream=data_stream,
-                   prefix=prefix)
+def EvaluateOnDataStream(model, data_stream, prefix):
+    return LambdaCallback(on_epoch_end=partial(_evaluate_on_data_stream,
+                                               model=model,
+                                               data_stream=data_stream,
+                                               prefix=prefix))
 
 
 def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data, test_data=None):
@@ -124,9 +131,30 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
         logger.info("Finished testing, test/acc_thr=" + str(logs['test/acc_thr']))
 
 
-def evaluate_with_threshold_fitting(model, dev1, dev2, test=None):
-    return partial(_evaluate_with_threshold_fitting,
-                   model=model,
-                   val_data_thr=dev1,
-                   val_data=dev2,
-                   test_data=test)
+def EvaluateWithThresholdFitting(model, dev1, dev2, test=None):
+    return LambdaCallback(on_epoch_end=partial(_evaluate_with_threshold_fitting,
+                                               model=model,
+                                               val_data_thr=dev1,
+                                               val_data=dev2,
+                                               test_data=test))
+
+
+def _evaluate_and_save(logs, save_path, dev1_stream, dev2_stream, test_stream):
+    model = load_model(os.path.join(save_path, 'model.h5'))
+    logger.info('Scoring using best model')
+    results = evaluate_fit_threshold(model=model,
+                                     dev1_stream=dev1_stream,
+                                     dev2_stream=dev2_stream,
+                                     test_stream=test_stream)
+    json.dump(results, open(os.path.join(save_path, "eval_results.json"), "w"))
+    logger.info('Dumped scores')
+
+
+def SaveBestScore(save_path, dev1_stream, dev2_stream, test_stream):
+    return LambdaCallback(on_train_end=partial(_evaluate_and_save,
+                                               save_path=save_path,
+                                               dev1_stream=dev1_stream,
+                                               dev2_stream=dev2_stream,
+                                               test_stream=test_stream))
+
+
