@@ -8,15 +8,12 @@ Run as:
 python scripts/train_factorized.py root results/test1
 
 """
-import json
-import os
 
-import keras
+import numpy as np
 from keras.optimizers import (Adagrad,
                               Adam,
                               SGD,
                               RMSprop)
-import numpy as np
 
 from src import DATA_DIR
 from src.callbacks import (EvaluateOnDataStream, _evaluate_with_threshold_fitting,
@@ -24,7 +21,6 @@ from src.callbacks import (EvaluateOnDataStream, _evaluate_with_threshold_fittin
                            SaveBestScore)
 from src.configs import configs_factorized
 from src.data import Dataset
-from src.evaluate import evaluate_fit_threshold
 from src.model import factorized
 from src.utils.data_loading import load_embeddings, endless_data_stream
 from src.utils.tools import argsim_threshold
@@ -36,7 +32,7 @@ def train(config, save_path):
     np.random.seed(config['random_seed'])
 
     word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
-    dataset = Dataset(DATA_DIR)
+    dataset = Dataset(config['data_dir'])
 
     # Get data
     train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True)
@@ -45,8 +41,8 @@ def train(config, save_path):
     dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
 
     # Initialize Model
-    # threshold = argsim_threshold(train_stream, embeddings, N=1000)
-    threshold = argsim_threshold(dev1_stream, embeddings, N=1000)
+    threshold = argsim_threshold(train_stream, embeddings, N=1000)
+    # threshold = argsim_threshold(dev1_stream, embeddings, N=1000)
     print("Found argsim threshold " + str(threshold))
     model = factorized(embedding_init=embeddings,
         vocab_size=embeddings.shape[0],
@@ -83,12 +79,14 @@ def train(config, save_path):
         loss='binary_crossentropy',
         metrics=['binary_crossentropy', 'accuracy'])
 
-    # Prepare callbacks
+    # Prepare callbacks.
+    # TODO(kudkudak): Slightly confused why we have SaveBestScore AND EvaluateWithThresholdFitting using
+    # different function behind the scenes. It is inviting a bug
     callbacks = []
     callbacks.append(EvaluateWithThresholdFitting(model=model,
         dev2=dev2_stream,
         dev1=dev1_stream,
-        test=test_stream))
+        test=None))  # Never print out test score.
     callbacks.append(EvaluateOnDataStream(model=model,
         data_stream=dev1_stream,
         prefix="dev1/"))
@@ -104,10 +102,10 @@ def train(config, save_path):
     _evaluate_with_threshold_fitting(
         epoch=-1,
         logs={},
-        model = model,
-        val_data_thr = dev1_stream,
-        val_data = dev2_stream,
-        test_data = test_stream)
+        model=model,
+        val_data_thr=dev1_stream,
+        val_data=dev2_stream,
+        test_data=test_stream)
 
     training_loop(model=model,
         train=endless_data_stream(train_stream),

@@ -7,11 +7,13 @@ from src.utils.vegab import ConfigRegistry
 
 config = ConfigRegistry()
 
+# Root should get ~ 91.9/91.96
 config.set_root_config({
     'batch_size': 200,
     'epochs': 30,
     'activation': 'relu',
-    'hidden_units': 150,
+    'hidden_units': 1000,
+    'data_dir': 'LiACL/conceptnet/',
     'merge': 'add',
     'merge_weight': False,
     'rel_init': 0.05,

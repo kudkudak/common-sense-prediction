@@ -26,9 +26,14 @@ def evaluate_fit_threshold(model, dev1_stream, dev2_stream, test_stream):
                       for thr in tqdm.tqdm(thresholds, total=len(thresholds))]
     optimal_threshold = thresholds[np.argmax(threshold_accs)]
     logger.info('optimal threshold is {}'.format(optimal_threshold))
-    logger.info('test accuracy with threshold is {}'.format(
-        np.mean((scores_test > optimal_threshold) == targets_test)))
+    logger.info('dev1 accuracy with threshold is {}'.format(
+        np.mean((scores_dev1 > optimal_threshold) == targets_dev1)))
+    logger.info('dev2 accuracy with threshold is {}'.format(
+        np.mean((scores_dev2 > optimal_threshold) == targets_dev2)))
     results = {
+        "test_thr_acc": np.mean((scores_test > optimal_threshold) == targets_test),
+        "dev2_thr_acc": np.mean((scores_dev2 > optimal_threshold) == targets_dev2),
+        "dev1_thr_acc": np.mean((scores_dev1 > optimal_threshold) == targets_dev1),
         "scores_dev1": scores_dev1.tolist(),
         "scores_dev2": scores_dev2.tolist(),
         "scores_test": scores_test.tolist(),

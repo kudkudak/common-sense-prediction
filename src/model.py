@@ -3,9 +3,7 @@
 Implementatons of keras models
 """
 
-import keras
 import numpy as np
-
 from keras.initializers import (Constant,
                                 RandomUniform)
 from keras.layers import (Activation,
@@ -18,8 +16,7 @@ from keras.layers import (Activation,
                           Embedding,
                           Flatten,
                           Input,
-                          Maximum,
-                          Multiply)
+                          Maximum)
 from keras.models import Model
 from keras.regularizers import l2 as l2_reg
 
@@ -27,25 +24,24 @@ from src.layers import MaskAvg
 
 
 def dnn_ce(embedding_init, embedding_size, vocab_size, use_embedding,
-           rel_init, rel_embed_size, rel_vocab_size, l2, hidden_units,
-           hidden_activation, batch_norm):
+        rel_init, rel_embed_size, rel_vocab_size, l2, hidden_units,
+        hidden_activation, batch_norm):
     # TODO(kudkudak): Add scaling
     embedding_args = {}
     if use_embedding:
         embedding_args['weights'] = [embedding_init]
 
     embedding_layer = Embedding(vocab_size,
-                                embedding_size,
-                                embeddings_regularizer=l2_reg(l2),
-                                trainable=True,
-                                **embedding_args)
+        embedding_size,
+        embeddings_regularizer=l2_reg(l2),
+        trainable=True,
+        **embedding_args)
 
     rel_embedding_layer = Embedding(rel_vocab_size,
-                                    rel_embed_size,
-                                    embeddings_initializer=RandomUniform(-rel_init, rel_init),
-                                    embeddings_regularizer=l2_reg(l2),
-                                    trainable=True)
-
+        rel_embed_size,
+        embeddings_initializer=RandomUniform(-rel_init, rel_init),
+        embeddings_regularizer=l2_reg(l2),
+        trainable=True)
 
     rel_input = Input(shape=(1,), dtype='int32', name='rel')
     rel = rel_embedding_layer(rel_input)
@@ -72,17 +68,17 @@ def dnn_ce(embedding_init, embedding_size, vocab_size, use_embedding,
     output = Activation('sigmoid')(output)
 
     model = Model([rel_input, head_input, head_mask_input, tail_input, tail_mask_input],
-                  [output])
+        [output])
     model.summary()
 
     return model
 
 
 def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
-               l2, rel_vocab_size, rel_init, bias_init, hidden_units,
-               hidden_activation, merge, merge_weight, batch_norm, bias_trick,
-               use_tailrel=True, use_headrel=True, copy_init=False,
-               use_headtail=True, share_mode=False):
+        l2, rel_vocab_size, rel_init, bias_init, hidden_units,
+        hidden_activation, merge, merge_weight, batch_norm, bias_trick,
+        use_tailrel=True, use_headrel=True, copy_init=False,
+        use_headtail=True, share_mode=False):
     """
     score(head, rel, tail) = s1(head, rel) + s2(rel, tail) + s3(tail, head)
     s1(head, rel) = <Ahead, Brel> = headA^TBrel
@@ -93,23 +89,23 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
         embedding_args['weights'] = [embedding_init]
 
     embedding_layer = Embedding(vocab_size,
-                                embedding_size,
-                                embeddings_regularizer=l2_reg(l2),
-                                trainable=True,
-                                **embedding_args)
+        embedding_size,
+        embeddings_regularizer=l2_reg(l2),
+        trainable=True,
+        **embedding_args)
 
     rel_embedding_layer = Embedding(rel_vocab_size,
-                                    embedding_size,
-                                    embeddings_regularizer=l2_reg(l2),
-                                    embeddings_initializer=RandomUniform(-rel_init, rel_init),
-                                    trainable=True)
+        embedding_size,
+        embeddings_regularizer=l2_reg(l2),
+        embeddings_initializer=RandomUniform(-rel_init, rel_init),
+        trainable=True)
 
     # If copy_init==True then
     dense_args = {}
     if copy_init:
         print("Using copy init")
         init = np.zeros(shape=(embedding_size, hidden_units))
-        init[0:embedding_size, 0:embedding_size]= np.eye(embedding_size, embedding_size)
+        init[0:embedding_size, 0:embedding_size] = np.eye(embedding_size, embedding_size)
         dense_args['weights'] = [init, np.zeros(shape=(hidden_units,))]
 
     if share_mode == 0:
@@ -139,7 +135,7 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
     elif share_mode == 4:
         # score = <Ahead, Atail> + <Ahead, Brel> + <Atail, Brel>
         dense_layer_head1 = Dense(hidden_units, activation=hidden_activation, **dense_args)
-        dense_layer_head2 = lambda x:x
+        dense_layer_head2 = lambda x: x
         rel_embedding_layer = Embedding(rel_vocab_size,
             hidden_units,
             embeddings_regularizer=l2_reg(l2),
@@ -152,7 +148,7 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
     elif share_mode == 5:
         # score = <Ahead, Atail> + <Bhead, Crel> + <Dtail, Crel>
         dense_layer_head1 = Dense(hidden_units, activation=hidden_activation, **dense_args)
-        dense_layer_head2 = lambda x:x
+        dense_layer_head2 = lambda x: x
         rel_embedding_layer = Embedding(rel_vocab_size,
             hidden_units,
             embeddings_regularizer=l2_reg(l2),
@@ -217,14 +213,14 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
 
     if bias_trick:
         score = Dense(1,
-                      kernel_initializer='ones',
-                      bias_initializer=Constant(bias_init),
-                      kernel_regularizer=l2_reg(l2),
-                      trainable=True,)(score)
+            kernel_initializer='ones',
+            bias_initializer=Constant(bias_init),
+            kernel_regularizer=l2_reg(l2),
+            trainable=True, )(score)
     else:
         score = Dense(1,
-                      kernel_regularizer=l2_reg(l2),
-                      trainable=True,)(score)
+            kernel_regularizer=l2_reg(l2),
+            trainable=True, )(score)
 
     if batch_norm:
         score = BatchNormalization()(score)
@@ -232,7 +228,7 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
     output = Activation(activation='sigmoid')(score)
 
     model = Model([rel_input, head_input, head_mask_input,
-                   tail_input, tail_mask_input], [output])
+        tail_input, tail_mask_input], [output])
     model.summary()
 
     return model

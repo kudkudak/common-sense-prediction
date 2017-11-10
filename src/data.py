@@ -21,13 +21,15 @@ from fuel.transformers import (SourcewiseTransformer,
 import numpy as np
 import pandas as pd
 
+from src import DATA_DIR
+
 logger = logging.getLogger(__name__)
 UNKNOWN_TOKEN = 'UUUNKKK'
-REL_FILE = 'LiACL/conceptnet/rel.txt'
-TRAIN_FILE = 'LiACL/conceptnet/train100k.txt'
-TEST_FILE = 'LiACL/conceptnet/test.txt'
-DEV1_FILE = 'LiACL/conceptnet/dev1.txt'
-DEV2_FILE = 'LiACL/conceptnet/dev2.txt'
+REL_FILE = 'rel.txt'
+TRAIN_FILE = 'train100k.txt'
+TEST_FILE = 'test.txt'
+DEV1_FILE = 'dev1.txt'
+DEV2_FILE = 'dev2.txt'
 
 class Dataset(object):
     def __init__(self, data_dir):
@@ -39,7 +41,13 @@ class Dataset(object):
         self.test_dataset = self.load_data(TEST_FILE)
 
     def load_data(self, data_path):
-        data = pd.read_csv(os.path.join(self.data_dir, data_path),
+        data_path = os.path.join(self.data_dir, data_path)
+        if not os.path.isabs(data_path):
+            data_path = os.path.join(DATA_DIR, data_path)
+
+        logging.info("Automatic path resolution to: " + data_path)
+
+        data = pd.read_csv(data_path,
                            sep="\t", header=None)
         data.columns = ['rel', 'head', 'tail', 'score']
         assert(not data.empty)
@@ -48,6 +56,12 @@ class Dataset(object):
     def load_rel2index(self):
         rel2index = {}
         rel_file = os.path.join(self.data_dir, REL_FILE)
+
+        if not os.path.isabs(rel_file):
+            rel_file = os.path.join(DATA_DIR, rel_file)
+
+        logging.info("Automatic path resolution to: " + rel_file)
+
         with open(rel_file, 'r') as f:
             for index, line in enumerate(f):
                 rel2index[line.strip()] = index
