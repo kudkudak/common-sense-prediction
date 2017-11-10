@@ -86,7 +86,7 @@ def train(config, save_path):
     callbacks.append(EvaluateWithThresholdFitting(model=model,
         dev2=dev2_stream,
         dev1=dev1_stream,
-        test=None))  # Never print out test score.
+        test=None))  # Never print out test score nor track it throughout training - risk of overfitting    .
     callbacks.append(EvaluateOnDataStream(model=model,
         data_stream=dev1_stream,
         prefix="dev1/"))
@@ -106,6 +106,8 @@ def train(config, save_path):
         val_data_thr=dev1_stream,
         val_data=dev2_stream,
         test_data=test_stream)
+
+    # TODO(kududak): Save best val acc test performanc
 
     training_loop(model=model,
         train=endless_data_stream(train_stream),

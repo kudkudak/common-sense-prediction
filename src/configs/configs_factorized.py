@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Implementatons of configs used in ACL model
+Configs for Factorized
 """
 
 from src.utils.vegab import ConfigRegistry
 
 config = ConfigRegistry()
 
-# Root should get ~ 91.9/91.96
+# Root should get ~ 91.9/91.96 (dev2/test)
 config.set_root_config({
     'batch_size': 200,
     'epochs': 30,
@@ -20,7 +20,7 @@ config.set_root_config({
     'l2': 1e-6,
     'optimizer': 'adagrad',
     'learning_rate': 0.01,
-    'share_mode': 1, # 0, 1 or 2.
+    'share_mode': 1,
     'use_headtail': True,
     'use_tailrel': True,
     'use_headrel': True,
@@ -28,7 +28,7 @@ config.set_root_config({
     'use_embedding': True,
     'batch_norm': True,
     'bias_trick': False,
-    'copy_init': False, # Initializes transformation matrices to copy repr
+    'copy_init': False,
     'momentum': True,
     'random_seed': 0,
 })

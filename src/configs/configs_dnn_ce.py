@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Implementatons of configs used in ACL model
+Configs for DNN + CE
 """
 
 from src.utils.vegab import ConfigRegistry
