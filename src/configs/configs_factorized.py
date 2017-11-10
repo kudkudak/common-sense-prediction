@@ -8,6 +8,8 @@ from src.utils.vegab import ConfigRegistry
 config = ConfigRegistry()
 
 # Root should get ~ 91.9/91.96 (dev2/test)
+# share_mode=0 boosts slightly results (~0.1%),
+# similarly tuning regularization (not checked extensively, but around 0.5%)
 config.set_root_config({
     'batch_size': 200,
     'epochs': 30,
