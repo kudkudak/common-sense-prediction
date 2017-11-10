@@ -26,6 +26,7 @@ config.set_root_config({
     'use_embedding': True,
     'batch_norm': True,
     'bias_trick': False,
+    'copy_init': False, # Initializes transformation matrices to copy repr
     'momentum': True,
     'random_seed': 0,
 })

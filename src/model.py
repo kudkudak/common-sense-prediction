@@ -4,6 +4,8 @@ Implementatons of keras models
 """
 
 import keras
+import numpy as np
+
 from keras.initializers import (Constant,
                                 RandomUniform)
 from keras.layers import (Activation,
@@ -61,7 +63,6 @@ def dnn_ce(embedding_init, embedding_size, vocab_size, use_embedding,
 
     vin = Concatenate(axis=1)([head_avg, tail_avg, rel])
     u = Dense(hidden_units, kernel_initializer='random_normal')(vin)
-    # u = BatchNormalization()(u)
     u = Activation(hidden_activation)(u)
     output = Dense(1, kernel_initializer='random_normal', kernel_regularizer=l2_reg(l2))(u)
 
@@ -80,7 +81,7 @@ def dnn_ce(embedding_init, embedding_size, vocab_size, use_embedding,
 def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
                l2, rel_vocab_size, rel_init, bias_init, hidden_units,
                hidden_activation, merge, merge_weight, batch_norm, bias_trick,
-               use_tailrel=True, use_headrel=True,
+               use_tailrel=True, use_headrel=True, copy_init=False,
                use_headtail=True, share_mode=False):
     """
     score(head, rel, tail) = s1(head, rel) + s2(rel, tail) + s3(tail, head)
@@ -103,30 +104,64 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
                                     embeddings_initializer=RandomUniform(-rel_init, rel_init),
                                     trainable=True)
 
-    # How much are matrices in each term (e.g. score(head, tail)) shared?
+    # If copy_init==True then
+    dense_args = {}
+    if copy_init:
+        print("Using copy init")
+        init = np.zeros(shape=(embedding_size, hidden_units))
+        init[0:embedding_size, 0:embedding_size]= np.eye(embedding_size, embedding_size)
+        dense_args['weights'] = [init, np.zeros(shape=(hidden_units,))]
+
     if share_mode == 0:
-        # Least shared
-        dense_layer_head1 = Dense(hidden_units, activation=hidden_activation)
-        dense_layer_head2 = Dense(hidden_units, activation=hidden_activation)
-        dense_layer_rel1 = Dense(hidden_units, activation=hidden_activation)
-        dense_layer_rel2 = Dense(hidden_units, activation=hidden_activation)
-        dense_layer_tail1 = Dense(hidden_units, activation=hidden_activation)
-        dense_layer_tail2 = Dense(hidden_units, activation=hidden_activation)
+        # score = <Ahead, Btail> + <Chead, Drel> + <Etail, Frel>
+        dense_layer_head1 = Dense(hidden_units, activation=hidden_activation, **dense_args)
+        dense_layer_head2 = Dense(hidden_units, activation=hidden_activation, **dense_args)
+        dense_layer_rel1 = Dense(hidden_units, activation=hidden_activation, **dense_args)
+        dense_layer_rel2 = Dense(hidden_units, activation=hidden_activation, **dense_args)
+        dense_layer_tail1 = Dense(hidden_units, activation=hidden_activation, **dense_args)
+        dense_layer_tail2 = Dense(hidden_units, activation=hidden_activation, **dense_args)
     elif share_mode == 1:
-        dense_layer_head1 = Dense(hidden_units, activation=hidden_activation)
-        dense_layer_head2 = Dense(hidden_units, activation=hidden_activation)
+        # score = <Ahead, Btail> + <Ahead, Brel> + <Btail, Arel>
+        dense_layer_head1 = Dense(hidden_units, activation=hidden_activation, **dense_args)
+        dense_layer_head2 = Dense(hidden_units, activation=hidden_activation, **dense_args)
         dense_layer_rel1 = dense_layer_head1
         dense_layer_rel2 = dense_layer_head2
         dense_layer_tail1 = dense_layer_head1
         dense_layer_tail2 = dense_layer_head2
-    elif share_mode == 2:
-        # Most shared
-        dense_layer_head1 = Dense(hidden_units, activation=hidden_activation)
+    elif share_mode == 3:
+        # score = <Ahead, Atail> + <Ahead, Arel> + <Atail, Arel>
+        dense_layer_head1 = Dense(hidden_units, activation=hidden_activation, **dense_args)
         dense_layer_head2 = dense_layer_head1
         dense_layer_rel1 = dense_layer_head1
         dense_layer_rel2 = dense_layer_head2
         dense_layer_tail1 = dense_layer_head1
         dense_layer_tail2 = dense_layer_head2
+    elif share_mode == 4:
+        # score = <Ahead, Atail> + <Ahead, Brel> + <Atail, Brel>
+        dense_layer_head1 = Dense(hidden_units, activation=hidden_activation, **dense_args)
+        dense_layer_head2 = lambda x:x
+        rel_embedding_layer = Embedding(rel_vocab_size,
+            hidden_units,
+            embeddings_regularizer=l2_reg(l2),
+            embeddings_initializer=RandomUniform(-rel_init, rel_init),
+            trainable=True)
+        dense_layer_rel1 = lambda x: x
+        dense_layer_rel2 = dense_layer_head1
+        dense_layer_tail1 = dense_layer_head1
+        dense_layer_tail2 = dense_layer_head1
+    elif share_mode == 5:
+        # score = <Ahead, Atail> + <Bhead, Crel> + <Dtail, Crel>
+        dense_layer_head1 = Dense(hidden_units, activation=hidden_activation, **dense_args)
+        dense_layer_head2 = lambda x:x
+        rel_embedding_layer = Embedding(rel_vocab_size,
+            hidden_units,
+            embeddings_regularizer=l2_reg(l2),
+            embeddings_initializer=RandomUniform(-rel_init, rel_init),
+            trainable=True)
+        dense_layer_rel1 = lambda x: x
+        dense_layer_rel2 = Dense(hidden_units, activation=hidden_activation, **dense_args)
+        dense_layer_tail1 = Dense(hidden_units, activation=hidden_activation, **dense_args)
+        dense_layer_tail2 = dense_layer_tail1
     else:
         raise NotImplementedError()
 
@@ -144,9 +179,15 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
     rel = rel_embedding_layer(rel_input)
     rel = Flatten()(rel)
 
-    head_rel = Dot(1, normalize=True)([dense_layer_head1(head_avg), dense_layer_head2(rel)])
-    rel_tail = Dot(1, normalize=True)([dense_layer_rel1(rel), dense_layer_rel2(tail_avg)])
-    head_tail = Dot(1, normalize=True)([dense_layer_tail1(head_avg), dense_layer_tail2(tail_avg)])
+    if copy_init:
+        # TODO(kudkudak):Maybe remove this
+        head_rel = Dot(1, normalize=False)([dense_layer_head1(head_avg), dense_layer_head2(rel)])
+        rel_tail = Dot(1, normalize=False)([dense_layer_rel1(rel), dense_layer_rel2(tail_avg)])
+        head_tail = Dot(1, normalize=False)([dense_layer_tail1(head_avg), dense_layer_tail2(tail_avg)])
+    else:
+        head_rel = Dot(1, normalize=True)([dense_layer_head1(head_avg), dense_layer_head2(rel)])
+        rel_tail = Dot(1, normalize=True)([dense_layer_rel1(rel), dense_layer_rel2(tail_avg)])
+        head_tail = Dot(1, normalize=True)([dense_layer_tail1(head_avg), dense_layer_tail2(tail_avg)])
 
     if merge_weight == True:
         head_rel = Dense(1, kernel_initializer='ones')(head_rel)

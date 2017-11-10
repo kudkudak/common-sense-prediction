@@ -23,10 +23,6 @@ def argsim_score(data_stream, embedding):
     Bug proof, TODO: remove later:
     (Pdb) sim[0]
     -0.078352564280480014
-    (Pdb) np.dot(head[0], tail[0])
-    *** ValueError: shapes (1,200) and (1,200) not aligned: 200 (dim 1) != 1 (dim 0)
-    (Pdb) ^[[A^[[D^[[D
-    *** SyntaxError: invalid syntax (<stdin>, line 1)
     (Pdb) np.dot(head[0], tail[0].T)
     matrix([[ 0.08965615]])
     (Pdb) np.diag(head.dot(tail.T))[0]
