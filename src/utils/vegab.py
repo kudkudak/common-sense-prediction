@@ -232,6 +232,8 @@ class Fork(object):
         self.file1.flush()
         self.file2.flush()
 
+    def isatty(self):
+        return self.file1.isatty() and self.file2.isatty()
 
 @contextmanager
 def replace_logging_stream(file_):
@@ -263,7 +265,7 @@ def run_with_redirection(stdout_path, stderr_path, func):
     def func_wrapper(*args, **kwargs):
         with open(stdout_path, 'a', 1) as out_dst:
             with open(stderr_path, 'a', 1) as err_dst:
-                out_fork = Fork(sys.stdout, out_dst)
+                out_fork = (sys.stdout, out_dst)
                 err_fork = Fork(sys.stderr, err_dst)
                 with replace_standard_stream('stderr', err_fork):
                     with replace_standard_stream('stdout', out_fork):
