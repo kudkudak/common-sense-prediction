@@ -34,3 +34,8 @@ config.set_root_config({
     'momentum': True,
     'random_seed': 0,
 })
+
+# Previous version of model, gets around 89%
+c = config['root']
+c['share_mode'] = 4
+config['root_previous_share'] = c
