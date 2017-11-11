@@ -232,7 +232,6 @@ class Fork(object):
         self.file1.flush()
         self.file2.flush()
 
-
 @contextmanager
 def replace_logging_stream(file_):
     root = logging.getLogger()
