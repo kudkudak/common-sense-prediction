@@ -27,6 +27,8 @@ config.set_root_config({
     'use_tailrel': True,
     'use_headrel': True,
     'embedding_file': 'embeddings/LiACL/embeddings_OMCS.txt',
+	'external_embedding_file': 'embeddings/glove/glove.42B.300d.txt',
+    'ext_sub_embedding_file': 'embeddings/glove/glove.42B.300d.sub.txt',
     'use_embedding': True,
     'batch_norm': True,
     'bias_trick': False,
