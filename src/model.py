@@ -7,6 +7,7 @@ import numpy as np
 from keras.initializers import (Constant,
                                 RandomUniform)
 from keras.layers import (Activation,
+                          Dropout,
                           Add,
                           Average,
                           BatchNormalization,
@@ -77,9 +78,11 @@ def dnn_ce(embedding_init, embedding_size, vocab_size, use_embedding,
 def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
         l2, rel_vocab_size, rel_init, bias_init, hidden_units,
         hidden_activation, merge, merge_weight, batch_norm, bias_trick,
-        use_tailrel=True, use_headrel=True, copy_init=False,
+        use_tailrel=True, use_headrel=True, emb_drop=0.0, trainable_word_embeddings=True,
         use_headtail=True, share_mode=False):
     """
+    TODO(kudkudak): Try without biases
+
     score(head, rel, tail) = s1(head, rel) + s2(rel, tail) + s3(tail, head)
     s1(head, rel) = <Ahead, Brel> = headA^TBrel
     """
@@ -91,8 +94,10 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
     embedding_layer = Embedding(vocab_size,
         embedding_size,
         embeddings_regularizer=l2_reg(l2),
-        trainable=True,
+        trainable=trainable_word_embeddings,
         **embedding_args)
+
+    embedding_drop_layer = Dropout(emb_drop)
 
     rel_embedding_layer = Embedding(rel_vocab_size,
         embedding_size,
@@ -100,13 +105,7 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
         embeddings_initializer=RandomUniform(-rel_init, rel_init),
         trainable=True)
 
-    # If copy_init==True then
     dense_args = {}
-    if copy_init:
-        print("Using copy init")
-        init = np.zeros(shape=(embedding_size, hidden_units))
-        init[0:embedding_size, 0:embedding_size] = np.eye(embedding_size, embedding_size)
-        dense_args['weights'] = [init, np.zeros(shape=(hidden_units,))]
 
     if share_mode == 0:
         # score = <Ahead, Btail> + <Chead, Drel> + <Etail, Frel>
@@ -164,26 +163,22 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
     head_input = Input(shape=(None,), dtype='int32', name='head')
     head_mask_input = Input(shape=(None,), dtype='float32', name='head_mask')
     head = embedding_layer(head_input)
+    head = embedding_drop_layer(head)
     head_avg = MaskAvg(output_shape=(embedding_size,))([head, head_mask_input])
 
     tail_input = Input(shape=(None,), dtype='int32', name='tail')
     tail_mask_input = Input(shape=(None,), dtype='float32', name='tail_mask')
     tail = embedding_layer(tail_input)
+    tail = embedding_drop_layer(tail)
     tail_avg = MaskAvg(output_shape=(embedding_size,))([tail, tail_mask_input])
 
     rel_input = Input(shape=(1,), dtype='int32', name='rel')
     rel = rel_embedding_layer(rel_input)
     rel = Flatten()(rel)
 
-    if copy_init:
-        # TODO(kudkudak):Maybe remove this
-        head_rel = Dot(1, normalize=False)([dense_layer_head1(head_avg), dense_layer_head2(rel)])
-        rel_tail = Dot(1, normalize=False)([dense_layer_rel1(rel), dense_layer_rel2(tail_avg)])
-        head_tail = Dot(1, normalize=False)([dense_layer_tail1(head_avg), dense_layer_tail2(tail_avg)])
-    else:
-        head_rel = Dot(1, normalize=True)([dense_layer_head1(head_avg), dense_layer_head2(rel)])
-        rel_tail = Dot(1, normalize=True)([dense_layer_rel1(rel), dense_layer_rel2(tail_avg)])
-        head_tail = Dot(1, normalize=True)([dense_layer_tail1(head_avg), dense_layer_tail2(tail_avg)])
+    head_rel = Dot(1, normalize=True)([dense_layer_head1(head_avg), dense_layer_head2(rel)])
+    rel_tail = Dot(1, normalize=True)([dense_layer_rel1(rel), dense_layer_rel2(tail_avg)])
+    head_tail = Dot(1, normalize=True)([dense_layer_tail1(head_avg), dense_layer_tail2(tail_avg)])
 
     if merge_weight == True:
         head_rel = Dense(1, kernel_initializer='ones')(head_rel)

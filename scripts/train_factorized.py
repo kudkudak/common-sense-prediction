@@ -6,9 +6,7 @@ Trains Factorized model
 Run as:
 
 python scripts/train_factorized.py root results/test1
-
 """
-
 import numpy as np
 from keras.optimizers import (Adagrad,
                               Adam,
@@ -27,8 +25,7 @@ from src.utils.tools import argsim_threshold
 from src.utils.training_loop import training_loop
 from src.utils.vegab import wrap, MetaSaver
 
-
-def train(config, save_path):
+def init_model_and_data(config):
     np.random.seed(config['random_seed'])
 
     word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
@@ -50,10 +47,11 @@ def train(config, save_path):
         use_headtail=config['use_headtail'],
         use_tailrel=config['use_tailrel'],
         use_headrel=config['use_headrel'],
+        emb_drop=config['emb_drop'],
         use_embedding=config['use_embedding'],
         share_mode=config['share_mode'],
         l2=config['l2'],
-        copy_init=config['copy_init'],
+        trainable_word_embeddings=config['trainable_word_embeddings'],
         rel_vocab_size=dataset.rel_vocab_size,
         rel_init=config['rel_init'],
         bias_init=threshold,
@@ -78,6 +76,15 @@ def train(config, save_path):
     model.compile(optimizer=optimizer,
         loss='binary_crossentropy',
         metrics=['binary_crossentropy', 'accuracy'])
+
+    return model, {"train_stream": train_stream, "train_steps": train_steps, "test_stream": test_stream,
+        "dev1_stream": dev1_stream, "dev2_stream": dev2_stream}
+
+def train(config, save_path):
+    model, D = init_model_and_data(config)
+
+    train_stream, dev1_stream, dev2_stream, test_stream, train_steps = D['train_stream'], D['dev1_stream'],\
+        D['dev2_stream'], D['test_stream'], D['train_steps']
 
     # Prepare callbacks.
     # TODO(kudkudak): Slightly confused why we have SaveBestScore AND EvaluateWithThresholdFitting using

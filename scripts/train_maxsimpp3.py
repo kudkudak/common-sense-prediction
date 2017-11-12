@@ -3,37 +3,49 @@
 """
 Trains MaxSim3.6 (neg sample + NN + careful init) and save predictions. Should get to circa 84 dev2 acc.
 
-Run like: python scripts/train_maxsim3.py results/MaxSim3/OMCS --embeddings=/u/jastrzes/l2lwe/data/embeddings/LiACL/embeddings_OMCS.txt
+Run like: python scripts/train_maxsimpp3.py $SCRATCH/l2lwe/results/MaxSim3/OMCS_tst --embeddings=$SCRATCH/l2lwe/data/embeddings/LiACL/embeddings_OMCS.txt
 
 TODO: all_positive" negative sampling from train_maxargsim.py is just better (84.7) worth
 copying over
 """
 
-from src.utils.vegab import wrap_no_config_registry, MetaSaver
-from src import DATA_DIR
-
-import pandas as pd
-import os
-import matplotlib.pylab as plt
-import pandas as pd
-import numpy as np
-import tqdm
-import sys
 import json
+import os
 
+import numpy as np
+import pandas as pd
 import theano.tensor as T
-
+import tqdm
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.initializers import *
 from keras.layers import *
 from keras.models import Model
-from keras.initializers import *
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.optimizers import SGD, Adam
+from keras.optimizers import Adam
 
-from dnn_ce.utils import getWordmap
+def getWordmap(textfile):
+    words={}
+    We = []
+    f = open(textfile,'r')
+    lines = f.readlines()
+    for (n,i) in enumerate(lines):
+        i=i.split()
+        j = 1
+        v = []
+        while j < len(i):
+            v.append(float(i[j]))
+            j += 1
+        words[i[0]]=n
+        We.append(v)
+    words['EXXXXAR'] = n+1
+    We.append([0]*len(v))
+    return (words, np.matrix(We))
+
+from src import DATA_DIR
+from src.utils.vegab import wrap_no_config_registry, MetaSaver
 
 
 def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt",
-        n_neighbours=2, L_1=3e-3, batchsize=100):
+        n_neighbours=2, L_1=3e-3, batchsize=100, feat_type="concat"):
     train = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/train100k.txt"), sep="\t", header=None)
     dev = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/dev1.txt"), sep="\t", header=None)
     dev2 = pd.read_csv(os.path.join(DATA_DIR, "LiACL/conceptnet/dev2.txt"), sep="\t", header=None)
@@ -50,10 +62,15 @@ def train(save_path, embeddings="commonsendata/embeddings_glove200_norm.txt",
     for v in We_rel:
         We_rel[v] = We_rel[v] / np.linalg.norm(We_rel[v]) * np.linalg.norm(We[0])
 
-    def featurize_triplet(v):
-        return np.concatenate([np.array([We[words.get(w, 0)] for w in v[1].split()]).mean(axis=0),
-            We_rel.get(v[0], We_rel['random']).reshape(1, -1),
-            np.array([We[words.get(w, 0)] for w in v[2].split()]).mean(axis=0)]).reshape(-1, )
+    if feat_type == "concat":
+        def featurize_triplet(v):
+            return np.concatenate([np.array([We[words.get(w, 0)] for w in v[1].split()]).mean(axis=0),
+                We_rel.get(v[0], We_rel['random']).reshape(1, -1),
+                np.array([We[words.get(w, 0)] for w in v[2].split()]).mean(axis=0)]).reshape(-1, )
+    elif feat_type == "argsim":
+        raise NotImplementedError()
+    else:
+        pass
 
     def featurize_df(df):
         feat = np.zeros(shape=(len(df), 3 * dim))
