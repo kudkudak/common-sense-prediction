@@ -454,7 +454,8 @@ def wrap(config_registry, func, plugins=[], **training_func_kwargs):
 
     # Do some configurations, then run with redirection
     def call_training_func():
-        pprint.pprint(config)
+        #pprint.pprint(config)
+        # print(config)
         logger.info("Calling function {}".format(func.__name__))
         func(config, args.save_path, **training_func_kwargs)
         logger.info("Finished {}".format(func.__name__))

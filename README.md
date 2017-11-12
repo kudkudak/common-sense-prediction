@@ -16,12 +16,12 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 * Note: https://drive.google.com/drive/folders/0B8-M39RV4diKVlBvTEZidnJNYm8 (or this link https://drive.google.com/open?id=0B8-M39RV4diKVlBvTEZidnJNYm8)
 
 ## Setup
- 
+
 0. Project uses primarly python2.7, but should work without issues in python3.
- 
+
 1. Configure PYTHONPATH to include root folder of the project. Configure DATA_DIR to point to data directory
- 
-2. Go to DATA_DIR and run `scripts/fetch_LiACL_data.sh`
+
+2. Go to DATA_DIR and run `scripts/fetch_LiACL_data.sh` and then run `scripts/fetch_glove.sh`
 
 3. (Optional if you want to run baselines) Clone https://github.com/Lorraine333/ACL_CKBC repository and add to your PYTHONPATH. Add
 `__init__.py` file to `ACL_CKBC` and `dnn_ce` folders.
@@ -44,6 +44,8 @@ export PYTHONPATH=$PYTHONPATH:$ACL_ROOT_DIR
 * `LiACL/conceptnet` - all files used in ACL models
 
 * `embeddings` - embeddings (kept separately as tend to be big)
+
+* `glove embeddings` - GloVe embeddings
 
 ## Notes
 
