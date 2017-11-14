@@ -41,6 +41,13 @@ if __name__ == "__main__":
     with open("tuples.wiki/top10k.txt", "w") as f:
         for id in top10k:
             f.write(lines[id] + "\n")
+
+    # Create top10k version
+    scores = [float(l.split("\t")[-1]) for l in lines]
+    top100 = np.argsort(scores)[-100:]
+    with open("tuples.wiki/top100.txt", "w") as f:
+        for id in top100:
+            f.write(lines[id] + "\n")
     #
     # # Create 10k version
     # np.random.RandomState(777).shuffle(lines)

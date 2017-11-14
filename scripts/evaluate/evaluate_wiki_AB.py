@@ -107,7 +107,7 @@ if __name__ == "__main__":
                     tail = evaluated.iloc[id]['tail']
                     rel = evaluated.iloc[id]['rel']
                     score = evaluated.iloc[id]['score']
-                    entry = "{}\t{}\t{}\t{}".format(rel, head, tail, score)
+                    entry = "{}\t{}\t{}\t{}\n".format(rel, head, tail, score)
                     if mapping.iloc[id]['entity'] == 'A':
                         scores[0].append(score)
                         f_A.write(entry)
@@ -119,6 +119,23 @@ if __name__ == "__main__":
 
         print((A, np.mean(scores[0])))
         print((B, np.mean(scores[1])))
+    elif sys.argv[1] == "peek":
+        if len(sys.argv) != 6:
+            print("Use as python scripts/evaluate/evaluate_wiki_AB.py prepare run_A_scores run_B_scores K save_path")
+            exit(1)
+        A, B, K = sys.argv[3:]
+        K = int(K)
+        # Weird version control
+        assert A.endswith("_scored.txt") and B.endswith("_scored.txt")
 
+        # Read
+        topA = get_top(A, K=K)
+        topB = get_top(B, K=K)
+        assert len(topA) == len(topB) == K
+
+        for id in range(10):
+            print(topA[id])
+        for id in range(10):
+            print(topB[id])
     else:
         raise NotImplementedError()

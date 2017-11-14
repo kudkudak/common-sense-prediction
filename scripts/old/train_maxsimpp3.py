@@ -22,23 +22,25 @@ from keras.layers import *
 from keras.models import Model
 from keras.optimizers import Adam
 
+
 def getWordmap(textfile):
-    words={}
+    words = {}
     We = []
-    f = open(textfile,'r')
+    f = open(textfile, 'r')
     lines = f.readlines()
-    for (n,i) in enumerate(lines):
-        i=i.split()
+    for (n, i) in enumerate(lines):
+        i = i.split()
         j = 1
         v = []
         while j < len(i):
             v.append(float(i[j]))
             j += 1
-        words[i[0]]=n
+        words[i[0]] = n
         We.append(v)
-    words['EXXXXAR'] = n+1
-    We.append([0]*len(v))
+    words['EXXXXAR'] = n + 1
+    We.append([0] * len(v))
     return (words, np.matrix(We))
+
 
 from src import DATA_DIR
 from src.utils.vegab import wrap_no_config_registry, MetaSaver
