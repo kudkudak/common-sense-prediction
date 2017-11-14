@@ -1,9 +1,6 @@
 # Common sense prediction project
 
-*Research question*: how far are we from predicting common sense knowledge (from raw text, but not limited to)?
-
-*Extra research question*: how can we further SOTA in word representation learning in terms of representing common
-sense knowledge?
+*Research objective*: how far are we from common sense prediction: measuring and evaluating.
 
 We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
