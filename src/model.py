@@ -21,6 +21,8 @@ from keras.layers import (Activation,
 from keras.models import Model
 from keras.regularizers import l2 as l2_reg
 
+import keras.backend as K
+
 from src.layers import MaskAvg
 
 
@@ -201,6 +203,11 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
             score = Maximum()([head_rel, rel_tail, head_tail])
         elif merge == 'avg':
             score = Average()([head_rel, rel_tail, head_tail])
+        # elif merge == "rel_att":
+        #     which_rel = Dense(dim=3)
+        #     def picker_fnc(xxx):
+        #         a, b, c, rel = xxx
+        #     picker = Lambda(output_shape=(1,))
         else:
             raise NotImplementedError('Merge function ', merge, ' must be one of ["add","maximum"]')
     else:

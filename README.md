@@ -21,7 +21,11 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
 1. Configure PYTHONPATH to include root folder of the project. Configure DATA_DIR to point to data directory
 
-2. Go to DATA_DIR and run `scripts/fetch_LiACL_data.sh` and then run `scripts/fetch_glove.sh`
+2. Go to DATA_DIR and run `scripts/data/fetch_LiACL_data.sh`.
+
+    * Optionally run `scripts/data/fetch_and_split_wiki.py ` for extrinsic evaluation.
+    
+    * Optionally run `scripts/data/fetch_glove.sh`, but probably you don't need to.
 
 3. (Optional if you want to run baselines) Clone https://github.com/Lorraine333/ACL_CKBC repository and add to your PYTHONPATH. Add
 `__init__.py` file to `ACL_CKBC` and `dnn_ce` folders.

@@ -9,6 +9,59 @@ from keras import initializers
 from keras.engine import InputSpec
 from keras.layers import Lambda
 
+#
+# class MergeRelSplit(keras.layers.Layer):
+#     """
+#
+#     Merged differently in each rel
+#
+#     """
+#     def __init__(self, num_relations, k, type="max",
+#                  **kwargs):
+#         super(MergeRelSplit, self).__init__(**kwargs)
+#         self.num_relations = num_relations
+#         self.k = k
+#         self.type = type
+#
+#         if type != "max":
+#             raise NotImplementedError()
+#
+#     def build(self, input_shape):
+#         assert len(input_shape) >= 2
+#         input_dim = input_shape[0][1]
+#         self.dim = int(input_dim / 2)
+#         self.kernel = self.add_weight(shape=(self.num_relations, self.k),
+#                                       initializer="ones",
+#                                       name='matrices')
+#         # s1, s2, s3
+#         self.input_spec = [InputSpec(shape=(None, self.k,)), InputSpec(shape=(None, 1,))]
+#         self.built = True
+#
+#     def call(self, inputs):
+#         heads_and_tails, relations = inputs
+#         heads = heads_and_tails[:, :self.dim]
+#         tails = heads_and_tails[:, -self.dim:]
+#         relations = relations[:, 0]
+#
+#         matrices = self.kernel[relations]
+#         result = K.batch_dot(heads, matrices, axes=1)
+#         result = K.batch_dot(result, tails, axes=1)
+#         return result
+#
+#     def compute_output_shape(self, input_shape):
+#         assert len(input_shape[0]) == 2
+#         assert input_shape[1][1] == 1
+#         return (input_shape[0], 1)
+#
+#
+#     def get_config(self):
+#         config = {
+#             'num_relations': self.units,
+#             'kernel_initializer': initializers.serialize(self.kernel_initializer),
+#         }
+#         base_config = super(Bilinear, self).get_config()
+#         return dict(list(base_config.items()) + list(config.items()))
+
 
 class Bilinear(keras.layers.Layer):
     """Bilinear layer.
