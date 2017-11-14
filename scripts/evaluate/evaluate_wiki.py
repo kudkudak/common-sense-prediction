@@ -3,9 +3,9 @@
 """
 Evaluate script for models using wiki examples mined by original ACL paper.
 
-python scripts/evaluate_wiki.py type save_path, e.g.:
+python scripts/evaluate_wiki.py dataset type save_path, e.g.:
 
-python scripts/evaluate_wiki.py factorized $SCRATCH/l2lwe/results/factorized/12_11_prototypical
+python scripts/evaluate_wiki.py all factorized $SCRATCH/l2lwe/results/factorized/12_11_prototypical
 
 Creates:
 * wiki/allrel.txt.[dev/test]_eval.json: json with entries for fast and dirty comparison:
@@ -26,7 +26,7 @@ from scripts.train_factorized import init_model_and_data as factorized_init_mode
 from src.data import TUPLES_WIKI, LiACLDatasetFromFile, LiACL_ON_REL_LOWERCASE
 
 
-def evaluate_on_file(model, save_path, f_path, word2index):
+def evaluate_on_file(dataset, model, save_path, f_path, word2index):
     print("Evaluating on " + f_path)
     rel = os.path.basename(f_path).split(".")[0]
     base_fname = os.path.basename(f_path)
@@ -41,12 +41,16 @@ def evaluate_on_file(model, save_path, f_path, word2index):
         scores_liacl.append(np.array(y).reshape(-1,1))
         scores_model.append(y_pred.reshape(-1,1))
     print("Concatenating")
-    scores_model = list(np.concatenate(scores_model, axis=0))
-    scores_liacl = list(np.concatenate(scores_liacl, axis=0))
+    scores_model = list(np.concatenate(scores_model, axis=0).reshape(-1,))
+    scores_liacl = list(np.concatenate(scores_liacl, axis=0).reshape(-1,))
+    print("Writing output")
     with open(os.path.join(save_path, "wiki", base_fname + "_scored.txt"), "w") as f_write:
-        stream, batches_per_epoch = D.data_stream(128, word2index=word2index, target='score')
-        for x, sc in tqdm.tqdm(zip(stream.get_epoch_iterator(), scores_model), total=batches_per_epoch):
-            f_write.write("\t".join([x['rel'], x['head'], x['tail']]) + "\t" + str(sc) + "\n")
+        lines = open(f_path).read().splitlines()
+        for l, sc in tqdm.tqdm(zip(lines, scores_model), total=len(lines)):
+            tokens = l.split("\t")
+            assert len(tokens) == 4
+            rel, head, tail = tokens[0:3]
+            f_write.write("\t".join([rel, head, tail]) + "\t" + str(sc) + "\n")
 
     # Compute eval_wiki.dev.json
     results = {}
@@ -67,7 +71,10 @@ def evaluate_on_file(model, save_path, f_path, word2index):
     results['common_with_LiACL_top100'] = len(top100_model & top100_model)
     json.dump(results, open(os.path.join(save_path, "wiki", base_fname + "_eval.json"), "w"))
 
-def evaluate(type, save_path):
+def evaluate(dataset, type, save_path):
+    if dataset not in {"all", "10k"}:
+        raise NotImplementedError()
+
     os.system("mkdir " + str(os.path.join(save_path, "wiki")))
 
     c = json.load(open(os.path.join(save_path, "config.json")))
@@ -83,9 +90,9 @@ def evaluate(type, save_path):
         evaluate_on_file(model=model, save_path=save_path, f_path=f, word2index=D['word2index'])
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Use as python scripts/evaluate_wiki.py type save_path")
+    if len(sys.argv) != 4:
+        print("Use as python scripts/evaluate_wiki.py dataset type save_path")
 
-    type, save_path = sys.argv[1:]
+    dataset, type, save_path = sys.argv[1:]
 
-    evaluate(type, save_path)
+    evaluate(dataset, type, save_path)
