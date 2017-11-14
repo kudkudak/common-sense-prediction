@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 # Extrinsic evaluation dataset
 LiACL_CN_DATASET = os.path.join(DATA_DIR, "LiACL", "conceptnet")
 LiACL_ON_REL = os.path.join(LiACL_CN_DATASET, "rel.txt")
+assert os.path.exists(LiACL_ON_REL)
 # TODO(kudkudak): Add sth to figure out lowercase automatically. Idk.
 LiACL_ON_REL_LOWERCASE = os.path.join(LiACL_CN_DATASET, "rel_lowercase.txt")
 TUPLES_WIKI = os.path.join(DATA_DIR, "LiACL", "tuples.wiki")

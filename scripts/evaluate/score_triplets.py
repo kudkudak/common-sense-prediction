@@ -25,7 +25,7 @@ from scipy import stats
 import tqdm
 
 from scripts.train_factorized import init_model_and_data as factorized_init_model_and_data
-from src.data import TUPLES_WIKI, LiACLDatasetFromFile, LiACL_ON_REL_LOWERCASE
+from src.data import TUPLES_WIKI, LiACLDatasetFromFile, LiACL_ON_REL_LOWERCASE, LiACL_ON_REL
 
 
 def evaluate_on_file(model, save_path, f_path, word2index):
@@ -33,7 +33,11 @@ def evaluate_on_file(model, save_path, f_path, word2index):
     rel = os.path.basename(f_path).split(".")[0]
     base_fname = os.path.basename(f_path)
     print("rel=" + str(rel))
-    D = LiACLDatasetFromFile(f_path, rel_file_path=LiACL_ON_REL_LOWERCASE)
+    # TODO(kudkudak): Fix madness with this, preferably by fixing wiki in fetch_and_split
+    if "wiki" in f_path:
+        D = LiACLDatasetFromFile(f_path, rel_file_path=LiACL_ON_REL_LOWERCASE)
+    else:
+        D = LiACLDatasetFromFile(f_path, rel_file_path=LiACL_ON_REL)
     stream, batches_per_epoch = D.data_stream(128, word2index=word2index, target='score', shuffle=False)
     scores_model = []
     scores_liacl = []
@@ -74,7 +78,8 @@ def evaluate_on_file(model, save_path, f_path, word2index):
     json.dump(results, open(os.path.join(save_path, base_fname + "_eval.json"), "w"))
 
 def evaluate(dataset, type, model_path, save_path):
-    os.system("mkdir -p" + str(os.path.join(save_path)))
+    print("mkdir -p " + save_path)
+    os.system("mkdir -p " + save_path)
 
     c = json.load(open(os.path.join(model_path, "config.json")))
     if type != "factorized":
@@ -89,8 +94,9 @@ def evaluate(dataset, type, model_path, save_path):
         evaluate_on_file(model=model, save_path=save_path, f_path=f, word2index=D['word2index'])
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         print("Use as python scripts/evaluate_wiki.py dataset type save_path")
+        exit(1)
 
     dataset, type, model_path, save_path = sys.argv[1:]
 

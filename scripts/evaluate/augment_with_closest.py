@@ -31,7 +31,9 @@ def _batch(iterable, n=1):
 
 
 def main(source_dataset, target_dataset, K, embedding_source, save_path):
-    os.system("mkdir -p " + os.path.basename(save_path))
+    K = int(K)
+
+    os.system("mkdir -p " + os.path.dirname(save_path))
 
     print("Loading embeddings")
     if embedding_source.endswith("txt"):
@@ -70,8 +72,8 @@ def main(source_dataset, target_dataset, K, embedding_source, save_path):
         for x, y in tqdm.tqdm(stream.get_epoch_iterator(), total=batches_per_epochs):
             assert len(x['rel']) == 1
             rel = x['rel'][0][0]
-            v = _featurize_triplet(x['head'].reshape(-1, ), rel, x['tail'].reshape(-1, ))
-            X.append(x)
+            v = _featurize_triplet(x['head'].reshape(-1, ), rel, x['tail'].reshape(-1, )).reshape(1, -1)
+            X.append({k: x[k][0] for k in x}) # Remove BS dimension for simplciity
             D_feat.append(v)
         D_feat = np.concatenate(D_feat, axis=0)
         print("Featurized {} examples. Shape={}".format(len(D_feat), D_feat.shape))
@@ -97,7 +99,7 @@ def main(source_dataset, target_dataset, K, embedding_source, save_path):
             for id in closest_id:
                 head = " ".join([index2word[w_id] for w_id in Xt[id]['head']])
                 tail = " ".join([index2word[w_id] for w_id in Xt[id]['tail']])
-                rel = V_rel[Xt[id]['rel']]
+                rel = V_rel[Xt[id]['rel'][0]]
                 line.append("{}\t{}\t{}".format(rel, head, tail))
             line = ";".join(line)
             f_target.write(line + "\n")

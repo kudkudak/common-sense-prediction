@@ -59,15 +59,20 @@ if __name__ == "__main__":
         rng.shuffle(lines)
 
         N_dev = int(0.85 * len(lines))
-        with open("tuples.wiki/" + f_name + ".dev.tmp", "w") as dev_f:
+        with open(f_name + ".dev.tmp", "w") as dev_f:
             for l in lines[0:N_dev]:
                 dev_f.write(l + "\n")
-        with open("tuples.wiki/" + f_name + ".test.tmp", "w") as test_f:
+        with open(f_name + ".test.tmp", "w") as test_f:
             for l in lines[N_dev:]:
                 test_f.write(l + "\n")
         # Remove middle weird column
-        _ec("cat tuples.wiki/{0}.test.tmp | cut -f 1-3,5- >  tuples.wiki/{0}.test".format(f_name))
-        _ec("cat tuples.wiki/{0}.dev.tmp | cut -f 1-3,5- >  tuples.wiki/{0}.dev".format(f_name))
+        # TODO(kudkudak): What is this column? (keeping files to investigate easily)
+        if "tuples.wiki" in f_name:
+            _ec("cat {0}.test.tmp | cut -f 1-3,5- > {0}.test".format(f_name))
+            _ec("cat {0}.dev.tmp | cut -f 1-3,5- >  {0}.dev".format(f_name))
+        else:
+            _ec("cat {0}.test.tmp  > {0}.test".format(f_name))
+            _ec("cat {0}.dev.tmp  >  {0}.dev".format(f_name))
 
     _ec("mv tuples.wiki LiACL")
     _ec("mv tuples.cn.txt* LiACL")
