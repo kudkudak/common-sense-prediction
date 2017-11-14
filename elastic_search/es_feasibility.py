@@ -8,7 +8,7 @@ import time
 def get_result(es, query, verbose=True):
 	num_results = 10
 	if not es:
-		es = elasticsearch.Elasticsearch()  # use default of localhost, port 9200
+		es = elasticsearch.Elasticsearch() 
 
 	results = es.search(
 				    index='cbt',
@@ -37,14 +37,14 @@ def add_data(file_path):
 	get_result(es,'regard affection')
 
 def query_interactive():
-	es = elasticsearch.Elasticsearch()  # use default of localhost, port 9200
+	es = elasticsearch.Elasticsearch()
 	while True:
 		query = raw_input("input: ")
 		if query == '':
 			break
 		get_result(es, query)
 def benchmark(file_path):
-	es = elasticsearch.Elasticsearch()  # use default of localhost, port 9200
+	es = elasticsearch.Elasticsearch()
 	start_time = time.time()
 	count = 0
 	with open(file_path) as f:
@@ -57,7 +57,7 @@ def benchmark(file_path):
 	print "Searched for %d in %f seconds (%f search/second)" %(count, process_time, float(count) / process_time)
 
 if __name__ == '__main__':
-	
+
 	if len(sys.argv) < 2:
 		print "Specify a mode: inter, index, benchmark"
 		sys.exit()

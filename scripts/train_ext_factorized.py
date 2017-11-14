@@ -19,7 +19,7 @@ from src import DATA_DIR
 from src.callbacks import (EvaluateOnDataStream, _evaluate_with_threshold_fitting,
                            EvaluateWithThresholdFitting,
                            SaveBestScore)
-from src.configs import configs_factorized
+from src.configs import configs_ext_factorized as model_config
 from src.data import Dataset
 from src.model import extended_factorized
 from src.utils.data_loading import load_embeddings, endless_data_stream, load_external_embeddings
@@ -123,4 +123,4 @@ def train(config, save_path):
 
 
 if __name__ == '__main__':
-    wrap(configs_factorized.config, train, plugins=[MetaSaver()])
+    wrap(model_config.config, train, plugins=[MetaSaver()])
