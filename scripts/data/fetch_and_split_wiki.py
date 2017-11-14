@@ -42,18 +42,12 @@ if __name__ == "__main__":
         for id in top10k:
             f.write(lines[id] + "\n")
 
-    # Create top10k version
+    # Create top100 version
     scores = [float(l.split("\t")[-1]) for l in lines]
     top100 = np.argsort(scores)[-100:]
     with open("tuples.wiki/top100.txt", "w") as f:
         for id in top100:
             f.write(lines[id] + "\n")
-    #
-    # # Create 10k version
-    # np.random.RandomState(777).shuffle(lines)
-    # with open("tuples.wiki/10k.txt", "w") as f:
-    #     for id in range(10000):
-    #         f.write(lines[id] + "\n")
 
     # Split 10k and full into dev/test
     for f_name in ["allrel.txt", "top10k.txt"]:
