@@ -37,7 +37,7 @@ def get_top(f, K):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Use as python scripts/evaluate/evaluate_wiki_AB.py cmd save_path (...) ")
+        print("Use as python scripts/evaluate/human_evaluate_triplets.py prepare save_path (...) ")
         exit(1)
 
     # Save command used for reference
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     if sys.argv[1] == "prepare":
         # Parse args
         if len(sys.argv) != 6:
-            print("Use as python scripts/evaluate/evaluate_wiki_AB.py prepare run_A_scores run_B_scores K save_path")
+            print("Use as python scripts/evaluate/human_evaluate_triplets.py prepare save_path run_A_scores run_B_scores K")
             exit(1)
         A, B, K = sys.argv[3:]
         K = int(K)
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     elif sys.argv[1] == "process":
         # Parse args
         if len(sys.argv) != 6:
-            print("Use as python scripts/evaluate/evaluate_wiki_AB.py prepare save_path run_A_scores run_B_scores K")
+            print("Use as python scripts/evaluate/human_evaluate_triplets.py prepare save_path run_A_scores run_B_scores K")
             exit(1)
         A, B, K = sys.argv[3:]
         K = int(K)
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         print((B, np.mean(scores[1])))
     elif sys.argv[1] == "peek":
         if len(sys.argv) != 6:
-            print("Use as python scripts/evaluate/evaluate_wiki_AB.py prepare run_A_scores run_B_scores K save_path")
+            print("Use as python scripts/evaluate/human_evaluate_triplets.py prepare save_path run_A_scores run_B_scores K")
             exit(1)
         A, B, K = sys.argv[3:]
         K = int(K)

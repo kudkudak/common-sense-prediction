@@ -5,7 +5,7 @@ Trains Factorized model
 
 Run as:
 
-python scripts/train_factorized.py root results/test1
+python scripts/train_factorized.py root results/test4
 """
 import numpy as np
 from keras.optimizers import (Adagrad,

@@ -20,7 +20,7 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
 2. Go to DATA_DIR and run `scripts/data/fetch_LiACL_data.sh`.
 
-    * Optionally run `scripts/data/fetch_and_split_wiki.py ` for extrinsic evaluation.
+    * Optionally run `scripts/data/fetch_and_split_extrinsic_LiACL.py ` for extrinsic evaluation.
     
     * Optionally run `scripts/data/fetch_glove.sh`, but probably you don't need to.
 
@@ -49,7 +49,7 @@ We have following datasets used in project:
 The way our human evaluation work for now is that each evaluation has a unique id. Each evaluation is stored and processed
 as separate spreadsheet. 
 
-Use `scripts/evaluate/evaluate_wiki.py` to score using model wiki tupels. Use `scripts/evaluate_wiki_AB.py` to
+Use `scripts/evaluate/score_trplets.py` to score using model some triplets (e.g. wiki). Use `scripts/human_evaluate_triplets.py` to
 prepare AB tests of two models (for human evaluators) and to process results.
 
 ## Data folder structure

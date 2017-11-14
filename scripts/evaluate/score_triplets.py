@@ -1,19 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Evaluate script for models on list of triplets
+Score models on list of triplets
 
 # TODO(kudkudak): for now split into dev and test subsets, can be simplified later
 
-python scripts/evaluate/score_triplets.py dataset type save_path, e.g.:
-
-python scripts/evaluate/score_triplets.py allrel/top10k factorized $SCRATCH/l2lwe/results/factorized/12_11_prototypical
+python scripts/evaluate/score_triplets.py dataset type model_path save_path, e.g.:
+python scripts/evaluate/score_triplets.py allrel/top10k factorized $SCRATCH/l2lwe/results/factorized/12_11_prototypical $SCRATCH/l2lwe/results/factorized/12_11_prototypical/wiki
 
 Creates:
-* wiki/[dataset].txt.[dev/test]_eval.json: json with entries for fast and dirty comparison:
+* save_path/[dataset].txt.[dev/test]_eval.json: json with entries for fast and dirty comparison:
     - common_with_LiACL_top100: how many tuples are shared in top100 with LiACL model
     - pearson_with_LiACL: what is pearson rank cor. with LiACL model
-* wiki/[dataset].txt.[dev/test]_scored.txt (ordered by score with score added)
+* save_path/[dataset].txt.[dev/test]_scored.txt (ordered by score with score added)
 """
 
 import json
@@ -46,7 +45,7 @@ def evaluate_on_file(model, save_path, f_path, word2index):
     scores_model = list(np.concatenate(scores_model, axis=0).reshape(-1,))
     scores_liacl = list(np.concatenate(scores_liacl, axis=0).reshape(-1,))
     print("Writing output")
-    with open(os.path.join(save_path, "wiki", base_fname + "_scored.txt"), "w") as f_write:
+    with open(os.path.join(save_path, base_fname + "_scored.txt"), "w") as f_write:
         lines = open(f_path).read().splitlines()
         for l, sc in tqdm.tqdm(zip(lines, scores_model), total=len(lines)):
             tokens = l.split("\t")
@@ -72,19 +71,16 @@ def evaluate_on_file(model, save_path, f_path, word2index):
     results['pearson_with_LiACL'] = scipy.stats.pearsonr(scores_model, scores_liacl)[0]
     results['spearman_with_LiACL'] = scipy.stats.spearmanr(scores_model, scores_liacl)[0]
     results['common_with_LiACL_top100'] = len(top100_model & top100_liacl)
-    json.dump(results, open(os.path.join(save_path, "wiki", base_fname + "_eval.json"), "w"))
+    json.dump(results, open(os.path.join(save_path, base_fname + "_eval.json"), "w"))
 
-def evaluate(dataset, type, save_path):
-    if dataset not in {"allrel", "top10k"}:
-        raise NotImplementedError()
+def evaluate(dataset, type, model_path, save_path):
+    os.system("mkdir -p" + str(os.path.join(save_path)))
 
-    os.system("mkdir " + str(os.path.join(save_path, "wiki")))
-
-    c = json.load(open(os.path.join(save_path, "config.json")))
+    c = json.load(open(os.path.join(model_path, "config.json")))
     if type != "factorized":
         raise NotImplementedError()
     model, D = factorized_init_model_and_data(c)
-    model.load_weights(os.path.join(save_path, "model.h5")) # This is best acc_monitor
+    model.load_weights(os.path.join(model_path, "model.h5")) # This is best acc_monitor
     # Eval
     for f in [dataset + '.txt.dev', dataset + '.txt.test']:
         f = os.path.join(TUPLES_WIKI, f)
@@ -96,6 +92,6 @@ if __name__ == "__main__":
     if len(sys.argv) != 4:
         print("Use as python scripts/evaluate_wiki.py dataset type save_path")
 
-    dataset, type, save_path = sys.argv[1:]
+    dataset, type, model_path, save_path = sys.argv[1:]
 
-    evaluate(dataset, type, save_path)
+    evaluate(dataset, type, model_path, save_path)

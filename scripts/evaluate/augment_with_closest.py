@@ -20,7 +20,8 @@ import tqdm
 from six import iteritems
 
 from scripts.train_factorized import load_embeddings
-from src.data import LiACLDatasetFromFile, LiACL_ON_REL_LOWERCASE
+# TODO(kudkudak): Fix madness with lowercase or uppercase rel.txt :P
+from src.data import LiACLDatasetFromFile, LiACL_ON_REL_LOWERCASE, LiACL_ON_REL
 
 
 def _batch(iterable, n=1):
@@ -52,7 +53,7 @@ def main(source_dataset, target_dataset, K, embedding_source, save_path):
 
     Dt = LiACLDatasetFromFile(target_dataset, rel_file_path=LiACL_ON_REL_LOWERCASE)
     st, batches_per_epocht = Dt.data_stream(1, word2index=word2index, target='score', shuffle=False)
-    Ds = LiACLDatasetFromFile(source_dataset, rel_file_path=LiACL_ON_REL_LOWERCASE)
+    Ds = LiACLDatasetFromFile(source_dataset, rel_file_path=LiACL_ON_REL)
     ss, batches_per_epochs = Ds.data_stream(1, word2index=word2index, target='score', shuffle=False)
 
     def _featurize_triplet(head, rel, tail):
@@ -68,8 +69,9 @@ def main(source_dataset, target_dataset, K, embedding_source, save_path):
         print("Featurizing source dataset")
         for x, y in tqdm.tqdm(stream.get_epoch_iterator(), total=batches_per_epochs):
             assert len(x['rel']) == 1
-            v = _featurize_triplet(x['head'].reshape(-1, ), x['rel'][0], x['tail'].reshape(-1, ))
-            X.append(x[0])
+            rel = x['rel'][0][0]
+            v = _featurize_triplet(x['head'].reshape(-1, ), rel, x['tail'].reshape(-1, ))
+            X.append(x)
             D_feat.append(v)
         D_feat = np.concatenate(D_feat, axis=0)
         print("Featurized {} examples. Shape={}".format(len(D_feat), D_feat.shape))
@@ -81,7 +83,7 @@ def main(source_dataset, target_dataset, K, embedding_source, save_path):
 
     # Compute
     closest_ids = []
-    for batch in tqdm.tqdm(_batch(Dt_featurize, 100), total=len(Dt_featurize / 100)):
+    for batch in tqdm.tqdm(_batch(Dt_featurize, 100), total=len(Dt_featurize) / 100):
         sim = Ds_featurize.dot(batch.T)
         assert sim.ndim == 2
         sim_ids = np.argsort(sim, axis=1)
