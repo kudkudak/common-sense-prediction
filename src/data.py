@@ -31,7 +31,10 @@ from src import DATA_DIR
 logger = logging.getLogger(__name__)
 
 # Extrinsic evaluation dataset
-LiACL_CN_DATASET = os.path.join(DATA_DIR, "LiACL", "conceptpnet")
+LiACL_CN_DATASET = os.path.join(DATA_DIR, "LiACL", "conceptnet")
+LiACL_ON_REL = os.path.join(LiACL_CN_DATASET, "rel.txt")
+# TODO(kudkudak): Add sth to figure out lowercase automatically. Idk.
+LiACL_ON_REL_LOWERCASE = os.path.join(LiACL_CN_DATASET, "rel_lowercase.txt")
 TUPLES_WIKI = os.path.join(DATA_DIR, "LiACL", "tuples.wiki")
 
 UNKNOWN_TOKEN = 'UUUNKKK'
@@ -54,7 +57,7 @@ def _liacl_data_stream(dataset, rel2index, batch_size, word2index, target='negat
         data_stream = FilterSources(data_stream, sources=('head', 'tail', 'rel'))
         data_stream = NegativeSampling(data_stream)
     elif target == 'score':
-        logger.info('target for data stream ' + name + ' is score')
+        logger.info('target for data stream ' + str(name) + ' is score')
         data_stream = Rename(data_stream, {'score': 'target'})
     else:
         raise NotImplementedError('target ', target, ' must be one of "score" or "negative_sampling"')
@@ -82,7 +85,7 @@ class LiACLDatasetFromFile(object):
     File is assumed to be in following line format: head tail rel score
     """
 
-    def __init__(self, file_path, rel_file_path=os.path.join(LiACL_CN_DATASET, "rel.txt")):
+    def __init__(self, file_path, rel_file_path=LiACL_ON_REL):
         self.file_path = file_path
         self.load_rel2index(rel_file_path)
         self.dataset = self.load_data(file_path)

@@ -5,7 +5,7 @@ Evaluate script for models using wiki examples mined by original ACL paper.
 
 python scripts/evaluate_wiki.py type save_path, e.g.:
 
-python scripts/evaluate_wiki.py factorized $SCRATCH/l2lwe/results/
+python scripts/evaluate_wiki.py factorized $SCRATCH/l2lwe/results/factorized/12_11_prototypical
 
 Creates:
 * wiki/allrel.txt.[dev/test]_eval.json: json with entries for fast and dirty comparison:
@@ -14,61 +14,63 @@ Creates:
 * wiki/allrel.txt.[dev/test]_scored.txt (ordered by score with score added)
 """
 
-import sys
 import json
 import os
+import sys
 
-import tqdm
-import glob
-
-from src.data import TUPLES_WIKI, LiACL_CN_DATASET, LiACLDatasetFromFile
-from scripts.train_factorized import init_model_and_data as factorized_init_model_and_data
 import numpy as np
-from keras.optimizers import (Adagrad,
-                              Adam,
-                              SGD,
-                              RMSprop)
+import scipy
+import tqdm
 
-from src import DATA_DIR
-from src.callbacks import (EvaluateOnDataStream, _evaluate_with_threshold_fitting,
-                           EvaluateWithThresholdFitting,
-                           SaveBestScore)
-from src.configs import configs_factorized
-from src.data import LiACLSplitDataset
-from src.model import factorized
-from src.utils.data_loading import load_embeddings, endless_data_stream
-from src.utils.tools import argsim_threshold
-from src.utils.training_loop import training_loop
-from src.utils.vegab import wrap, MetaSaver
+from scripts.train_factorized import init_model_and_data as factorized_init_model_and_data
+from src.data import TUPLES_WIKI, LiACLDatasetFromFile, LiACL_ON_REL_LOWERCASE
 
-def evaluate_on_file(model, save_path, f, word2index):
-    print("Evaluating on " + f)
-    rel = os.path.basename(f).split(".")[0]
-    base_fname = os.path.basename(f)
+
+def evaluate_on_file(model, save_path, f_path, word2index):
+    print("Evaluating on " + f_path)
+    rel = os.path.basename(f_path).split(".")[0]
+    base_fname = os.path.basename(f_path)
     print("rel=" + str(rel))
-    D, batches_per_epoch = LiACLDatasetFromFile(f)
-    stream = D.data_stream(128, word2index=word2index, target='score')
+    D = LiACLDatasetFromFile(f_path, rel_file_path=LiACL_ON_REL_LOWERCASE)
+    stream, batches_per_epoch = D.data_stream(128, word2index=word2index, target='score', shuffle=False)
     scores_model = []
     scores_liacl = []
     for x, y in tqdm.tqdm(stream.get_epoch_iterator(), total=batches_per_epoch):
-        y_pred = model.predict(x)
-        scores_liacl.append(y.reshape(-1,1))
+        # TODO(kudkudak): This is TF specific, and in general break Keras API
+        y_pred = model.predict(x) # [x[i.name.split(":")[0]] for i in model.inputs])
+        scores_liacl.append(np.array(y).reshape(-1,1))
         scores_model.append(y_pred.reshape(-1,1))
+    print("Concatenating")
     scores_model = list(np.concatenate(scores_model, axis=0))
     scores_liacl = list(np.concatenate(scores_liacl, axis=0))
-    # eval_scores = {}
-    with open(os.path.join(save_path, "wiki", base_fname + "_scored.txt", "w")) as f_write:
-        stream = D.data_stream(128, word2index=word2index, target='score')
-        for x, sc in zip(stream.get_epoch_iterator(), scores_model):
-            f.write(" ".join(x) + " " + str(sc) + "\n")
+    with open(os.path.join(save_path, "wiki", base_fname + "_scored.txt"), "w") as f_write:
+        stream, batches_per_epoch = D.data_stream(128, word2index=word2index, target='score')
+        for x, sc in tqdm.tqdm(zip(stream.get_epoch_iterator(), scores_model), total=batches_per_epoch):
+            f_write.write("\t".join([x['rel'], x['head'], x['tail']]) + "\t" + str(sc) + "\n")
 
     # Compute eval_wiki.dev.json
-    top100 = np.argsort(scores_liacl)[-100:]
+    results = {}
+    top100_model_ids = set(np.argsort(scores_model)[-100:])
+    top100_liacl_ids = set(np.argsort(scores_liacl)[-100:])
+    top100_model = set()
+    top100_liacl = set()
+    with open(f_path) as f:
+        for l_id, l in enumerate(f.read().splitlines()):
+            if l_id in top100_model_ids:
+                top100_model.add(tuple(l.split(" ")[0:3]))
+            if l_id in top100_liacl_ids:
+                top100_liacl.add(tuple(l.split(" ")[0:3]))
+    assert len(top100_model) == len(top100_liacl)
+    print(list(top100_model)[0:2])
+    print(list(top100_liacl)[0:2])
+    results['pearson_with_LiACL'] = scipy.stats.pearsonr(scores_model, scores_liacl)[0]
+    results['common_with_LiACL_top100'] = len(top100_model & top100_model)
+    json.dump(results, open(os.path.join(save_path, "wiki", base_fname + "_eval.json"), "w"))
 
 def evaluate(type, save_path):
     os.system("mkdir " + str(os.path.join(save_path, "wiki")))
 
-    c = json.load(os.path.join(save_path, "config.json"))
+    c = json.load(open(os.path.join(save_path, "config.json")))
     if type != "factorized":
         raise NotImplementedError()
     model, D = factorized_init_model_and_data(c)
@@ -78,7 +80,7 @@ def evaluate(type, save_path):
         f = os.path.join(TUPLES_WIKI, f)
         # TODO(kudkudak): Once https://github.com/kudkudak/common-sense-prediction/issues/33 is fixed
         # we can remove passing word2index. For now vocab is sort of tied to embedding
-        evaluate_on_file(model=model, save_path=save_path, f=f, word2index=D['word2index'])
+        evaluate_on_file(model=model, save_path=save_path, f_path=f, word2index=D['word2index'])
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
