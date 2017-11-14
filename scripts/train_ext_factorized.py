@@ -20,7 +20,7 @@ from src.callbacks import (EvaluateOnDataStream, _evaluate_with_threshold_fittin
                            EvaluateWithThresholdFitting,
                            SaveBestScore)
 from src.configs import configs_ext_factorized as model_config
-from src.data import Dataset
+from src.data import LiACLSplitDataset
 from src.model import extended_factorized
 from src.utils.data_loading import load_embeddings, endless_data_stream, load_external_embeddings
 from src.utils.tools import argsim_threshold
@@ -34,7 +34,7 @@ def train(config, save_path):
     word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
     print ("Loading external embedding")
     external_embeddings = load_external_embeddings(DATA_DIR, config['external_embedding_file'], config['ext_sub_embedding_file'], word2index)
-    dataset = Dataset(config['data_dir'])
+    dataset = LiACLSplitDataset(config['data_dir'])
 
     # Get data
     train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True)

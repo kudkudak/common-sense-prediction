@@ -3,13 +3,13 @@ from keras.models import Model
 from keras.layers import Input, Embedding, Flatten
 
 from src import DATA_DIR
-from src.data import Dataset
+from src.data import LiACLSplitDataset
 from scripts.train_dnn_ce import endless_data_stream
 
 
 def test_integration():
     BATCH_SIZE = 600
-    data = Dataset(DATA_DIR)
+    data = LiACLSplitDataset(DATA_DIR)
     data_stream, batches = data.train_data_stream(BATCH_SIZE)
     endless = endless_data_stream(data_stream)
 

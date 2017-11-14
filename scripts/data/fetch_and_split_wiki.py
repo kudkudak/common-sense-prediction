@@ -4,6 +4,9 @@
 Small script to fetch, unpack and split wiki tuples from ACL paper
 
 Execute in data folder, like other scipts
+
+Format of training data:
+ReceivesAction  hockey  play on ice     3.4594316186372978
 """
 
 import os

@@ -18,7 +18,7 @@ from src.callbacks import (EvaluateOnDataStream, _evaluate_with_threshold_fittin
                            EvaluateWithThresholdFitting,
                            SaveBestScore)
 from src.configs import configs_factorized
-from src.data import Dataset
+from src.data import LiACLSplitDataset
 from src.model import factorized
 from src.utils.data_loading import load_embeddings, endless_data_stream
 from src.utils.tools import argsim_threshold
@@ -29,7 +29,7 @@ def init_model_and_data(config):
     np.random.seed(config['random_seed'])
 
     word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
-    dataset = Dataset(config['data_dir'])
+    dataset = LiACLSplitDataset(config['data_dir'])
 
     # Get data
     train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True)

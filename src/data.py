@@ -31,7 +31,87 @@ TEST_FILE = 'test.txt'
 DEV1_FILE = 'dev1.txt'
 DEV2_FILE = 'dev2.txt'
 
-class Dataset(object):
+class LiACLDatasetFromFile(object):
+    """
+    Flexible way to serve dataset in format used in Li et al. ACL paper.
+
+    Notes
+    -----
+    File is assumed to be in following line format: head tail rel score
+    """
+
+    def __init__(self, file_path, rel_file_path):
+        self.file_path = file_path
+        self.load_rel2index(rel_file_path)
+        self.dataset = self.load_data(file_path)
+
+    def load_data(self, data_path):
+        logging.info("Loading: " + data_path)
+
+        data = pd.read_csv(data_path, sep="\t", header=None)
+        data.columns = ['rel', 'head', 'tail', 'score']
+        assert(not data.empty)
+        return IndexableDataset(data.to_dict('list'))
+
+    def load_rel2index(self, rel_file):
+        rel2index = {}
+
+        if not os.path.isabs(rel_file):
+            rel_file = os.path.join(DATA_DIR, rel_file)
+
+        logging.info("Loading: " + rel_file)
+
+        with open(rel_file, 'r') as f:
+            for index, line in enumerate(f):
+                rel2index[line.strip()] = index
+
+        self.rel2index = rel2index
+        self.rel_vocab_size = len(rel2index)
+
+    def data_stream(self, batch_size, word2index, target='negative_sampling', name=None, shuffle=False):
+        batches_per_epoch = int(np.ceil(self.dataset.num_examples / float(batch_size)))
+        if shuffle:
+            iteration_scheme = ShuffledScheme(self.dataset.num_examples, batch_size)
+        else:
+            iteration_scheme = SequentialScheme(self.dataset.num_examples, batch_size)
+        data_stream = DataStream(self.dataset, iteration_scheme=iteration_scheme)
+        data_stream = NumberizeWords(data_stream, word2index, default=word2index[UNKNOWN_TOKEN],
+            which_sources=('head', 'tail'))
+        data_stream = NumberizeWords(data_stream, self.rel2index, which_sources=('rel'))
+
+        if target == 'negative_sampling':
+            logger.info('target for data stream ' + name + ' is negative sampling')
+            data_stream = FilterSources(data_stream, sources=('head', 'tail', 'rel'))
+            data_stream = NegativeSampling(data_stream)
+        elif target == 'score':
+            logger.info('target for data stream ' + name + ' is score')
+            data_stream = Rename(data_stream, {'score': 'target'})
+        else:
+            raise NotImplementedError('target ', target, ' must be one of "score" or "negative_sampling"')
+
+        data_stream = Padding(data_stream, mask_sources=('head, tail'), mask_dtype=np.float32)
+        data_stream = MergeSource(data_stream, merge_sources=('head', 'tail', 'head_mask', 'tail_mask', 'rel'),
+                                  merge_name='input')
+
+        return data_stream, batches_per_epoch
+
+class LiACLSplitDataset(object):
+    """
+    Class wrapping dataset used originally in Li et al. ACL paper.
+
+    Notes
+    -----
+    Bakes in original splitting and gives interface for just getting train/dev/dev2/test
+    streams without thinking too much
+
+    Files:
+        * train100k.txt (TODO(kudkudak): Replace with train.txt, or pass as param N)
+        * dev1.txt
+        * dev2.txt
+        * test.txt
+        * rel.txt
+    """
+
     def __init__(self, data_dir):
         self.data_dir = data_dir
         self.load_rel2index()
@@ -45,7 +125,7 @@ class Dataset(object):
         if not os.path.isabs(data_path):
             data_path = os.path.join(DATA_DIR, data_path)
 
-        logging.info("Automatic path resolution to: " + data_path)
+        logging.info("Loading: " + data_path)
 
         data = pd.read_csv(data_path,
                            sep="\t", header=None)
@@ -60,7 +140,7 @@ class Dataset(object):
         if not os.path.isabs(rel_file):
             rel_file = os.path.join(DATA_DIR, rel_file)
 
-        logging.info("Automatic path resolution to: " + rel_file)
+        logging.info("Loading: " + rel_file)
 
         with open(rel_file, 'r') as f:
             for index, line in enumerate(f):

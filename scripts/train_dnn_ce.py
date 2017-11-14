@@ -16,7 +16,7 @@ from src.callbacks import (EvaluateOnDataStream,
                            EvaluateWithThresholdFitting,
                            SaveBestScore)
 from src.configs import configs_dnn_ce
-from src.data import Dataset
+from src.data import LiACLSplitDataset
 from src.model import dnn_ce
 from src.utils.data_loading import load_embeddings, endless_data_stream
 from src.utils.training_loop import training_loop
@@ -27,7 +27,7 @@ def train(config, save_path):
     np.random.seed(config['random_seed'])
 
     word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
-    dataset = Dataset(config['data_dir'])
+    dataset = LiACLSplitDataset(config['data_dir'])
 
     model = dnn_ce(embedding_init=embeddings,
         vocab_size=embeddings.shape[0],

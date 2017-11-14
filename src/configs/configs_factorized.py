@@ -23,6 +23,8 @@ config.set_root_config({
     'optimizer': 'adagrad',
     'learning_rate': 0.01,
     'share_mode': 1,
+    "emb_drop": 0.0,
+    "trainable_word_embeddings": True,
     'use_headtail': True,
     'use_tailrel': True,
     'use_headrel': True,
