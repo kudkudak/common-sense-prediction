@@ -44,6 +44,14 @@ We have following datasets used in project:
 * LiACL/conceptnet dataset
 * LiACL/tuples.wiki evaluation dataset
 
+## Evaluation
+
+The way our human evaluation work for now is that each evaluation has a unique id. Each evaluation is stored and processed
+as separate spreadsheet. 
+
+Use `scripts/evaluate/evaluate_wiki.py` to score using model wiki tupels. Use `scripts/evaluate_wiki_AB.py` to
+prepare AB tests of two models (for human evaluators) and to process results.
+
 ## Data folder structure
 
 * `LiACL/conceptnet` - all files used in ACL models

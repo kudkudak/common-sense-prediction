@@ -61,6 +61,9 @@ def training_loop(model, train, epochs, steps_per_epoch, valid=None, valid_steps
                                          save_best_only=True,
                                          mode='max',
                                          filepath=os.path.join(save_path, "model.h5")))
+
+        # TODO(kudkudak): Add saving from last epoch, often useful
+
         #optimization
         # callbacks.append(EarlyStopping(monitor=acc_monitor, patience=10))
         callbacks.append(ReduceLROnPlateau(monitor=acc_monitor, patience=10))

@@ -3,15 +3,17 @@
 """
 Evaluate script for models using wiki examples mined by original ACL paper.
 
-python scripts/evaluate_wiki.py dataset type save_path, e.g.:
+TODO(kudkudak): This can be generalized a bit
 
-python scripts/evaluate_wiki.py all factorized $SCRATCH/l2lwe/results/factorized/12_11_prototypical
+python scripts/evaluate/evaluate_wiki.py dataset type save_path, e.g.:
+
+python scripts/evaluate/evaluate_wiki.py allrel/top10k factorized $SCRATCH/l2lwe/results/factorized/12_11_prototypical
 
 Creates:
-* wiki/allrel.txt.[dev/test]_eval.json: json with entries for fast and dirty comparison:
+* wiki/[dataset].txt.[dev/test]_eval.json: json with entries for fast and dirty comparison:
     - common_with_LiACL_top100: how many tuples are shared in top100 with LiACL model
     - pearson_with_LiACL: what is pearson rank cor. with LiACL model
-* wiki/allrel.txt.[dev/test]_scored.txt (ordered by score with score added)
+* wiki/[dataset].txt.[dev/test]_scored.txt (ordered by score with score added)
 """
 
 import json
@@ -20,13 +22,14 @@ import sys
 
 import numpy as np
 import scipy
+from scipy import stats
 import tqdm
 
 from scripts.train_factorized import init_model_and_data as factorized_init_model_and_data
 from src.data import TUPLES_WIKI, LiACLDatasetFromFile, LiACL_ON_REL_LOWERCASE
 
 
-def evaluate_on_file(dataset, model, save_path, f_path, word2index):
+def evaluate_on_file(model, save_path, f_path, word2index):
     print("Evaluating on " + f_path)
     rel = os.path.basename(f_path).split(".")[0]
     base_fname = os.path.basename(f_path)
@@ -36,8 +39,7 @@ def evaluate_on_file(dataset, model, save_path, f_path, word2index):
     scores_model = []
     scores_liacl = []
     for x, y in tqdm.tqdm(stream.get_epoch_iterator(), total=batches_per_epoch):
-        # TODO(kudkudak): This is TF specific, and in general break Keras API
-        y_pred = model.predict(x) # [x[i.name.split(":")[0]] for i in model.inputs])
+        y_pred = model.predict(x)
         scores_liacl.append(np.array(y).reshape(-1,1))
         scores_model.append(y_pred.reshape(-1,1))
     print("Concatenating")
@@ -61,18 +63,19 @@ def evaluate_on_file(dataset, model, save_path, f_path, word2index):
     with open(f_path) as f:
         for l_id, l in enumerate(f.read().splitlines()):
             if l_id in top100_model_ids:
-                top100_model.add(tuple(l.split(" ")[0:3]))
+                top100_model.add(tuple(l.split("\t")[0:3]))
             if l_id in top100_liacl_ids:
-                top100_liacl.add(tuple(l.split(" ")[0:3]))
+                top100_liacl.add(tuple(l.split("\t")[0:3]))
     assert len(top100_model) == len(top100_liacl)
     print(list(top100_model)[0:2])
     print(list(top100_liacl)[0:2])
     results['pearson_with_LiACL'] = scipy.stats.pearsonr(scores_model, scores_liacl)[0]
-    results['common_with_LiACL_top100'] = len(top100_model & top100_model)
+    results['spearman_with_LiACL'] = scipy.stats.spearmanr(scores_model, scores_liacl)[0]
+    results['common_with_LiACL_top100'] = len(top100_model & top100_liacl)
     json.dump(results, open(os.path.join(save_path, "wiki", base_fname + "_eval.json"), "w"))
 
 def evaluate(dataset, type, save_path):
-    if dataset not in {"all", "10k"}:
+    if dataset not in {"allrel", "top10k"}:
         raise NotImplementedError()
 
     os.system("mkdir " + str(os.path.join(save_path, "wiki")))
@@ -81,9 +84,9 @@ def evaluate(dataset, type, save_path):
     if type != "factorized":
         raise NotImplementedError()
     model, D = factorized_init_model_and_data(c)
-
+    model.load_weights(os.path.join(save_path, "model.h5")) # This is best acc_monitor
     # Eval
-    for f in ['allrel.txt.dev', 'allrel.txt.test']:
+    for f in [dataset + '.txt.dev', dataset + '.txt.test']:
         f = os.path.join(TUPLES_WIKI, f)
         # TODO(kudkudak): Once https://github.com/kudkudak/common-sense-prediction/issues/33 is fixed
         # we can remove passing word2index. For now vocab is sort of tied to embedding
