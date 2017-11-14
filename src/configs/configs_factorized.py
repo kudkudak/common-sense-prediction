@@ -37,7 +37,13 @@ config.set_root_config({
     'random_seed': 0,
 })
 
-# Previous version of model, gets around 89%
+# Argsim, ~78% max dev2
 c = config['root']
-c['share_mode'] = 4
-config['root_previous_share'] = c
+c['use_headrel'] = False
+c['use_tailrel'] = False
+config['argsim++'] = c
+
+# Prototypical
+c = config['root']
+c['use_headtail'] = False
+config['prototypical'] = c

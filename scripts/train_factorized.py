@@ -78,7 +78,7 @@ def init_model_and_data(config):
         metrics=['binary_crossentropy', 'accuracy'])
 
     return model, {"train_stream": train_stream, "train_steps": train_steps, "test_stream": test_stream,
-        "dev1_stream": dev1_stream, "dev2_stream": dev2_stream}
+        "dev1_stream": dev1_stream, "dev2_stream": dev2_stream, "word2index": word2index}
 
 def train(config, save_path):
     model, D = init_model_and_data(config)

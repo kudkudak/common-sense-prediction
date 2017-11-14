@@ -37,7 +37,14 @@ export ACL_ROOT_DIR=$HOME/l2lwe/ACL_CKBC
 export PYTHONPATH=$PYTHONPATH:$ACL_ROOT_DIR
 ```
 
-## Data
+## Datasets
+
+We have following datasets used in project:
+
+* LiACL/conceptnet dataset
+* LiACL/tuples.wiki evaluation dataset
+
+## Data folder structure
 
 * `LiACL/conceptnet` - all files used in ACL models
 
