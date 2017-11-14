@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
+
 import os
-
 import numpy as np
-
+from src.data import DATA_DIR
 
 def endless_data_stream(data_stream):
     for iterator in data_stream.iterate_epochs():
@@ -12,8 +13,9 @@ def endless_data_stream(data_stream):
                 break
 
 
-def load_embeddings(data_dir, embedding_file):
-    embedding_file = os.path.join(data_dir, embedding_file)
+def load_embeddings(embedding_file):
+    if not os.path.isabs(embedding_file):
+        embedding_file = os.path.join(DATA_DIR, embedding_file)
     word2index = {'PADDING-WORD':0}
     embeddings = [0]
     with open(embedding_file,'r') as f:

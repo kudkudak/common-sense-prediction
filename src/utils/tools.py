@@ -18,17 +18,6 @@ def argsim_score(data_stream, embedding):
         sim = np.einsum('ij,ji->i', head, tail.T)
         argsims.append(sim)
         targets.append(target)
-
-    """
-    Bug proof, TODO: remove later:
-    (Pdb) sim[0]
-    -0.078352564280480014
-    (Pdb) np.dot(head[0], tail[0].T)
-    matrix([[ 0.08965615]])
-    (Pdb) np.diag(head.dot(tail.T))[0]
-    0.08965614676903999
-    """
-
     return np.concatenate(argsims), np.concatenate(targets)
 
 

@@ -9,6 +9,8 @@ python scripts/train_dnn_ce.py root results/test1
 """
 
 import numpy as np
+import os
+
 from keras.optimizers import Adagrad
 
 from src import DATA_DIR
@@ -26,7 +28,7 @@ from src.utils.vegab import wrap, MetaSaver
 def train(config, save_path):
     np.random.seed(config['random_seed'])
 
-    word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
+    word2index, embeddings = load_embeddings(config['embedding_file'])
     dataset = LiACLSplitDataset(config['data_dir'])
 
     model = dnn_ce(embedding_init=embeddings,

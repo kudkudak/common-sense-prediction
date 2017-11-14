@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-A tool that has two functionalities:
+A *tool* that has three functionalities:
 
-TODO(kudkudak): Allow for mixing of any number of runs
+TODO(kudkudak): Allow for mixing of any number of runs. For now always assumes 2 runs
 
-1. takes evaluation results by evaluate_wiki and mixes tuples from two runs and
+1. takes evaluation results by score_tripletws and mixes triplets from two runs and
 prepares evaluation csv that can be used in like gdocs
 2. takes evaluated csv and redistributes it
+3. allows for peeking into triplets produced by given model
 
 Use as:
 
-    python scripts/evaluate/evaluate_wiki_AB.py prepare save_path run_A_scores run_B_scores K
+    python scripts/evaluate/human_evaluate_triplets.py prepare save_path run_A_scores run_B_scores K
 
 , where K is top K triplets to get. Or:
 
-    python scripts/evaluate/evaluate_wiki_AB.py process save_path run_A_scores run_B_scores K
+    python scripts/evaluate/human_evaluate_triplets.py process save_path run_A_scores run_B_scores K
 
 , it expects .csv in save_path to have human evaluations in last column. Then saves it back to run_A_scores.human and
 run_B_scores.human

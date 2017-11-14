@@ -28,7 +28,7 @@ from src.utils.vegab import wrap, MetaSaver
 def init_model_and_data(config):
     np.random.seed(config['random_seed'])
 
-    word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
+    word2index, embeddings = load_embeddings(config['embedding_file'])
     dataset = LiACLSplitDataset(config['data_dir'])
 
     # Get data

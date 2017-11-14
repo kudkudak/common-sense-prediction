@@ -50,7 +50,7 @@ if __name__ == "__main__":
             f.write(lines[id] + "\n")
 
     # Split 10k and full into dev/test
-    for f_name in ["allrel.txt", "top10k.txt"]:
+    for f_name in ["allrel.txt", "top10k.txt", "top100.txt"]:
         lines = open("tuples.wiki/" + f_name).read().splitlines()
         rng = np.random.RandomState(777)
         rng.shuffle(lines)
@@ -67,5 +67,8 @@ if __name__ == "__main__":
         _ec("cat tuples.wiki/{0}.dev.tmp | cut -f 1-3,5- >  tuples.wiki/{0}.dev".format(f_name))
 
     _ec("mv tuples.wiki LiACL")
+    # TODO(kudkudak): Generalize lines below
+    _ec("cp LiACL/tuples.wiki/allrel.txt.dev LiACL/tuples.wiki/allrel.txt.dev_scored.txt")
+    _ec("cp LiACL/tuples.wiki/allrel.txt.test LiACL/tuples.wiki/allrel.txt.test_scored.txt")
 
 

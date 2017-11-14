@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Evaluate script for models using wiki examples mined by original ACL paper.
+Evaluate script for models on list of triplets
 
-TODO(kudkudak): This can be generalized a bit
+# TODO(kudkudak): for now split into dev and test subsets, can be simplified later
 
-python scripts/evaluate/evaluate_wiki.py dataset type save_path, e.g.:
+python scripts/evaluate/score_triplets.py dataset type save_path, e.g.:
 
-python scripts/evaluate/evaluate_wiki.py allrel/top10k factorized $SCRATCH/l2lwe/results/factorized/12_11_prototypical
+python scripts/evaluate/score_triplets.py allrel/top10k factorized $SCRATCH/l2lwe/results/factorized/12_11_prototypical
 
 Creates:
 * wiki/[dataset].txt.[dev/test]_eval.json: json with entries for fast and dirty comparison:

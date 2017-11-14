@@ -31,7 +31,7 @@ from src.utils.vegab import wrap, MetaSaver
 def train(config, save_path):
     np.random.seed(config['random_seed'])
 
-    word2index, embeddings = load_embeddings(DATA_DIR, config['embedding_file'])
+    word2index, embeddings = load_embeddings(config['embedding_file'])
     print ("Loading external embedding")
     external_embeddings = load_external_embeddings(DATA_DIR, config['external_embedding_file'], config['ext_sub_embedding_file'], word2index)
     dataset = LiACLSplitDataset(config['data_dir'])
