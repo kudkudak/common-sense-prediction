@@ -9,6 +9,7 @@ def featurize(term_batch, embedding):
     return np.array([[embedding[word] for word in term] for term in term_batch]).mean(axis=1)
 
 
+# TODO(kudkudak): Change mean to sum and divide by number of nonzeros
 def argsim_score(data_stream, embedding):
     targets = []
     argsims = []

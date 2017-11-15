@@ -35,6 +35,12 @@ config.set_root_config({
     'copy_init': False,
     'momentum': True,
     'random_seed': 0,
+
+    "regenerate_ns_eval": False,
+
+    # Negative sampler
+    'negative_sampling': 'uniform', # or "argsim"
+    'ns_alpha': 1.0, # Weigt used in threshold in argsim
 })
 
 # Argsim, ~78% max dev2

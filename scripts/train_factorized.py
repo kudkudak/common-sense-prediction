@@ -31,11 +31,56 @@ def init_model_and_data(config):
     word2index, embeddings = load_embeddings(config['embedding_file'])
     dataset = LiACLSplitDataset(config['data_dir'])
 
+    regenerate_ns_eval = config.get("regenerate_ns_eval", False)
+    ns = config.get("negative_sampling", "uniform")
+    if ns == 'uniform':
+        target = 'negative_sampling'
+        neg_sample_kwargs = {}
+    elif ns == "argsim":
+        target = "filtered_negative_sampling"
+
+        # Get train stream to just fit argsim
+        train_stream_argim, _ = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True,
+            target="negative_sampling")
+        def construct_filter_fnc(embedding_path):
+            print("Loading and fitting ArgSim adversary")
+            word2index, embeddings = load_embeddings(config['embedding_file'])
+            threshold = config['ns_alpha'] * argsim_threshold(train_stream_argim, embeddings, N=1000)
+            embeddings = np.array(embeddings)
+
+            def filter_fnc(head_sample, rel_sample, tail_sample):
+                assert tail_sample.ndim == head_sample.ndim == 2
+
+                head_v = embeddings[head_sample.reshape(-1, )].reshape(list(head_sample.shape) + [-1]).sum(axis=1)
+                tail_v = embeddings[tail_sample.reshape(-1, )].reshape(list(tail_sample.shape) + [-1]).sum(axis=1)
+
+                assert head_v.shape[-1] == embeddings.shape[1]
+                assert head_v.ndim == tail_v.ndim == 2
+
+                scores = np.einsum('ij,ji->i', head_v, tail_v.T).reshape(-1, )
+
+                return scores > threshold
+
+            return filter_fnc
+
+        filter_fnc = construct_filter_fnc(config['embedding_file'])
+
+        neg_sample_kwargs = {"filter_fnc": filter_fnc}
+    else:
+        raise NotImplementedError()
+
     # Get data
-    train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True)
-    test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
-    dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
-    dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
+    train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True,
+        target=target, neg_sample_kwargs=neg_sample_kwargs)
+
+    if regenerate_ns_eval:
+        test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index, k=1, target=target, neg_sample_kwargs=neg_sample_kwargs)
+        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index, k=1, target=target, neg_sample_kwargs=neg_sample_kwargs)
+        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index, k=1, target=target, neg_sample_kwargs=neg_sample_kwargs)
+    else:
+        test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
+        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
+        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
 
     # Initialize Model
     threshold = argsim_threshold(train_stream, embeddings, N=1000)
