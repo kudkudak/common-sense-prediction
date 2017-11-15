@@ -16,7 +16,7 @@ def endless_data_stream(data_stream):
 def load_embeddings(embedding_file):
     if not os.path.isabs(embedding_file):
         embedding_file = os.path.join(DATA_DIR, embedding_file)
-    word2index = {'PADDING-WORD':0}
+    word2index = {'PADDING-WORD': 0}
     embeddings = [0]
     with open(embedding_file,'r') as f:
         for index, line in enumerate(f):
