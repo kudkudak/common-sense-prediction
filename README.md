@@ -6,11 +6,13 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
 ## Resources
 
-* Write-up: https://www.overleaf.com/10600980csjksczhwpgb
+* Paper: https://www.overleaf.com/12326026ybwcgtxbxpkr#/46877048/
 
 * ACL paper: http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf
 
 * Note: https://drive.google.com/drive/folders/0B8-M39RV4diKVlBvTEZidnJNYm8 (or this link https://drive.google.com/open?id=0B8-M39RV4diKVlBvTEZidnJNYm8)
+
+* Old writeup: https://www.overleaf.com/10600980csjksczhwpgb
 
 ## Setup
 
