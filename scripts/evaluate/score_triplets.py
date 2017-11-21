@@ -3,7 +3,8 @@
 """
 Score models on list of triplets
 
-# TODO(kudkudak): for now split into dev and test subsets, can be simplified later
+TODO: Extend to include scores, so that it can spit out result
+TODO: Generalize
 
 python scripts/evaluate/score_triplets.py dataset type model_path save_path, e.g.:
 python scripts/evaluate/score_triplets.py allrel/top10k factorized $SCRATCH/l2lwe/results/factorized/12_11_prototypical $SCRATCH/l2lwe/results/factorized/12_11_prototypical/wiki

@@ -18,7 +18,7 @@ from src.callbacks import (EvaluateOnDataStream, _evaluate_with_threshold_fittin
                            EvaluateWithThresholdFitting,
                            SaveBestScore)
 from src.configs import configs_factorized
-from src.data import LiACLSplitDataset
+from src.data import LiACLSplitDataset, LiACL_OMCS_EMBEDDINGS
 from src.model import factorized
 from src.utils.data_loading import load_embeddings, endless_data_stream
 from src.utils.tools import argsim_threshold
@@ -42,28 +42,31 @@ def init_model_and_data(config):
         # Get train stream to just fit argsim
         train_stream_argim, _ = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True,
             target="negative_sampling")
-        def construct_filter_fnc(embedding_path):
+        def construct_filter_fnc():
             print("Loading and fitting ArgSim adversary")
-            word2index, embeddings = load_embeddings(config['embedding_file'])
-            threshold = config['ns_alpha'] * argsim_threshold(train_stream_argim, embeddings, N=1000)
-            embeddings = np.array(embeddings)
+            print("Using " + config['ns_embedding_file'])
+            # I really hope here word2index is same :P
+            word2index_argsim_adv, embeddings_argsim_adv = load_embeddings(config['ns_embedding_file']) #config['embedding_file'])
+            assert word2index_argsim_adv == word2index
+            threshold_argsim_adv = config['ns_alpha'] * argsim_threshold(train_stream_argim, embeddings_argsim_adv, N=1000)
+            embeddings_argsim_adv = np.array(embeddings_argsim_adv)
 
             def filter_fnc(head_sample, rel_sample, tail_sample):
                 assert tail_sample.ndim == head_sample.ndim == 2
 
-                head_v = embeddings[head_sample.reshape(-1, )].reshape(list(head_sample.shape) + [-1]).sum(axis=1)
-                tail_v = embeddings[tail_sample.reshape(-1, )].reshape(list(tail_sample.shape) + [-1]).sum(axis=1)
+                head_v = embeddings_argsim_adv[head_sample.reshape(-1, )].reshape(list(head_sample.shape) + [-1]).sum(axis=1)
+                tail_v = embeddings_argsim_adv[tail_sample.reshape(-1, )].reshape(list(tail_sample.shape) + [-1]).sum(axis=1)
 
                 assert head_v.shape[-1] == embeddings.shape[1]
                 assert head_v.ndim == tail_v.ndim == 2
 
                 scores = np.einsum('ij,ji->i', head_v, tail_v.T).reshape(-1, )
 
-                return scores > threshold
+                return scores > threshold_argsim_adv
 
             return filter_fnc
 
-        filter_fnc = construct_filter_fnc(config['embedding_file'])
+        filter_fnc = construct_filter_fnc()
 
         neg_sample_kwargs = {"filter_fnc": filter_fnc}
     else:
