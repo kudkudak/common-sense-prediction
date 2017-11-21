@@ -4,6 +4,7 @@
 A *tool* that has three functionalities:
 
 TODO(kudkudak): Allow for mixing of any number of runs. For now always assumes 2 runs
+TODO(kudkudak): Unit test this
 
 1. takes evaluation results by score_tripletws and mixes triplets from two runs and
 prepares evaluation csv that can be used in like gdocs
@@ -55,6 +56,7 @@ if __name__ == "__main__":
             exit(1)
         A, B, K = sys.argv[3:]
         K = int(K)
+
         # Weird version control
         assert A.endswith("_scored.txt") and B.endswith("_scored.txt")
 
