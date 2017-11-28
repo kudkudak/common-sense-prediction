@@ -39,9 +39,9 @@ def init_model_and_data(config):
     elif ns == "argsim":
         target = "filtered_negative_sampling"
 
-        # Get train stream to just fit argsim
-        train_stream_argim, _ = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True,
-            target="negative_sampling")
+        # Get dev stream (train has no information for argsim, weirdly enough?!)
+        dev_stream_argim, _ = dataset.dev1_dataset(config['batch_size'], word2index, shuffle=True,
+            target="score")
 
         print("Here")
 
@@ -54,7 +54,7 @@ def init_model_and_data(config):
             embeddings_argsim_adv, word2index_argsim_adv = load_external_embeddings(DATA_DIR, config['ns_embedding_file'],
                 '', word2index, cache=False), word2index
 
-            threshold_argsim_adv = config['ns_alpha'] * argsim_threshold(train_stream_argim, embeddings_argsim_adv, N=1000)
+            threshold_argsim_adv = config['ns_alpha'] * argsim_threshold(dev_stream_argim, embeddings_argsim_adv, N=1000)
             embeddings_argsim_adv = np.array(embeddings_argsim_adv)
 
             def filter_fnc(head_sample, rel_sample, tail_sample):
@@ -97,8 +97,9 @@ def init_model_and_data(config):
         dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
         dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
 
-    # Initialize Model
-    threshold = argsim_threshold(train_stream, embeddings, N=1000)
+    # Initialize Model. Using train set for argsim threshold doesn't make sense - it is too hard for argsim
+    # given a lot of noise everywhere. It is not discriminative anymore, weirdly.
+    threshold = argsim_threshold(dev1_stream, embeddings, N=1000)
     print("Found argsim threshold " + str(threshold))
     model = factorized(embedding_init=embeddings,
         vocab_size=embeddings.shape[0],
