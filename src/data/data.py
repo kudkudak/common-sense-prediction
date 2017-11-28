@@ -153,22 +153,6 @@ class LiACLSplitDataset(object):
         self.rel_vocab = Vocabulary(filepath=self.REL_FILE,
                                     data_dir=data_dir)
 
-    def load_rel2index(self):
-        rel2index = {}
-        rel_file = os.path.join(self.data_dir, LiACLSplitDataset.REL_FILE)
-
-        if not os.path.isabs(rel_file):
-            rel_file = os.path.join(DATA_DIR, rel_file)
-
-        logging.info("Loading: " + rel_file)
-
-        with open(rel_file, 'r') as f:
-            for index, line in enumerate(f):
-                rel2index[line.strip()] = index
-
-        self.rel2index = rel2index
-        self.rel_vocab_size = len(rel2index)
-
     def train_data_stream(self, batch_size, **args):
         return self.train.data_stream(batch_size,
                                       self.vocab,
