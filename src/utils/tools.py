@@ -8,14 +8,16 @@ logger = logging.getLogger(__name__)
 def featurize(term_batch, embedding):
     return np.array([[embedding[word] for word in term] for term in term_batch]).mean(axis=1)
 
-
 # TODO(kudkudak): Change mean to sum and divide by number of nonzeros
 def argsim_score(data_stream, embedding):
     targets = []
     argsims = []
     for data, target in data_stream.get_epoch_iterator():
-        head = np.mean(embedding[data['head']], axis=1)
-        tail = np.mean(embedding[data['tail']], axis=1)
+        head_len = data['head_mask'].sum(axis=1, keepdims=True)
+        tail_len = data['tail_mask'].sum(axis=1, keepdims=True)
+        # Warning: indexing works only for np.arrays
+        head = np.sum(embedding[data['head']], axis=1)/head_len
+        tail = np.sum(embedding[data['tail']], axis=1)/tail_len
         sim = np.einsum('ij,ji->i', head, tail.T)
         argsims.append(sim)
         targets.append(target)
@@ -24,8 +26,10 @@ def argsim_score(data_stream, embedding):
 
 def argsim_threshold(data_stream, embedding, N=1000):
     scores, targets = argsim_score(data_stream, embedding)
-    # TODO(kudkudak): If on dev, we can reuse the trick from callback to check all thresholds
-    thresholds = np.linspace(scores.min(), scores.max(), N)
+    if N == "all":
+        thresholds = np.array(sorted(scores))
+    else:
+        thresholds = np.linspace(scores.min(), scores.max(), N)
     print("Testing {} thresholds".format(N))
     threshold_acc = [np.mean((scores > t) == targets) for t in thresholds]
     print("Max threshold acc " + str(np.max(threshold_acc)))
