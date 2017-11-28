@@ -22,6 +22,7 @@ from keras.models import Model
 from keras.regularizers import l2 as l2_reg
 
 import keras.backend as K
+import logging
 
 from src.layers import MaskAvg
 
@@ -91,6 +92,7 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
 
     embedding_args = {}
     if use_embedding:
+        logging.info("Loading weights")
         embedding_args['weights'] = [embedding_init]
 
     embedding_layer = Embedding(vocab_size,

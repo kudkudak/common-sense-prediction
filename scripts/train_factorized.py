@@ -20,7 +20,7 @@ from src.callbacks import (EvaluateOnDataStream, _evaluate_with_threshold_fittin
 from src.configs import configs_factorized
 from src.data import LiACLSplitDataset, LiACL_OMCS_EMBEDDINGS
 from src.model import factorized
-from src.utils.data_loading import load_embeddings, endless_data_stream
+from src.utils.data_loading import load_embeddings, endless_data_stream, load_external_embeddings
 from src.utils.tools import argsim_threshold
 from src.utils.training_loop import training_loop
 from src.utils.vegab import wrap, MetaSaver
@@ -42,20 +42,29 @@ def init_model_and_data(config):
         # Get train stream to just fit argsim
         train_stream_argim, _ = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True,
             target="negative_sampling")
+
+        print("Here")
+
         def construct_filter_fnc():
+
             print("Loading and fitting ArgSim adversary")
             print("Using " + config['ns_embedding_file'])
-            # I really hope here word2index is same :P
-            word2index_argsim_adv, embeddings_argsim_adv = load_embeddings(config['ns_embedding_file']) #config['embedding_file'])
-            assert word2index_argsim_adv == word2index
+
+            # TODO(kudkudak): Very weird use of load_external_embeddings
+            embeddings_argsim_adv, word2index_argsim_adv = load_external_embeddings(DATA_DIR, config['ns_embedding_file'],
+                '', word2index, cache=False), word2index
+
             threshold_argsim_adv = config['ns_alpha'] * argsim_threshold(train_stream_argim, embeddings_argsim_adv, N=1000)
             embeddings_argsim_adv = np.array(embeddings_argsim_adv)
 
             def filter_fnc(head_sample, rel_sample, tail_sample):
                 assert tail_sample.ndim == head_sample.ndim == 2
 
-                head_v = embeddings_argsim_adv[head_sample.reshape(-1, )].reshape(list(head_sample.shape) + [-1]).sum(axis=1)
-                tail_v = embeddings_argsim_adv[tail_sample.reshape(-1, )].reshape(list(tail_sample.shape) + [-1]).sum(axis=1)
+                head_ids = head_sample.reshape(-1, )
+                tail_ids = tail_sample.reshape(-1, )
+
+                head_v = embeddings_argsim_adv[head_ids].reshape(list(head_sample.shape) + [-1]).sum(axis=1)
+                tail_v = embeddings_argsim_adv[tail_ids].reshape(list(tail_sample.shape) + [-1]).sum(axis=1)
 
                 assert head_v.shape[-1] == embeddings.shape[1]
                 assert head_v.ndim == tail_v.ndim == 2
@@ -77,9 +86,12 @@ def init_model_and_data(config):
         target=target, neg_sample_kwargs=neg_sample_kwargs)
 
     if regenerate_ns_eval:
-        test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index, k=1, target=target, neg_sample_kwargs=neg_sample_kwargs)
-        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index, k=1, target=target, neg_sample_kwargs=neg_sample_kwargs)
-        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index, k=1, target=target, neg_sample_kwargs=neg_sample_kwargs)
+        test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index, k=1, target=target,
+            neg_sample_kwargs=neg_sample_kwargs)
+        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index, k=1, target=target,
+            neg_sample_kwargs=neg_sample_kwargs)
+        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index, k=1, target=target,
+            neg_sample_kwargs=neg_sample_kwargs)
     else:
         test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
         dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)

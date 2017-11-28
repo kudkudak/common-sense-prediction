@@ -5,6 +5,7 @@ A *tool* that has three functionalities:
 
 TODO(kudkudak): Allow for mixing of any number of runs. For now always assumes 2 runs
 TODO(kudkudak): Unit test this
+TODO(kudkudak): Do we really need stupid naming conventions? Change to just passing names to script
 
 1. takes evaluation results by score_tripletws and mixes triplets from two runs and
 prepares evaluation csv that can be used in like gdocs

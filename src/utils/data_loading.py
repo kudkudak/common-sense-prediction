@@ -30,10 +30,14 @@ def load_embeddings(embedding_file):
 
     return word2index, np.matrix(embeddings)
 
-def load_external_embeddings(data_dir, embedding_file, ext_sub_embedding_file, main_word2index):
-    embedding_file = os.path.join(data_dir, embedding_file)
-    ext_sub_embedding_file = os.path.join(data_dir, ext_sub_embedding_file)
+def load_external_embeddings(data_dir, embedding_file, ext_sub_embedding_file, main_word2index, cache=True):
+    # TODO(kudkudak): Remove data_dir parameter
+    if not os.path.isabs(embedding_file):
+        embedding_file = os.path.join(data_dir, embedding_file)
+    if not os.path.isabs(ext_sub_embedding_file):
+        ext_sub_embedding_file = os.path.join(data_dir, ext_sub_embedding_file)
     if os.path.isfile(ext_sub_embedding_file):
+        # TODO(kudkudak): Remove support for sub. It is confusing. On top of that: should double-check alignment
         embeddings = []
         with open(ext_sub_embedding_file,'r') as f:
             index = 0
@@ -73,7 +77,9 @@ def load_external_embeddings(data_dir, embedding_file, ext_sub_embedding_file, m
             else:
                 miss += 1
         print ("loaded external embeddings with hit="+str(hit)+" and miss="+str(miss))
-        with open(ext_sub_embedding_file,'w') as f:
-            for word in main_word2index.keys():
-                f.write(word+" "+" ".join(corresponding_embeddings[main_word2index[word]].astype(str))+"\n")
+        # TODO(kdukudak): Remove this mess with ext_sub_embedding_file. These caches are extremeley dangerous
+        if cache:
+            with open(ext_sub_embedding_file,'w') as f:
+                for word in main_word2index.keys():
+                    f.write(word+" "+" ".join(corresponding_embeddings[main_word2index[word]].astype(str))+"\n")
     return corresponding_embeddings
