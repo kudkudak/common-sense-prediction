@@ -17,15 +17,17 @@ class Vocabulary(object):
     BOD = '<bod>' # beginning-of-definition
     EOD = '<eod>' # end-of-definition
     UNK = '<unk>' # unknown token
+    PADDING = '</s>' # padding token
     SPECIAL_TOKEN_MAP = {
         BOS: 'bos',
         EOS: 'eos',
         BOD: 'bod',
         EOD: 'eod',
-        UNK: 'unk'
+        UNK: 'unk',
+        PADDING: 'padding',
     }
 
-    def __init__(self, path_or_data):
+    def __init__(self, path_or_data, ignore_case=False):
         """Initialize the vocabulary.
 
         path_or_data
@@ -40,32 +42,42 @@ class Vocabulary(object):
             with open(path_or_data) as f:
                 for line in f:
                     word, freq_str = line.strip().split()
-                    word = word.decode('utf-8')
                     freq = int(freq_str)
                     words_and_freqs.append((word, freq))
         else:
             words_and_freqs = path_or_data
 
+        self.ignore_case = ignore_case
         self._id_to_word = []
         self._id_to_freq = []
         self._word_to_id = {}
         self.bos = self.eos = -1
         self.bod = self.eod = -1
         self.unk = -1
+        self.padding = -1
 
         for idx, (word_name, freq) in enumerate(words_and_freqs):
             token_attr = self.SPECIAL_TOKEN_MAP.get(word_name)
             if token_attr is not None:
                 setattr(self, token_attr, idx)
 
+            if self.ignore_case:
+                word_name = word_name.lower()
+
             self._id_to_word.append(word_name)
             self._id_to_freq.append(freq)
             self._word_to_id[word_name] = idx
 
-        if -1 in [getattr(self, attr)
-                  for attr in self.SPECIAL_TOKEN_MAP.values()]:
-            raise ValueError("special token not found in the vocabulary")
+        if self.unk == -1:
+            self.unk = len(self._id_to_word)
+            self._id_to_word.append(self.UNK)
+            self._id_to_freq.append(0)
+            self._word_to_id[self.UNK] = self.unk
+        # if -1 in [getattr(self, attr)
+                  # for attr in self.SPECIAL_TOKEN_MAP.values()]:
+            # raise ValueError("special token not found in the vocabulary")
 
+    @property
     def size(self):
         return len(self._id_to_word)
 
@@ -78,8 +90,11 @@ class Vocabulary(object):
         return self._id_to_freq
 
     def word_to_id(self, word, top_k=None):
+        if self.ignore_case:
+            word = word.lower()
+
         id_ = self._word_to_id.get(word)
-        if id_ is not None and not top_k or id_ < top_k:
+        if (id_ is not None) and (not top_k or id_ < top_k):
             return id_
         else:
             return self.unk
@@ -88,6 +103,9 @@ class Vocabulary(object):
         return self._id_to_word[cur_id]
 
     def word_freq(self, word):
+        if self.ignore_case:
+            word = word.lower()
+
         if not word in self._word_to_id:
             return 0
         return self._id_to_freq[self._word_to_id[word]]

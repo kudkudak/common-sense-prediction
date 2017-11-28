@@ -92,6 +92,9 @@ def _evaluate_with_threshold_fitting(epoch, logs, model, val_data_thr, val_data,
     logger.info("")
     logger.info("Calculating threshold")
 
+    import pdb
+    pdb.set_trace()
+
     # Predict
     # NOTE(kudkudak): Using manual looping, because Keras2 has issues
     X_thr, y_thr = _collect(val_data_thr.get_epoch_iterator())

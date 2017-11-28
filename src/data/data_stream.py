@@ -15,8 +15,17 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
+def endless_data_stream(data_stream):
+    for iterator in data_stream.iterate_epochs():
+        while True:
+            try:
+                yield next(iterator)
+            except StopIteration:
+                break
+
+
 def liacl_data_stream(dataset, batch_size, vocab, rel_vocab, target='negative_sampling',
-                      name=None, k=3, shuffle=False, neg_sample_kwargs={}):
+                      name=None, k=3, shuffle=False, **neg_sample_kwargs):
     batches_per_epoch = int(np.ceil(dataset.num_examples / float(batch_size)))
     if shuffle:
         iteration_scheme = ShuffledScheme(dataset.num_examples, batch_size)
@@ -36,10 +45,10 @@ def liacl_data_stream(dataset, batch_size, vocab, rel_vocab, target='negative_sa
 
     if target == 'negative_sampling':
         logger.info('target for data stream ' + name + ' is negative sampling')
-        data_stream = NegativeSampling(data_stream, k=k)
+        data_stream = NegativeSampling(data_stream, **neg_sample_kwargs)
     elif target == 'filtered_negative_sampling':
         logger.info('target for data stream ' + name + ' is filtered negative sampling')
-        data_stream = FilteredNegativeSampling(data_stream, k=k, **neg_sample_kwargs)
+        data_stream = FilteredNegativeSampling(data_stream, **neg_sample_kwargs)
     elif target == 'score':
         logger.info('target for data stream ' + str(name) + ' is score')
     else:
@@ -58,9 +67,8 @@ def _liacl_add_closest_neighbour(stream):
     raise NotImplementedError()
 
 
-
 class NumberizeWords(SourcewiseTransformer):
-    def __init__(self, data_stream, vocab):
+    def __init__(self, data_stream, vocab, *args, **kwargs):
         super(NumberizeWords, self).__init__(data_stream,
                                              produces_examples=data_stream.produces_examples,
                                              *args,
@@ -80,7 +88,7 @@ class FilteredNegativeSampling(Transformer):
     accept this sample or not
     """
 
-    def __init__(self, data_stream, filter_fnc, k=3, *args, **kwargs):
+    def __init__(self, data_stream, filter_fnc, *args, **kwargs):
         if data_stream.produces_examples:
             raise ValueError('the wrapped data stream must produce batches, '
                              'not examples.')
@@ -89,7 +97,7 @@ class FilteredNegativeSampling(Transformer):
         if self.rng is None:
             self.rng = np.random.RandomState(config.default_seed)
 
-        self.k = k
+        self.k = kwargs.pop('k', 3)
         self.filter_fnc = filter_fnc
 
         self.batch_id = 0
@@ -167,12 +175,12 @@ class FilteredNegativeSampling(Transformer):
 
 
 class NegativeSampling(Transformer):
-    def __init__(self, data_stream, k=3, *args, **kwargs):
+    def __init__(self, data_stream, *args, **kwargs):
         if data_stream.produces_examples:
             raise ValueError('the wrapped data stream must produce batches, '
                              'not examples.')
 
-        self.k = k
+        self.k = kwargs.pop('k', 3)
         self.rng = kwargs.pop('rng', None)
         if self.rng is None:
             self.rng = np.random.RandomState(config.default_seed)

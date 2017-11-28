@@ -237,6 +237,7 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
 
     return model
 
+
 def extended_factorized(embedding_init, embedding_size, external_embeddings, vocab_size, use_embedding,
         l2, rel_vocab_size, rel_init, bias_init, hidden_units,
         hidden_activation, merge, merge_weight, batch_norm, bias_trick,

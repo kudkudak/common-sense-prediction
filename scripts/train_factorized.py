@@ -14,34 +14,36 @@ from keras.optimizers import (Adagrad,
                               RMSprop)
 
 from src import DATA_DIR
-from src.callbacks import (EvaluateOnDataStream, _evaluate_with_threshold_fitting,
+from src.callbacks import (EvaluateOnDataStream,
+                           _evaluate_with_threshold_fitting,
                            EvaluateWithThresholdFitting,
                            SaveBestScore)
 from src.configs import configs_factorized
-from src.data.data import LiACLSplitDataset, LiACL_OMCS_EMBEDDINGS
+from src.data.dataset import (LiACLSplitDataset,
+                              LiACL_OMCS_EMBEDDINGS)
+from src.data.embeddings import Embedding
+from src.data.data_stream import endless_data_stream
 from src.model import factorized
-from src.utils.data_loading import load_embeddings, endless_data_stream, load_external_embeddings
 from src.utils.tools import argsim_threshold
 from src.utils.training_loop import training_loop
 from src.utils.vegab import wrap, MetaSaver
 
+
 def init_model_and_data(config):
     np.random.seed(config['random_seed'])
 
-    word2index, embeddings = load_embeddings(config['embedding_file'])
     dataset = LiACLSplitDataset(config['data_dir'])
+    embeddings = Embedding(config['embedding_file'], dataset.vocab)
 
-    regenerate_ns_eval = config.get("regenerate_ns_eval", False)
+    neg_sample_kwargs = {}
     ns = config.get("negative_sampling", "uniform")
     if ns == 'uniform':
         target = 'negative_sampling'
-        neg_sample_kwargs = {}
     elif ns == "argsim":
         target = "filtered_negative_sampling"
 
         # Get dev stream (train has no information for argsim, weirdly enough?!)
-        dev_stream_argim, _ = dataset.dev1_data_stream(config['batch_size'], word2index, shuffle=True,
-            target="score")
+        dev_stream_argim, _ = dataset.dev1_data_stream(config['batch_size'], shuffle=True)
 
         print("Here")
 
@@ -77,33 +79,41 @@ def init_model_and_data(config):
 
         filter_fnc = construct_filter_fnc()
 
-        neg_sample_kwargs = {"filter_fnc": filter_fnc}
+        neg_sample_kwargs["filter_fnc"] = filter_fnc
     else:
         raise NotImplementedError()
 
     # Get data
-    train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True,
-        target=target, neg_sample_kwargs=neg_sample_kwargs)
+    train_stream, train_steps = dataset.train_data_stream(config['batch_size'],
+                                                          shuffle=True,
+                                                          target=target,
+                                                          **neg_sample_kwargs)
 
+    regenerate_ns_eval = config.get("regenerate_ns_eval", False)
     if regenerate_ns_eval:
-        test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index, k=config['eval_k'], target=target,
-            neg_sample_kwargs=neg_sample_kwargs)
-        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index, k=config['eval_k'], target=target,
-            neg_sample_kwargs=neg_sample_kwargs)
-        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index, k=config['eval_k'], target=target,
-            neg_sample_kwargs=neg_sample_kwargs)
+        #TODO(mnuke): should k be = 1 here?
+        neg_sample_kwargs['k'] = 1
+        test_stream, _ = dataset.test_data_stream(config['batch_size'],
+                                                  target=target,
+                                                  **neg_sample_kwargs)
+        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'],
+                                                  target=target,
+                                                  **neg_sample_kwargs)
+        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'],
+                                                  target=target,
+                                                  **neg_sample_kwargs)
     else:
-        test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
-        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
-        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
+        test_stream, _ = dataset.test_data_stream(config['batch_size'])
+        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'])
+        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'])
 
     # Initialize Model. Using train set for argsim threshold doesn't make sense - it is too hard for argsim
     # given a lot of noise everywhere. It is not discriminative anymore, weirdly.
-    threshold = argsim_threshold(dev1_stream, embeddings, N=1000)
+    threshold = argsim_threshold(dev1_stream, embeddings.values, N=1000)
     print("Found argsim threshold " + str(threshold))
-    model = factorized(embedding_init=embeddings,
-        vocab_size=embeddings.shape[0],
-        embedding_size=embeddings.shape[1],
+    model = factorized(embedding_init=embeddings.values,
+        vocab_size=dataset.vocab.size,
+        embedding_size=embeddings.embed_size,
         use_headtail=config['use_headtail'],
         use_tailrel=config['use_tailrel'],
         use_headrel=config['use_headrel'],
@@ -113,7 +123,7 @@ def init_model_and_data(config):
         l2_a=config['l2_a'],
         l2_b=config['l2_b'],
         trainable_word_embeddings=config['trainable_word_embeddings'],
-        rel_vocab_size=dataset.rel_vocab_size,
+        rel_vocab_size=dataset.rel_vocab.size,
         rel_init=config['rel_init'],
         bias_init=threshold,
         hidden_units=config['hidden_units'],
@@ -139,7 +149,7 @@ def init_model_and_data(config):
         metrics=['binary_crossentropy', 'accuracy'])
 
     return model, {"train_stream": train_stream, "train_steps": train_steps, "test_stream": test_stream,
-        "dev1_stream": dev1_stream, "dev2_stream": dev2_stream, "word2index": word2index}
+        "dev1_stream": dev1_stream, "dev2_stream": dev2_stream}
 
 
 def train(config, save_path):

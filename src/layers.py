@@ -124,7 +124,8 @@ def MaskAvg(output_shape, **args):
         x, mask = inputs
         assert K.ndim(x) == 3  # (n_batch, len, dim)
         assert K.ndim(mask) == 2  # (n_batch, len)
-        return K.sum(x, axis=1) / K.sum(mask, axis=1, keepdims=True)
+        # return K.sum(x, axis=1) / K.sum(mask, axis=1, keepdims=True)
+        return K.sum(x * mask, axis=1)
 
     return Lambda(_mask_avg, output_shape=output_shape, **args)
 
