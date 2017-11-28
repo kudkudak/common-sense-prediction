@@ -19,7 +19,8 @@ config.set_root_config({
     'merge': 'add',
     'merge_weight': False,
     'rel_init': 0.05,
-    'l2': 1e-6,
+    'l2_a': 1e-6, # l2 used for other layers than dense transforming word embeddings
+    'l2_b': 0.0, # l2 used for dense layers
     'optimizer': 'adagrad',
     'learning_rate': 0.01,
     'share_mode': 1,

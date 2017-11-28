@@ -79,10 +79,10 @@ def dnn_ce(embedding_init, embedding_size, vocab_size, use_embedding,
 
 
 def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
-        l2, rel_vocab_size, rel_init, bias_init, hidden_units,
+        l2_a, rel_vocab_size, rel_init, bias_init, hidden_units,
         hidden_activation, merge, merge_weight, batch_norm, bias_trick,
         use_tailrel=True, use_headrel=True, emb_drop=0.0, trainable_word_embeddings=True,
-        use_headtail=True, share_mode=False):
+        use_headtail=True, share_mode=False, l2_b=0):
     """
     TODO(kudkudak): Try without biases
 
@@ -97,7 +97,7 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
 
     embedding_layer = Embedding(vocab_size,
         embedding_size,
-        embeddings_regularizer=l2_reg(l2),
+        embeddings_regularizer=l2_reg(l2_a),
         trainable=trainable_word_embeddings,
         **embedding_args)
 
@@ -105,11 +105,11 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
 
     rel_embedding_layer = Embedding(rel_vocab_size,
         embedding_size,
-        embeddings_regularizer=l2_reg(l2),
+        embeddings_regularizer=l2_reg(l2_a),
         embeddings_initializer=RandomUniform(-rel_init, rel_init),
         trainable=True)
 
-    dense_args = {}
+    dense_args = {"kernel_regularizer": l2_reg(l2_b)}
 
     if share_mode == 0:
         # score = <Ahead, Btail> + <Chead, Drel> + <Etail, Frel>
@@ -219,11 +219,11 @@ def factorized(embedding_init, embedding_size, vocab_size, use_embedding,
         score = Dense(1,
             kernel_initializer='ones',
             bias_initializer=Constant(bias_init),
-            kernel_regularizer=l2_reg(l2),
+            kernel_regularizer=l2_reg(l2_a),
             trainable=True, )(score)
     else:
         score = Dense(1,
-            kernel_regularizer=l2_reg(l2),
+            kernel_regularizer=l2_reg(l2_a),
             trainable=True, )(score)
 
     if batch_norm:

@@ -99,7 +99,6 @@ def init_model_and_data(config):
 
     # Initialize Model
     threshold = argsim_threshold(train_stream, embeddings, N=1000)
-    # threshold = argsim_threshold(dev1_stream, embeddings, N=1000)
     print("Found argsim threshold " + str(threshold))
     model = factorized(embedding_init=embeddings,
         vocab_size=embeddings.shape[0],
@@ -110,7 +109,8 @@ def init_model_and_data(config):
         emb_drop=config['emb_drop'],
         use_embedding=config['use_embedding'],
         share_mode=config['share_mode'],
-        l2=config['l2'],
+        l2_a=config['l2_a'],
+        l2_b=config['l2_b'],
         trainable_word_embeddings=config['trainable_word_embeddings'],
         rel_vocab_size=dataset.rel_vocab_size,
         rel_init=config['rel_init'],
