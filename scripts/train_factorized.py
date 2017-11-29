@@ -28,6 +28,33 @@ from src.utils.tools import argsim_threshold
 from src.utils.training_loop import training_loop
 from src.utils.vegab import wrap, MetaSaver
 
+def construct_filter_fnc(dev_stream_argim, ns_embedding_file, vocab, ns_alpha):
+    print("Loading and fitting ArgSim adversary")
+    print("Using {}".format(ns_embedding_file))
+
+    embeddings_argsim_adv = Embedding(ns_embedding_file, dataset.vocab)
+    threshold_argsim_adv = ns_alpha * argsim_threshold(dev_stream_argim, embeddings_argsim_adv.values, N=1000)
+    embeddings_argsim_adv = np.array(embeddings_argsim_adv)
+
+    def filter_fnc(head_sample, rel_sample, tail_sample):
+        assert tail_sample.ndim == head_sample.ndim == 2
+
+        head_ids = head_sample.reshape(-1, )
+        tail_ids = tail_sample.reshape(-1, )
+
+        head_v = embeddings_argsim_adv.values[head_ids].reshape(list(head_sample.shape) + [-1]).sum(axis=1)
+        tail_v = embeddings_argsim_adv.values[tail_ids].reshape(list(tail_sample.shape) + [-1]).sum(axis=1)
+
+        assert head_v.shape[-1] == embeddings.embed_size
+        assert head_v.ndim == tail_v.ndim == 2
+
+        scores = np.einsum('ij,ji->i', head_v, tail_v.T).reshape(-1, )
+
+        return scores > threshold_argsim_adv
+
+    return filter_fnc
+
+
 
 def init_model_and_data(config):
     np.random.seed(config['random_seed'])
@@ -44,37 +71,10 @@ def init_model_and_data(config):
 
         # Get dev stream (train has no information for argsim, weirdly enough?!)
         dev_stream_argim, _ = dataset.dev1_data_stream(config['batch_size'], shuffle=True)
-
-        print("Here")
-
-        def construct_filter_fnc():
-
-            print("Loading and fitting ArgSim adversary")
-            print("Using " + config['ns_embedding_file'])
-
-            embeddings_argsim_adv = Embedding(config['ns_embedding_file'], dataset.vocab)
-            threshold_argsim_adv = config['ns_alpha'] * argsim_threshold(dev_stream_argim, embeddings_argsim_adv.values, N=1000)
-            embeddings_argsim_adv = np.array(embeddings_argsim_adv)
-
-            def filter_fnc(head_sample, rel_sample, tail_sample):
-                assert tail_sample.ndim == head_sample.ndim == 2
-
-                head_ids = head_sample.reshape(-1, )
-                tail_ids = tail_sample.reshape(-1, )
-
-                head_v = embeddings_argsim_adv.values[head_ids].reshape(list(head_sample.shape) + [-1]).sum(axis=1)
-                tail_v = embeddings_argsim_adv.values[tail_ids].reshape(list(tail_sample.shape) + [-1]).sum(axis=1)
-
-                assert head_v.shape[-1] == embeddings.embed_size
-                assert head_v.ndim == tail_v.ndim == 2
-
-                scores = np.einsum('ij,ji->i', head_v, tail_v.T).reshape(-1, )
-
-                return scores > threshold_argsim_adv
-
-            return filter_fnc
-
-        filter_fnc = construct_filter_fnc()
+        filter_fnc = construct_filter_fnc(dev_stream_argim,
+                                          config['ns_embedding_file'],
+                                          dataset.vocab,
+                                          config['ns_alpha'])
 
         neg_sample_kwargs["filter_fnc"] = filter_fnc
     else:
