@@ -103,8 +103,7 @@ class LiACLSplitDataset(object):
                             filepath=self.TEST_FILE,
                             data_dir=data_dir)
         self.vocab = Vocabulary(os.path.join(data_dir, self.VOCAB_FILE))
-        self.rel_vocab = Vocabulary(os.path.join(data_dir, self.REL_FILE),
-                                    ignore_case=True)
+        self.rel_vocab = Vocabulary(os.path.join(data_dir, self.REL_FILE))
 
     def train_data_stream(self, batch_size, target='negative_sampling', **kwargs):
         return self.train.data_stream(batch_size,
@@ -135,10 +134,3 @@ class LiACLSplitDataset(object):
                                       **kwargs)
 
 
-if __name__ == '__main__':
-    dataset = LiACLSplitDataset('/home/mnoukhov/common_sense_prediction/data/LiACL/conceptnet')
-    ds, batches = dataset.train_data_stream(10)
-    import pdb
-    pdb.set_trace()
-    for batch in ds.get_epoch_iterator():
-        print(batch)

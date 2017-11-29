@@ -9,6 +9,8 @@ from keras import initializers
 from keras.engine import InputSpec
 from keras.layers import Lambda
 
+import tensorflow as tf
+
 #
 # class MergeRelSplit(keras.layers.Layer):
 #     """
@@ -125,7 +127,9 @@ def MaskAvg(output_shape, **args):
         assert K.ndim(x) == 3  # (n_batch, len, dim)
         assert K.ndim(mask) == 2  # (n_batch, len)
         # return K.sum(x, axis=1) / K.sum(mask, axis=1, keepdims=True)
-        return K.sum(x * mask, axis=1)
+        mask = tf.expand_dims(mask, 2)
+        masked = x * mask
+        return K.sum(masked, axis=1)
 
     return Lambda(_mask_avg, output_shape=output_shape, **args)
 
