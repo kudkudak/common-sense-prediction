@@ -52,11 +52,8 @@ def init_model_and_data(config):
             print("Loading and fitting ArgSim adversary")
             print("Using " + config['ns_embedding_file'])
 
-            # TODO(kudkudak): Very weird use of load_external_embeddings
-            embeddings_argsim_adv, word2index_argsim_adv = load_external_embeddings(DATA_DIR, config['ns_embedding_file'],
-                '', word2index, cache=False), word2index
-
-            threshold_argsim_adv = config['ns_alpha'] * argsim_threshold(dev_stream_argim, embeddings_argsim_adv, N=1000)
+            embeddings_argsim_adv = Embedding(config['ns_embedding_file'], dataset.vocab)
+            threshold_argsim_adv = config['ns_alpha'] * argsim_threshold(dev_stream_argim, embeddings_argsim_adv.values, N=1000)
             embeddings_argsim_adv = np.array(embeddings_argsim_adv)
 
             def filter_fnc(head_sample, rel_sample, tail_sample):
@@ -65,10 +62,10 @@ def init_model_and_data(config):
                 head_ids = head_sample.reshape(-1, )
                 tail_ids = tail_sample.reshape(-1, )
 
-                head_v = embeddings_argsim_adv[head_ids].reshape(list(head_sample.shape) + [-1]).sum(axis=1)
-                tail_v = embeddings_argsim_adv[tail_ids].reshape(list(tail_sample.shape) + [-1]).sum(axis=1)
+                head_v = embeddings_argsim_adv.values[head_ids].reshape(list(head_sample.shape) + [-1]).sum(axis=1)
+                tail_v = embeddings_argsim_adv.values[tail_ids].reshape(list(tail_sample.shape) + [-1]).sum(axis=1)
 
-                assert head_v.shape[-1] == embeddings.shape[1]
+                assert head_v.shape[-1] == embeddings.embed_size
                 assert head_v.ndim == tail_v.ndim == 2
 
                 scores = np.einsum('ij,ji->i', head_v, tail_v.T).reshape(-1, )
