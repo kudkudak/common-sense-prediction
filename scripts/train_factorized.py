@@ -40,7 +40,7 @@ def init_model_and_data(config):
         target = "filtered_negative_sampling"
 
         # Get dev stream (train has no information for argsim, weirdly enough?!)
-        dev_stream_argim, _ = dataset.dev1_dataset(config['batch_size'], word2index, shuffle=True,
+        dev_stream_argim, _ = dataset.dev1_data_stream(config['batch_size'], word2index, shuffle=True,
             target="score")
 
         print("Here")
@@ -86,11 +86,11 @@ def init_model_and_data(config):
         target=target, neg_sample_kwargs=neg_sample_kwargs)
 
     if regenerate_ns_eval:
-        test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index, k=1, target=target,
+        test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index, k=config['eval_k'], target=target,
             neg_sample_kwargs=neg_sample_kwargs)
-        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index, k=1, target=target,
+        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index, k=config['eval_k'], target=target,
             neg_sample_kwargs=neg_sample_kwargs)
-        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index, k=1, target=target,
+        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index, k=config['eval_k'], target=target,
             neg_sample_kwargs=neg_sample_kwargs)
     else:
         test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)

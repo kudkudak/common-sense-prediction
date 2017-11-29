@@ -12,6 +12,7 @@ config = ConfigRegistry()
 # similarly tuning regularization (not checked extensively, but around 0.5%)
 config.set_root_config({
     'batch_size': 200,
+    'eval_k': 1, # Number of neg samples in eval
     'epochs': 30,
     'activation': 'relu',
     'hidden_units': 1000,

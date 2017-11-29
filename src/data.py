@@ -367,6 +367,7 @@ class NegativeSampling(Transformer):
 
         # TODO(kudkudak): This is a terrible hack
         if self.k < 3:
+            # Can 1/3 of it be false negative?
             assert len(head) == 4*batch_size
             ids = range(batch_size)
             ids_chosen = np.random.choice(batch_size*3, batch_size*self.k, replace=False)
