@@ -3,8 +3,8 @@ from keras.models import Model
 from keras.layers import Input, Embedding, Flatten
 
 from src import DATA_DIR
-from src.data import LiACLSplitDataset
-from scripts.train_dnn_ce import endless_data_stream
+from src.data.dataset import LiACLSplitDataset
+from src.data.data_stream import endless_data_stream
 
 
 def test_integration():
@@ -25,5 +25,19 @@ def test_integration():
                         verbose=1)
 
 
+def test_stream():
+    from timeit import default_timer as timer
+
+    BATCH_SIZE = 1000
+    data_dir = 'LiACL/conceptnet/'
+    data = LiACLSplitDataset(data_dir)
+    data_stream, batches = data.train_data_stream(BATCH_SIZE)
+    start = timer()
+    for _ in data_stream.get_epoch_iterator():
+        pass
+    end = timer()
+    print(end - start)
+
+
 if __name__ == '__main__':
-    test_integration()
+    test_stream()

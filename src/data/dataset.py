@@ -44,8 +44,7 @@ class Dataset(object):
     def load_data(self, filepath):
         logging.info("Loading: " + filepath)
 
-        data = pd.read_csv(filepath,
-            sep="\t", header=None)
+        data = pd.read_csv(filepath, sep="\t", header=None)
         data.columns = ['rel', 'head', 'tail', 'score']
         assert (not data.empty)
         return IndexableDataset(data.to_dict('list'))
