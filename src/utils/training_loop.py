@@ -64,9 +64,9 @@ def training_loop(model, train, epochs, steps_per_epoch, valid=None, valid_steps
 
         # TODO(kudkudak): Add saving from last epoch, often useful
 
-        #optimization
-        # callbacks.append(EarlyStopping(monitor=acc_monitor, patience=10))
-        callbacks.append(ReduceLROnPlateau(monitor=acc_monitor, patience=10))
+    #optimization
+    # callbacks.append(EarlyStopping(monitor=acc_monitor, patience=10))
+    callbacks.append(ReduceLROnPlateau(monitor=acc_monitor, patience=10))
 
     model.fit_generator(generator=train,
                         steps_per_epoch=steps_per_epoch,

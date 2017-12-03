@@ -18,8 +18,8 @@ import numpy as np
 import pandas as pd
 
 from src import DATA_DIR
-from src.data.data_stream import liacl_data_stream
 from src.data.vocab import Vocabulary
+from src.data.stream import liacl_data_stream
 
 logger = logging.getLogger(__name__)
 

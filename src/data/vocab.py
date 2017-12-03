@@ -10,8 +10,10 @@ from six import text_type, string_types
 
 logger = logging.getLogger()
 
+
 class Vocabulary(object):
     """Class that holds a vocabulary for the dataset."""
+    #TODO(mnuke): this is overly complicated, should just be token char -> index
     BOS = '<bos>' # beginning-of-sequence
     EOS = '<eos>' # end-of-sequence
     BOD = '<bod>' # beginning-of-definition
@@ -150,11 +152,7 @@ class Vocabulary(object):
         if top_k:
             words_and_freqs  = words_and_freqs[:top_k]
         words_and_freqs = (
-            [(Vocabulary.BOS, 0),
-             (Vocabulary.EOS, 0),
-             (Vocabulary.BOD, 0),
-             (Vocabulary.EOD, 0),
-             (Vocabulary.UNK, 0)]
+            [(token, 0) for token in Vocabulary.SPECIAL_TOKEN_MAP.keys()]
             + words_and_freqs)
 
         return Vocabulary(words_and_freqs)

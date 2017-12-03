@@ -21,8 +21,8 @@ from src.callbacks import (EvaluateOnDataStream,
 from src.configs import configs_factorized
 from src.data.dataset import (LiACLSplitDataset,
                               LiACL_OMCS_EMBEDDINGS)
-from src.data.embeddings import Embedding
-from src.data.data_stream import endless_data_stream
+from src.data.embedding import Embedding
+from src.data.stream import endless_data_stream
 from src.model import factorized
 from src.utils.tools import argsim_threshold
 from src.utils.training_loop import training_loop

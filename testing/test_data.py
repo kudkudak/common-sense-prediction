@@ -1,34 +1,49 @@
 #TODO(mnuke): make this real unittest?
-from keras.models import Model
-from keras.layers import Input, Embedding, Flatten
+from timeit import default_timer as timer
 
-from src import DATA_DIR
+from keras.optimizers import Adagrad
+
 from src.data.dataset import LiACLSplitDataset
-from src.data.data_stream import endless_data_stream
+from src.data.embedding import Embedding
+from src.data.stream import endless_data_stream
+from src.model import dnn_ce
 
 
-def test_integration():
-    BATCH_SIZE = 600
-    data = LiACLSplitDataset(DATA_DIR)
-    data_stream, batches = data.train_data_stream(BATCH_SIZE)
-    endless = endless_data_stream(data_stream)
+def test_dnn_ce():
+    from src.configs.configs_dnn_ce import config
+    config = config.get_root_config()
 
-    rel_input = Input(shape=(1,), dtype='int32', name='rel')
-    rel = Embedding(34, 1, trainable=True)(rel_input)
-    rel = Flatten()(rel)
-    model = Model([rel_input], [rel])
-    model.compile('sgd', 'mean_squared_error')
+    dataset = LiACLSplitDataset(config['data_dir'])
+    embedding = Embedding(config['embedding_file'], dataset.vocab)
+    data_stream, batches = dataset.train_data_stream(config['batch_size'])
 
-    model.fit_generator(generator=endless,
+    model = dnn_ce(embedding_init=embedding.values,
+                   vocab_size=dataset.vocab.size,
+                   embedding_size=embedding.embed_size,
+                   use_embedding=config['use_embedding'],
+                   l2=config['l2'],
+                   rel_init=config['rel_init'],
+                   rel_vocab_size=dataset.rel_vocab.size,
+                   rel_embed_size=config['rel_vec_size'],
+                   hidden_units=config['hidden_units'],
+                   hidden_activation=config['activation'],
+                   batch_norm=config['batch_norm'])
+    model.compile(optimizer=Adagrad(config['learning_rate']),
+                  loss='binary_crossentropy',
+                  metrics=['binary_crossentropy', 'accuracy'])
+
+    start = timer()
+    model.fit_generator(generator=endless_data_stream(data_stream),
                         steps_per_epoch=batches,
                         epochs=2,
                         verbose=1)
 
+    end = timer()
+    print(end - start)
+
 
 def test_stream():
-    from timeit import default_timer as timer
-
-    BATCH_SIZE = 1000
+    BATCH_SIZE = 10
     data_dir = 'LiACL/conceptnet/'
     data = LiACLSplitDataset(data_dir)
     data_stream, batches = data.train_data_stream(BATCH_SIZE)
@@ -40,4 +55,4 @@ def test_stream():
 
 
 if __name__ == '__main__':
-    test_stream()
+    test_dnn_ce()
