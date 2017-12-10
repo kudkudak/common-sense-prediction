@@ -33,6 +33,9 @@ def argsim_threshold(data_stream, embedding, N=1000):
     print("Testing {} thresholds".format(N))
     threshold_acc = [np.mean((scores > t) == targets) for t in thresholds]
     print("Max threshold acc " + str(np.max(threshold_acc)))
+
     threshold_argsim = thresholds[np.argmax(threshold_acc)]
+    print("Best threshold {} in [{}, {}]".format(str(threshold_argsim), min(thresholds), max(thresholds)))
+
 
     return threshold_argsim

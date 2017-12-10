@@ -14,6 +14,7 @@ config.set_root_config({
     'rel_vec_size': 200,
     'activation': 'relu',
     'hidden_units': 1000,
+    'optimizer': 'adagrad',
     'data_dir': 'LiACL/conceptnet/',
     'l2': 1e-6, # "cost_new = (1000*loss) +(self.LC * l2_penalty1)" from original code ;)
     # 'lambda_2': 0.0, # Matrix for relation matrix # No identity matrix in DNN CE
@@ -22,4 +23,13 @@ config.set_root_config({
     'use_embedding': True,
     'batch_norm': False,
     'random_seed': 0,
+
+    "regenerate_ns_eval": False,
+
+    # Negative sampler
+    'negative_sampling': 'uniform',  # or "argsim"
+    'ns_alpha': 1.0,  # Weigt used in threshold in argsim
+    "ns_embedding_file": 'embeddings/LiACL/embeddings_OMCS.txt',
+
+    'eval_k': 1, # Number of neg samples in eval
 })

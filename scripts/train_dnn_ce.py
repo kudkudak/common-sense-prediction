@@ -9,9 +9,11 @@ python scripts/train_dnn_ce.py root results/test1
 """
 
 import numpy as np
-import os
+from keras.optimizers import (Adagrad,
+                              Adam,
+                              SGD,
+                              RMSprop)
 
-from keras.optimizers import Adagrad
 
 from src import DATA_DIR
 from src.callbacks import (EvaluateOnDataStream,
@@ -23,13 +25,83 @@ from src.model import dnn_ce
 from src.utils.data_loading import load_embeddings, endless_data_stream
 from src.utils.training_loop import training_loop
 from src.utils.vegab import wrap, MetaSaver
+from src.utils.data_loading import load_embeddings, endless_data_stream, load_external_embeddings
+from src.utils.tools import argsim_threshold
 
-
-def train(config, save_path):
-    np.random.seed(config['random_seed'])
-
+# by accident using same as train_factorized
+def init_data(config):
     word2index, embeddings = load_embeddings(config['embedding_file'])
     dataset = LiACLSplitDataset(config['data_dir'])
+
+    regenerate_ns_eval = config.get("regenerate_ns_eval", False)
+    ns = config.get("negative_sampling", "uniform")
+    if ns == 'uniform':
+        target = 'negative_sampling'
+        neg_sample_kwargs = {}
+    elif ns == "argsim":
+        target = "filtered_negative_sampling"
+
+        # Get dev stream (train has no information for argsim, weirdly enough?!)
+        dev_stream_argim, _ = dataset.dev1_data_stream(config['batch_size'], word2index, shuffle=True,
+            target="score")
+
+        def construct_filter_fnc():
+
+            print("Loading and fitting ArgSim adversary")
+            print("Using " + config['ns_embedding_file'])
+
+            # TODO(kudkudak): Very weird use of load_external_embeddings
+            embeddings_argsim_adv, word2index_argsim_adv = load_external_embeddings(DATA_DIR, config['ns_embedding_file'],
+                '', word2index, cache=False), word2index
+
+            threshold_argsim_adv = config['ns_alpha'] * argsim_threshold(dev_stream_argim, embeddings_argsim_adv, N=1000)
+            embeddings_argsim_adv = np.array(embeddings_argsim_adv)
+
+            def filter_fnc(head_sample, rel_sample, tail_sample):
+                assert tail_sample.ndim == head_sample.ndim == 2
+
+                head_ids = head_sample.reshape(-1, )
+                tail_ids = tail_sample.reshape(-1, )
+
+                head_v = embeddings_argsim_adv[head_ids].reshape(list(head_sample.shape) + [-1]).sum(axis=1)
+                tail_v = embeddings_argsim_adv[tail_ids].reshape(list(tail_sample.shape) + [-1]).sum(axis=1)
+
+                assert head_v.shape[-1] == embeddings.shape[1]
+                assert head_v.ndim == tail_v.ndim == 2
+
+                scores = np.einsum('ij,ji->i', head_v, tail_v.T).reshape(-1, )
+
+                return scores > threshold_argsim_adv
+
+            return filter_fnc
+
+        filter_fnc = construct_filter_fnc()
+
+        neg_sample_kwargs = {"filter_fnc": filter_fnc}
+    else:
+        raise NotImplementedError()
+
+    # Get data
+    train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True,
+        target=target, neg_sample_kwargs=neg_sample_kwargs)
+
+    if regenerate_ns_eval:
+        test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index, k=config['eval_k'], target=target,
+            neg_sample_kwargs=neg_sample_kwargs)
+        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index, k=config['eval_k'], target=target,
+            neg_sample_kwargs=neg_sample_kwargs)
+        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index, k=config['eval_k'], target=target,
+            neg_sample_kwargs=neg_sample_kwargs)
+    else:
+        test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
+        dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
+        dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
+
+    return train_stream, dev1_stream, dev2_stream, test_stream, embeddings, word2index, train_steps, dataset
+
+def init_data_and_model(config):
+    train_stream, dev1_stream, dev2_stream, test_stream, embeddings, word2index, train_steps, dataset = init_data(
+        config)
 
     model = dnn_ce(embedding_init=embeddings,
         vocab_size=embeddings.shape[0],
@@ -42,15 +114,32 @@ def train(config, save_path):
         hidden_units=config['hidden_units'],
         hidden_activation=config['activation'],
         batch_norm=config['batch_norm'])
-    model.compile(optimizer=Adagrad(config['learning_rate']),
+
+    if config['optimizer'] == 'adagrad':
+        optimizer = Adagrad(config['learning_rate'])
+    elif config['optimizer'] == 'adam':
+        optimizer = Adam(config['learning_rate'])
+    elif config['optimizer'] == 'rmsprop':
+        optimizer = RMSprop(lr=config['learning_rate'])
+    elif config['optimizer'] == 'sgd':
+        optimizer = SGD(lr=config['learning_rate'], momentum=config['momentum'], nesterov=True)
+    else:
+        raise NotImplementedError('optimizer ', config['optimizer'])
+
+    model.compile(optimizer=optimizer,
         loss='binary_crossentropy',
         metrics=['binary_crossentropy', 'accuracy'])
 
-    # Get data
-    train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True)
-    test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
-    dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
-    dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
+    return model, {"train_stream": train_stream, "train_steps": train_steps, "test_stream": test_stream,
+        "dev1_stream": dev1_stream, "dev2_stream": dev2_stream, "word2index": word2index}
+
+def train(config, save_path):
+    np.random.seed(config['random_seed'])
+
+    model, D = init_data_and_model(config)
+
+    train_stream, dev1_stream, dev2_stream, test_stream, train_steps = D['train_stream'], D['dev1_stream'],\
+        D['dev2_stream'], D['test_stream'], D['train_steps']
 
     # Evaluation callbacks
     callbacks = []

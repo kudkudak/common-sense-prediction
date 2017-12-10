@@ -25,9 +25,7 @@ from src.utils.tools import argsim_threshold
 from src.utils.training_loop import training_loop
 from src.utils.vegab import wrap, MetaSaver
 
-def init_model_and_data(config):
-    np.random.seed(config['random_seed'])
-
+def init_data(config):
     word2index, embeddings = load_embeddings(config['embedding_file'])
     dataset = LiACLSplitDataset(config['data_dir'])
 
@@ -42,8 +40,6 @@ def init_model_and_data(config):
         # Get dev stream (train has no information for argsim, weirdly enough?!)
         dev_stream_argim, _ = dataset.dev1_data_stream(config['batch_size'], word2index, shuffle=True,
             target="score")
-
-        print("Here")
 
         def construct_filter_fnc():
 
@@ -96,6 +92,13 @@ def init_model_and_data(config):
         test_stream, _ = dataset.test_data_stream(config['batch_size'], word2index)
         dev1_stream, _ = dataset.dev1_data_stream(config['batch_size'], word2index)
         dev2_stream, _ = dataset.dev2_data_stream(config['batch_size'], word2index)
+
+    return train_stream, dev1_stream, dev2_stream, test_stream, embeddings, word2index, train_steps, dataset
+
+def init_model_and_data(config):
+    np.random.seed(config['random_seed'])
+
+    train_stream, dev1_stream, dev2_stream, test_stream, embeddings, word2index, train_steps, dataset = init_data(config)
 
     # Initialize Model. Using train set for argsim threshold doesn't make sense - it is too hard for argsim
     # given a lot of noise everywhere. It is not discriminative anymore, weirdly.
