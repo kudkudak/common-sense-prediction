@@ -41,10 +41,6 @@ def init_data(config):
     elif ns == "argsim":
         target = "filtered_negative_sampling"
 
-        # Get dev stream (train has no information for argsim, weirdly enough?!)
-        dev_stream_argim, _ = dataset.dev1_data_stream(config['batch_size'], word2index, shuffle=True,
-            target="score")
-
         def construct_filter_fnc():
 
             print("Loading and fitting ArgSim adversary")
@@ -54,8 +50,10 @@ def init_data(config):
             embeddings_argsim_adv, word2index_argsim_adv = load_external_embeddings(DATA_DIR, config['ns_embedding_file'],
                 '', word2index, cache=False), word2index
 
-            threshold_argsim_adv = config['ns_alpha'] * argsim_threshold(dev_stream_argim, embeddings_argsim_adv, N=1000)
+            threshold_argsim_adv = config.get('negative_threshold', 0.0)
             embeddings_argsim_adv = np.array(embeddings_argsim_adv)
+
+            print("Using threshold " + str(threshold_argsim_adv))
 
             def filter_fnc(head_sample, rel_sample, tail_sample):
                 assert tail_sample.ndim == head_sample.ndim == 2
@@ -71,7 +69,7 @@ def init_data(config):
 
                 scores = np.einsum('ij,ji->i', head_v, tail_v.T).reshape(-1, )
 
-                return scores > threshold_argsim_adv
+                return scores > threshold_argsim_adv, scores
 
             return filter_fnc
 
@@ -80,6 +78,10 @@ def init_data(config):
         neg_sample_kwargs = {"filter_fnc": filter_fnc}
     else:
         raise NotImplementedError()
+
+    neg_sample_kwargs.update(config.get("neg_sample_kwargs", {}))
+
+    print(neg_sample_kwargs)
 
     # Get data
     train_stream, train_steps = dataset.train_data_stream(config['batch_size'], word2index, shuffle=True,

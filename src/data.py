@@ -239,7 +239,7 @@ class FilteredNegativeSampling(Transformer):
         accept this sample or not
     """
 
-    def __init__(self, data_stream, filter_fnc, k=3, *args, **kwargs):
+    def __init__(self, data_stream, filter_fnc, k=3, target="cls", *args, **kwargs):
         if data_stream.produces_examples:
             raise ValueError('the wrapped data stream must produce batches, '
                              'not examples.')
@@ -250,6 +250,8 @@ class FilteredNegativeSampling(Transformer):
 
         self.k = k
         self.filter_fnc = filter_fnc
+
+        self.target = target
 
         self.batch_id = 0
         self.samples_per_batch = 0
@@ -275,6 +277,8 @@ class FilteredNegativeSampling(Transformer):
         # TODO: Parametrize elegantly by resampling procedure, but later?
         # For now just have argsim. Or maybe do not have the resampling?
 
+        # TODO: Add from whole batch.
+
         # The way it goes is sample in while loop until it found examples fooling ArgSim
         while sum([len(x) for x in head_list]) < (self.k + 1) * batch_size:
             neg_rels_idx_sample = np.random.randint(batch_size, size=batch_size)
@@ -293,8 +297,9 @@ class FilteredNegativeSampling(Transformer):
             head_mask_sample = np.concatenate([head_mask, neg_head_mask_sample, head_mask], axis=0)
             tail_mask_sample = np.concatenate([tail_mask, tail_mask, neg_tail_mask_sample], axis=0)
             target_sample = np.array([0] * batch_size * 3)
+            type = np.array([0] * batch_size + [1] * batch_size + [2] * batch_size)
 
-            accept = self.filter_fnc(head_sample, rel_sample, tail_sample)
+            accept, scores = self.filter_fnc(head_sample, None, tail_sample)
 
             assert len(accept) == len(head_sample)
 
@@ -306,7 +311,15 @@ class FilteredNegativeSampling(Transformer):
             rel_list.append(rel_sample[accept])
             tail_list.append(tail_sample[accept])
             tail_mask_list.append(tail_mask_sample[accept])
-            target_list.append(target_sample[accept])
+
+            if self.target == "cls":
+                target_list.append(target_sample[accept])
+            elif self.target == "score":
+                target_list.append(scores[accept])
+            elif self.target == "type":
+                target_list.append(type[accept])
+            else:
+                raise NotImplementedError()
 
             k += 3 * batch_size
 

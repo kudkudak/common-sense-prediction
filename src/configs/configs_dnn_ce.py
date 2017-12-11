@@ -28,7 +28,7 @@ config.set_root_config({
 
     # Negative sampler
     'negative_sampling': 'uniform',  # or "argsim"
-    'ns_alpha': 1.0,  # Weigt used in threshold in argsim
+    'negative_threshold': 0.0,  # Weigt used in threshold in argsim
     "ns_embedding_file": 'embeddings/LiACL/embeddings_OMCS.txt',
 
     'eval_k': 1, # Number of neg samples in eval
