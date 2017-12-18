@@ -156,6 +156,7 @@ def train(config, save_path):
     # TODO(kudkudak): Slightly confused why we have SaveBestScore AND EvaluateWithThresholdFitting using
     # different function behind the scenes. It is inviting a bug
     callbacks = []
+
     callbacks.append(EvaluateWithThresholdFitting(model=model,
         dev2=dev2_stream,
         dev1=dev1_stream,

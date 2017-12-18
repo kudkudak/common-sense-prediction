@@ -15,6 +15,20 @@ from keras.models import load_model
 
 from src.evaluate import evaluate_fit_threshold
 
+"""
+TODO: Implement
+class Metrics(keras.callbacks.Callback):
+    def on_epoch_end(self, batch, logs={}):
+        predict = np.asarray(self.model.predict(self.validation_data[0]))
+        targ = self.validation_data[1]
+        self.f1s=f1(targ, predict)
+        return
+
+
+def PrecisionRecallCallback():
+    return None
+"""
+
 
 logger = logging.getLogger(__name__)
 

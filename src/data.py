@@ -40,9 +40,9 @@ LiACL_ON_REL = os.path.join(LiACL_CN_DATASET, "rel.txt")
 LiACL_OMCS_EMBEDDINGS = os.path.join(DATA_DIR, "embeddings/LiACL/embeddings_OMCS.txt")
 # TODO(kudkudak): Add sth to figure out lowercase automatically. Idk.
 LiACL_ON_REL_LOWERCASE = os.path.join(LiACL_CN_DATASET, "rel_lowercase.txt")
-assert os.path.exists(LiACL_ON_REL)
-assert os.path.exists(LiACL_ON_REL_LOWERCASE)
-assert os.path.exists(LiACL_OMCS_EMBEDDINGS)
+assert os.path.exists(LiACL_ON_REL), LiACL_ON_REL
+assert os.path.exists(LiACL_ON_REL_LOWERCASE), LiACL_ON_REL_LOWERCASE
+assert os.path.exists(LiACL_OMCS_EMBEDDINGS), LiACL_OMCS_EMBEDDINGS
 TUPLES_WIKI = os.path.join(DATA_DIR, "LiACL", "tuples.wiki")
 
 UNKNOWN_TOKEN = 'UUUNKKK'

@@ -45,6 +45,9 @@ We have following datasets used in project:
 
 * LiACL/conceptnet dataset
 * LiACL/tuples.wiki evaluation dataset
+    * LiACL/tuples.wiki/tuples5k.cn.txt.dev
+    * LiACL/tuples.wiki/tuples5k.cn.txt.test
+    * LiACL/tuples.wiki/scored_tuples5k.cn.txt.dev
 
 ## Evaluation
 
