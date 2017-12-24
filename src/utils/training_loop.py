@@ -41,6 +41,13 @@ def save_loop_state(epoch, logs, save_path):
 
 def training_loop(model, train, epochs, steps_per_epoch, valid=None, valid_steps=None,
                   save_path=None, acc_monitor='val_acc', callbacks=[]):
+    """
+    Params
+    ------
+    callbacks: list
+        List of pickable Callbacks
+    """
+
     loop_state = {'last_epoch_done_id': -1}
 
     if save_path is not None:
@@ -50,7 +57,6 @@ def training_loop(model, train, epochs, steps_per_epoch, valid=None, valid_steps
             if os.path.exists(os.path.join(save_path, "loop_state.pkl")):
                 logger.info("Reloading loop state")
                 loop_state = pickle.load(open(os.path.join(save_path, "loop_state.pkl"), 'rb'))
-
 
         # saving history, model, logs
         callbacks.append(LambdaCallback(on_epoch_end=partial(save_loop_state, save_path=save_path)))
@@ -62,10 +68,7 @@ def training_loop(model, train, epochs, steps_per_epoch, valid=None, valid_steps
                                          mode='max',
                                          filepath=os.path.join(save_path, "model.h5")))
 
-        # TODO(kudkudak): Add saving from last epoch, often useful
-
-        #optimization
-        # callbacks.append(EarlyStopping(monitor=acc_monitor, patience=10))
+        # optimization
         callbacks.append(ReduceLROnPlateau(monitor=acc_monitor, patience=10))
 
     model.fit_generator(generator=train,
