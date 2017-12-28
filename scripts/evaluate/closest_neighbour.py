@@ -1,18 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Small script taking in two files (rel/head/tail/score) and 1.producing 5 closest examples of target dataset to source dataset 2.producing samples from 3 buckets of minimal target to source distances.
+Small script taking in two files (rel/head/tail/score) and 1.producing 5 closest examples of target dataset to
+source dataset 2.producing samples from 3 buckets of minimal target to source distances.
 
 Use as:
 
-python scripts/evaluate/closest_neighbour.py source_dataset target_dataset embedding_source save_path dump [dumps the head and tail distances for later faster reruns] num_samples
+python scripts/evaluate/closest_neighbour.py source_dataset target_dataset embedding_source save_path dump
+[dumps the head and tail distances for later faster reruns] num_samples
 
 e.g.:
 
-python scripts/evaluate/closest_neighbour.py $DATA_DIR/LiACL/conceptnet/train100k.txt $DATA_DIR/LiACL/tuples.cn.txt $DATA_DIR/embeddings/LiACL/embeddings_OMCS.txt ./closest_results/tuplescn_minimal_dist_examples.txt True  10
+python scripts/evaluate/closest_neighbour.py $DATA_DIR/LiACL/conceptnet/train100k.txt $DATA_DIR/LiACL/tuples.cn.txt
+DATA_DIR/embeddings/LiACL/embeddings_OMCS.txt ./closest_results/tuplescn_minimal_dist_examples.txt True  10
+
+Memory:
+
+If you want to dump the computed unique head and tail distances you need to have atleast 80GB of memory.
+I also used 8 cores for CPU.
+python scripts/evaluate/closest_neighbour.py $DATA_DIR/LiACL/conceptnet/train100k.txt $DATA_DIR/LiACL/tuples.cn.txt
+$DATA_DIR/embeddings/LiACL/e mbeddings_OMCS.txt ./closest_results/tuplescn_minimal_dist_examples_ver2.txt True 10
 
 """
-
 import os
 from collections import deque
 

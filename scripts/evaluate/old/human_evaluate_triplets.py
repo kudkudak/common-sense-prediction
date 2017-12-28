@@ -3,10 +3,6 @@
 """
 A *tool* that has three functionalities:
 
-TODO(kudkudak): Allow for mixing of any number of runs. For now always assumes 2 runs
-TODO(kudkudak): Unit test this
-TODO(kudkudak): Do we really need stupid naming conventions? Change to just passing names to script
-
 1. takes evaluation results by score_tripletws and mixes triplets from two runs and
 prepares evaluation csv that can be used in like gdocs
 2. takes evaluated csv and redistributes it
@@ -22,8 +18,12 @@ Use as:
 
 , it expects .csv in save_path to have human evaluations in last column. Then saves it back to run_A_scores.human and
 run_B_scores.human
-"""
 
+
+TODO(kudkudak): Allow for mixing of any number of runs. For now always assumes 2 runs
+TODO(kudkudak): Unit test this
+TODO(kudkudak): Do we really need stupid naming conventions? Change to just passing names to script
+"""
 import os
 import sys
 import numpy as np
