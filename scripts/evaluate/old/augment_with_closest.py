@@ -52,7 +52,7 @@ def main(source_dataset, target_dataset, K, embedding_source, save_path):
         # TODO(kudkudak): Add as option. But normalization usually helps. Focuses more on relation
         embeddings = embeddings / (1e-4 + np.linalg.norm(embeddings, axis=1, keepdims=True))
         D = embeddings.shape[1]
-        # Rel embedding is random, essentionally
+        # Rel embedding is random
         # NOTE(kudkudak): Better norm determination would be nice
         We_rel = {v: np.random.uniform(-0.1, 0.1, size=D) for v in V_rel}
         for v in We_rel:
@@ -89,6 +89,7 @@ def main(source_dataset, target_dataset, K, embedding_source, save_path):
 
     Dt = LiACLDatasetFromFile(target_dataset, rel_file_path=REL_FILE)
     st, batches_per_epocht = Dt.data_stream(1, word2index=word2index, target='score', shuffle=False)
+
     Ds = LiACLDatasetFromFile(source_dataset, rel_file_path=LiACL_ON_REL)
     ss, batches_per_epochs = Ds.data_stream(1, word2index=word2index, target='score', shuffle=False)
 

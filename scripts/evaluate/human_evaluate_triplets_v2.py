@@ -139,8 +139,8 @@ if __name__ == "__main__":
                 head = row['head']
                 tail = row['tail']
                 rel = row['rel']
-                entry = "{}\t{}\t{}\n".format(rel, head, tail)
-                score = raw_input("Please score {}".format(entry))
+                entry = "{},{},{}\n".format(rel, head, tail)
+                score = raw_input("{}/{} {}".format(row_id, len(evaluated), entry))
                 evaluated.loc[row_id, 'score'] = score
                 evaluated.to_csv(scored_csv, index=False)
     elif sys.argv[1] == "evaluate":
