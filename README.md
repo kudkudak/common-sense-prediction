@@ -2,7 +2,7 @@
 
 *Research objective*: how far are we from common sense prediction: measuring and evaluating.
 
-We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
+We base from http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
 ## Resources
 
@@ -19,9 +19,13 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 0. Project uses primarly python2.7, but should work without issues in python3.
 
 1. Configure PYTHONPATH to include root folder of the project, DATA_DIR to point to data directory, and 
-PROJECT_DIR to point to root of project.
+PROJECT_ROOT to point to root of project.
 
-2. Go to DATA_DIR and run `scripts/data/fetch_LiACL_data.sh`.
+2. Go to DATA_DIR and:
+ 
+    * Run `scripts/data/fetch_LiACL_data.sh`.
+
+    * Run `scripts/data/split_intrinsic_LiACL.py ` (takes like 15 minutes)
 
     * Optionally run `scripts/data/fetch_and_split_extrinsic_LiACL.py ` for extrinsic evaluation.
     
@@ -33,7 +37,7 @@ For example you can have `env.sh` file that you source before running scripts. I
 
 ```
 #!/usr/bin/env bash
-export PROJECT_DIR=$PYTHONPATH:$HOME/l2lwe
+export PROJECT_ROOT=$PYTHONPATH:$HOME/l2lwe
 export PYTHONPATH=$PYTHONPATH:$HOME/l2lwe
 export DATA_DIR=$HOME/l2lwe/data
 ```
@@ -42,27 +46,24 @@ export DATA_DIR=$HOME/l2lwe/data
 
 We have following datasets used in project:
 
-* LiACL/conceptnet dataset
-* LiACL/tuples.wiki evaluation dataset
+* LiACL/conceptnet 
+* LiACL/conceptnet_my 
+* LiACL/conceptnet_my_random 
+* LiACL/tuples.wiki  
     * LiACL/tuples.wiki/tuples5k.cn.txt.dev
     * LiACL/tuples.wiki/tuples5k.cn.txt.test
     * LiACL/tuples.wiki/scored_tuples5k.cn.txt.dev
 
 ## Evaluation
 
-The way our human evaluation work for now is that each evaluation has a unique id. Each evaluation is stored and processed
-as separate spreadsheet. 
-
 Use `scripts/evaluate/score_trplets.py` to score using model some triplets (e.g. wiki). Use `scripts/human_evaluate_triplets.py` to
 prepare AB tests of two models (for human evaluators) and to process results.
 
 ## Data folder structure
 
-* `LiACL/conceptnet` - all files used in ACL models
+* `LiACL/conceptnet_{"my","my_random",""}` - KBC dataset from ACL models and variants
 
 * `embeddings` - embeddings (kept separately as tend to be big)
-
-* `glove embeddings` - GloVe embeddings
 
 ## Notes
 

@@ -47,18 +47,18 @@ def main(dataset, K, save_path):
         word2index=word2index, target='negative_sampling', shuffle=False)
     epoch_iterator = stream.get_epoch_iterator()
     X, y = next(epoch_iterator)
-    assert len(X) == Dt.N * (K + 1)
+    assert len(X['head']) == Dt.N * (K + 1)
     assert batches_per_epoch == 1
 
     # Save
     with open(save_path, "w") as f_target:
-        for ex_x, ex_y in zip(X, y):
-            head, tail, rel = ex_x['head'],  ex_x['tail'],  ex_x['rel']
-            head, tail, rel = " ".join([index2word[w_id] for w_id in head]), \
-                " ".join([index2word[w_id] for w_id in tail]), \
+        for head, tail, rel, score in zip(X['head'], X['tail'], X['rel'], y):
+            # TODO(kudkduak): After refactor change to vocab.OOV
+            head, tail, rel = " ".join([index2word[w_id] for w_id in head if w_id != 0]), \
+                " ".join([index2word[w_id] for w_id in tail if w_id != 0]), \
                 " ".join([V_rel[w_id] for w_id in rel])
-            line = [head, tail, rel]
-            line = ",".join(line)
+            line = [head, tail, rel, str(score)]
+            line = "\t".join(line)
             f_target.write(line + "\n")
 
 if __name__ == "__main__":
