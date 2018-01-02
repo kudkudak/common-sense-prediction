@@ -57,7 +57,7 @@ def main(dataset, K, save_path):
             head, tail, rel = " ".join([index2word[w_id] for w_id in head if w_id != 0]), \
                 " ".join([index2word[w_id] for w_id in tail if w_id != 0]), \
                 " ".join([V_rel[w_id] for w_id in rel])
-            line = [head, tail, rel, str(score)]
+            line = [rel, head, tail, str(score)]
             line = "\t".join(line)
             f_target.write(line + "\n")
 

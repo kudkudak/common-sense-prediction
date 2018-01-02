@@ -53,14 +53,14 @@ if __name__ == "__main__":
     # _ec{"ln -s {} {}".format(os.path.join(SOURCE, "*embeddings*"), DESTINATION2)}
 
     # Add negative samples
-    # TODO: Uncomment
-    for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
-        N = len(open(os.path.join(SOURCE, f)).read().splitlines())
-        assert N%100 == 0
-        _ec("cp {} {}".format(os.path.join(SOURCE, f), os.path.join(DESTINATION1, f + ".tmp")))
-        # NOTE: Assumes here 50% of dataset are positive examples
-        _ec("head -n {} {} > {}".format(N/2, os.path.join(DESTINATION1, f + ".tmp"), os.path.join(DESTINATION1, f + ".tmp.2")))
-        _ec("python {} {} {} {}".format(AUGMENT_SCRIPT, os.path.join(DESTINATION1, f + ".tmp.2"), K, os.path.join(DESTINATION1, f)))
+    # # TODO: Uncomment
+    # for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
+    #     N = len(open(os.path.join(SOURCE, f)).read().splitlines())
+    #     assert N%100 == 0
+    #     _ec("cp {} {}".format(os.path.join(SOURCE, f), os.path.join(DESTINATION1, f + ".tmp")))
+    #     # NOTE: Assumes here 50% of dataset are positive examples
+    #     _ec("head -n {} {} > {}".format(N/2, os.path.join(DESTINATION1, f + ".tmp"), os.path.join(DESTINATION1, f + ".tmp.2")))
+    #     _ec("python {} {} {} {}".format(AUGMENT_SCRIPT, os.path.join(DESTINATION1, f + ".tmp.2"), K, os.path.join(DESTINATION1, f)))
 
     # TODO(kudkudak)
     # Add OMCS distances
@@ -91,7 +91,8 @@ if __name__ == "__main__":
     for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
         N = len(open(os.path.join(DESTINATION2, f + ".tmp")).read().splitlines())
         assert N%100 == 0
-        _ec("python {} {} {} {}".format(AUGMENT_SCRIPT, os.path.join(DESTINATION2, f + ".tmp"), K, os.path.join(DESTINATION2, f)))
+        _ec("head -n {} {} > {}".format(N / 2, os.path.join(DESTINATION2, f + ".tmp"), os.path.join(DESTINATION2, f + ".tmp.2")))
+        _ec("python {} {} {} {}".format(AUGMENT_SCRIPT, os.path.join(DESTINATION2, f + ".tmp.2"), K, os.path.join(DESTINATION2, f)))
 
 
 
