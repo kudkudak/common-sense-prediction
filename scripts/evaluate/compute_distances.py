@@ -5,12 +5,13 @@ Small script taking in 2 files (rel/head/tail/score) and producing distances fro
  embeddings
 Use as:
 
-python scripts/evaluate/compute_distances.py source_dataset target_dataset K embedding_source save_path
+python scripts/evaluate/compute_distances.py source_dataset target_dataset embedding_source save_path ignore0
 
 Notes
 -----
-TODO: Normalize or not?
-TODO: Too slow
+ignore0 is a hack to allow for comparing dataset subset to itself
+TODO(kudkudak): Normalize or not?
+TODO(kudkudak): Too slow
 """
 import h5py
 
@@ -60,10 +61,10 @@ def _batch(iterable, n=1):
         yield iterable[ndx:min(ndx + n, l)]
 
 
-def main(source_dataset, target_dataset, K, embedding_source, save_path):
-    K = int(K)
-
+def main(source_dataset, target_dataset, embedding_source, save_path, ignore0):
     os.system("mkdir -p " + os.path.dirname(save_path))
+
+    ignore0 = int(ignore0)
 
     # TODO(kudkudak): Get rid of this madness
     if "wiki" in target_dataset:
@@ -136,6 +137,9 @@ def main(source_dataset, target_dataset, K, embedding_source, save_path):
     target_feat = _featurize_df(target, dim=3 * D, featurizer=featurizer)
 
     invididual_dists, dists = _calculate_distances(target, target_feat, source_feat, same_rel=False)
+
+    if ignore0 == 1:
+        dists = [dists_ex[dists_ex > 0].min() for dists_ex in invididual_dists]
 
     with open(save_path, "w") as f_target:
         f_target.write("\n".join([str(v) for v in dists]))

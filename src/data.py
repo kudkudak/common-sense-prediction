@@ -48,7 +48,8 @@ TUPLES_WIKI = os.path.join(DATA_DIR, "LiACL", "tuples.wiki")
 UNKNOWN_TOKEN = 'UUUNKKK'
 
 
-def _liacl_data_stream(dataset, rel2index, batch_size, word2index, target='negative_sampling', name=None, k=3,
+# TODO(kudkudak): Refactor k parameter
+def _liacl_data_stream(dataset, rel2index, batch_size, word2index, target='negative_sampling', name="", k=3,
         shuffle=False, neg_sample_kwargs={}):
     batches_per_epoch = int(np.ceil(dataset.num_examples / float(batch_size)))
     if shuffle:
@@ -68,10 +69,10 @@ def _liacl_data_stream(dataset, rel2index, batch_size, word2index, target='negat
     data_stream = Padding(data_stream, mask_sources=('head, tail'), mask_dtype=np.float32)
 
     if target == 'negative_sampling':
-        logger.info('target for data stream ' + name + ' is negative sampling')
+        logger.info('target for data stream ' + str(name) + ' is negative sampling')
         data_stream = NegativeSampling(data_stream, k=k)
     elif target == 'filtered_negative_sampling':
-        logger.info('target for data stream ' + name + ' is filtered negative sampling')
+        logger.info('target for data stream ' + str(name) + ' is filtered negative sampling')
         data_stream = FilteredNegativeSampling(data_stream, k=k, **neg_sample_kwargs)
     elif target == 'score':
         logger.info('target for data stream ' + str(name) + ' is score')
@@ -111,6 +112,7 @@ class LiACLDatasetFromFile(object):
         data = pd.read_csv(data_path, sep="\t", header=None)
         data.columns = ['rel', 'head', 'tail', 'score']
         assert (not data.empty)
+        self.N = len(data)
         return IndexableDataset(data.to_dict('list'))
 
     def load_rel2index(self, rel_file):

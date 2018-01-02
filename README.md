@@ -18,7 +18,8 @@ We base on http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
 0. Project uses primarly python2.7, but should work without issues in python3.
 
-1. Configure PYTHONPATH to include root folder of the project. Configure DATA_DIR to point to data directory
+1. Configure PYTHONPATH to include root folder of the project, DATA_DIR to point to data directory, and 
+PROJECT_DIR to point to root of project.
 
 2. Go to DATA_DIR and run `scripts/data/fetch_LiACL_data.sh`.
 
@@ -32,11 +33,9 @@ For example you can have `env.sh` file that you source before running scripts. I
 
 ```
 #!/usr/bin/env bash
-
+export PROJECT_DIR=$PYTHONPATH:$HOME/l2lwe
 export PYTHONPATH=$PYTHONPATH:$HOME/l2lwe
 export DATA_DIR=$HOME/l2lwe/data
-export ACL_ROOT_DIR=$HOME/l2lwe/ACL_CKBC
-export PYTHONPATH=$PYTHONPATH:$ACL_ROOT_DIR
 ```
 
 ## Datasets
