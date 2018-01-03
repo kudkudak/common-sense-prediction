@@ -44,44 +44,37 @@ if __name__ == "__main__":
     # TODO(kudkudak): After refactoring vocab change to copying vocab
     _ec("cp {} {}".format(os.path.join(SOURCE, "*train*txt"), DESTINATION1))
     _ec("cp {} {}".format(os.path.join(SOURCE, "*rel*txt"), DESTINATION1))
-    _ec("cp {} {}".format(os.path.join(SOURCE, "*train*txt"), DESTINATION2))
     _ec("cp {} {}".format(os.path.join(SOURCE, "*rel*txt"), DESTINATION2))
 
-    # Link batch embeddings
-    # Shouldn't be required
-    # _ec{"ln -s {} {}".format(os.path.join(SOURCE, "*embeddings*"), DESTINATION1)}
-    # _ec{"ln -s {} {}".format(os.path.join(SOURCE, "*embeddings*"), DESTINATION2)}
-
+    """
     # Add negative samples
-    # # TODO: Uncomment
-    # for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
-    #     N = len(open(os.path.join(SOURCE, f)).read().splitlines())
-    #     assert N%100 == 0
-    #     _ec("cp {} {}".format(os.path.join(SOURCE, f), os.path.join(DESTINATION1, f + ".tmp")))
-    #     # NOTE: Assumes here 50% of dataset are positive examples
-    #     _ec("head -n {} {} > {}".format(N/2, os.path.join(DESTINATION1, f + ".tmp"), os.path.join(DESTINATION1, f + ".tmp.2")))
-    #     _ec("python {} {} {} {}".format(AUGMENT_SCRIPT, os.path.join(DESTINATION1, f + ".tmp.2"), K, os.path.join(DESTINATION1, f)))
+    for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
+        N = len(open(os.path.join(SOURCE, f)).read().splitlines())
+        assert N%100 == 0
+        _ec("cp {} {}".format(os.path.join(SOURCE, f), os.path.join(DESTINATION1, f + ".tmp")))
+        # NOTE: Assumes here 50% of dataset are positive examples
+        _ec("head -n {} {} > {}".format(N/2, os.path.join(DESTINATION1, f + ".tmp"), os.path.join(DESTINATION1, f + ".tmp.2")))
+        _ec("python {} {} {} {}".format(AUGMENT_SCRIPT, os.path.join(DESTINATION1, f + ".tmp.2"), K, os.path.join(DESTINATION1, f)))
 
-    # TODO(kudkudak)
     # Add OMCS distances
-    # for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
-    #     N = len(open(os.path.join(SOURCE, f)).read().splitlines())
-    #     assert N%100 == 0
-    #     _ec("python {} {} {} {}".format(AUGMENT_SCRIPT, K, os.path.join(DESTINATION1, f)))
-
-    # Create allrel.txt file
-    _ec("cat {} > {}/allrel.txt".format(" ".join([os.path.join(SOURCE, r) for r in ALL_FILES]), DESTINATION2))
-
-    # Perform split and save
-    # TODO(kudkudak): Removes scores!!
-    lines = open(os.path.join(DESTINATION2, "allrel.txt")).read().splitlines()
+    for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
+        _ec("python {} {} {} {} {} {}".format(DISTANCE_SCRIPT, os.path.join(DESTINATION1, "train100k.txt"),
+            os.path.join(DESTINATION1, f), LiACL_OMCS_EMBEDDINGS, os.path.join(DESTINATION1, f + ".dists"), 0))
+    """
+    # Read all data, perform split and save
+    # TODO(kudkudak): Removes scores!
+    lines = open(os.path.join(SOURCE, "train100k.txt")).read().splitlines()
+    for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
+        lines_f = open(os.path.join(SOURCE, f)).read().splitlines()
+        N = len(lines_f)
+        assert N % 100 == 0
+        lines += lines_f[0:N/2]
     rng = np.random.RandomState(SEED)
     rng.shuffle(lines)
-
     d = {"test.txt.tmp": lines[0:1200],
         "dev1.txt.tmp": lines[1200:(1200+600)],
         "dev2.txt.tmp": lines[(1200+600):2400],
-        "train.txt.tmp": lines[2400:]}
+        "train100k.txt": lines[2400:]}
     for f in d:
         with open(os.path.join(DESTINATION2, f), "w") as dev_f:
             for l in d[f]:
@@ -91,8 +84,10 @@ if __name__ == "__main__":
     for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
         N = len(open(os.path.join(DESTINATION2, f + ".tmp")).read().splitlines())
         assert N%100 == 0
-        _ec("head -n {} {} > {}".format(N / 2, os.path.join(DESTINATION2, f + ".tmp"), os.path.join(DESTINATION2, f + ".tmp.2")))
-        _ec("python {} {} {} {}".format(AUGMENT_SCRIPT, os.path.join(DESTINATION2, f + ".tmp.2"), K, os.path.join(DESTINATION2, f)))
+        _ec("python {} {} {} {}".format(AUGMENT_SCRIPT, os.path.join(DESTINATION2, f + ".tmp"), K, os.path.join(DESTINATION2, f)))
 
-
+    # Add OMCS distances
+    for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
+        _ec("python {} {} {} {} {} {}".format(DISTANCE_SCRIPT, os.path.join(DESTINATION2, "train100k.txt"),
+            os.path.join(DESTINATION2, f), LiACL_OMCS_EMBEDDINGS, os.path.join(DESTINATION2, f + ".dists"), 0))
 

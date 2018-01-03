@@ -160,6 +160,7 @@ def _evaluate_and_save(logs, save_path, dev1_stream, dev2_stream, test_stream):
                                      dev1_stream=dev1_stream,
                                      dev2_stream=dev2_stream,
                                      test_stream=test_stream)
+
     json.dump(results, open(os.path.join(save_path, "eval_results.json"), "w"))
     logger.info('Dumped scores')
 

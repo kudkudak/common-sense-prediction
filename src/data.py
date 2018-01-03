@@ -177,7 +177,9 @@ class LiACLSplitDataset(object):
             sep="\t", header=None)
         data.columns = ['rel', 'head', 'tail', 'score']
         assert (not data.empty)
-        return IndexableDataset(data.to_dict('list'))
+
+        dataset = IndexableDataset(data.to_dict('list'))
+        return dataset
 
     def load_rel2index(self):
         rel2index = {}

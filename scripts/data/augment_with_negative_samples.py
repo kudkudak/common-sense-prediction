@@ -18,7 +18,6 @@ import tqdm
 from six import iteritems
 
 from scripts.train_factorized import load_embeddings
-# TODO(kudkudak): Fix madness with lowercase or uppercase rel.txt :P
 from src.data import LiACLDatasetFromFile, LiACL_ON_REL, LiACL_OMCS_EMBEDDINGS
 
 
@@ -26,6 +25,19 @@ def _batch(iterable, n=1):
     l = len(iterable)
     for ndx in range(0, l, n):
         yield iterable[ndx:min(ndx + n, l)]
+
+# TODO(kudkudak): Get rid of once we have vocabs
+def _build_word2index(path):
+    vocab = set()
+    with open(path) as f:
+        for l in f.read().splitlines():
+            for w in l.split():
+                vocab.add(w)
+    print("Found {} words".format(len(vocab)))
+    word2index = dict(zip(vocab, range(1, 1 + len(vocab))))
+    word2index['PADDING-WORD'] = 0
+    word2index['UUUNKKK'] = len(word2index)
+    return word2index
 
 def main(dataset, K, save_path):
     K = int(K)
@@ -37,9 +49,11 @@ def main(dataset, K, save_path):
     V_rel = open(REL_FILE).read().splitlines()
 
     print("Loading embeddings")
+
     # TODO(kudkudak): Remove after refactor to vocab
-    word2index, embeddings = load_embeddings(LiACL_OMCS_EMBEDDINGS)
-    index2word = {v: k for k, v in iteritems(word2index)}
+    word2index = _build_word2index(dataset)
+    index2word = {v: k for k, v in word2index.iteritems()}
+    # import pdb; pdb.set_trace()
 
     # Leverage LiACLDatasetFromFile to compute negative samples.
     Dt = LiACLDatasetFromFile(dataset, rel_file_path=REL_FILE)
