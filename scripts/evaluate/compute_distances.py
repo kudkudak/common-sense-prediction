@@ -10,6 +10,7 @@ python scripts/evaluate/compute_distances.py source_dataset target_dataset embed
 Notes
 -----
 ignore0 is a hack to allow for comparing dataset subset to itself
+outputs also quantiles
 TODO(kudkudak): Normalize or not?
 TODO(kudkudak): Too slow
 """
@@ -51,6 +52,16 @@ def _calculate_distances(df, df_feat, train_feat, same_rel=False):
     scores = []
     for id in tqdm.tqdm(range(len(df)), total=len(df)):
         scores.append(_calculate_distance(df_feat[id], train_feat, same_rel=same_rel))
+
+        if id % 50 == 0:
+            print("Quantiles at {}".format(id))
+            scores_min = np.array([a.min() for a in scores])
+            scores_min = sorted(scores_min)
+            print(("33%", scores_min[id/3]))
+            print(("66%", scores_min[2*id/3]))
+
+
+
     scores_min = np.array([a.min() for a in scores])
     return scores, scores_min
 

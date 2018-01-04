@@ -65,14 +65,22 @@ if __name__ == "__main__":
         with open(f_name + ".test.tmp", "w") as test_f:
             for l in lines[N_dev:]:
                 test_f.write(l + "\n")
+        with open(f_name + ".shuffled.tmp", "w") as shuffled_f:
+            for l in lines:
+                shuffled_f.write(l + "\n")
+
         # Remove middle weird column
         # TODO(kudkudak): What is this column? (keeping files to investigate easily)
         if "tuples.wiki" in f_name:
             _ec("cat {0}.test.tmp | cut -f 1-3,5- > {0}.test".format(f_name))
+            _ec("cat {0}.shuffled.tmp | cut -f 1-3,5- > {0}.shuffled".format(f_name))
             _ec("cat {0}.dev.tmp | cut -f 1-3,5- >  {0}.dev".format(f_name))
         else:
             _ec("cat {0}.test.tmp  > {0}.test".format(f_name))
+            _ec("cat {0}.shuffled.tmp  > {0}.shuffled".format(f_name))
             _ec("cat {0}.dev.tmp  >  {0}.dev".format(f_name))
+
+
 
     _ec("mv tuples.wiki LiACL")
     _ec("mv tuples.cn.txt* LiACL")
