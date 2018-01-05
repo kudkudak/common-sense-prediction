@@ -56,6 +56,7 @@ def evaluate_on_file(model, save_path, f_path, word2index):
 def evaluate(f_path, type, model_path, save_path):
     print("mkdir -p " + save_path)
     os.system("mkdir -p " + save_path)
+    print(type)
 
     c = json.load(open(os.path.join(model_path, "config.json")))
     if type == "factorized":
