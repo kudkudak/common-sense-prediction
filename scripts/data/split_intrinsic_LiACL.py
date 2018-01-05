@@ -34,7 +34,7 @@ SEED = 777
 
 def _ec(cmd):
     print(cmd)
-    os.system(cmd)
+    assert os.system(cmd) == 0
 
 if __name__ == "__main__":
     _ec("mkdir " + DESTINATION1)

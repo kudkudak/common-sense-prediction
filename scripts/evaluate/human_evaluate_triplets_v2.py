@@ -3,17 +3,20 @@
 """
 A *tool* that has 4 functionalities
 
-1. takes evaluation results by score_triplets and mixes triplets from two runs and
-prepares evaluation csv that can be used in like gdocs
-2. takes evaluated csv and redistributes it
+1. prepares regular evaluation.
+2. prepares bucketed evaluation.
 3. allows for interactive scoring
 4. list examples
 
-To prepare run:
+To prepare normal evaluation:
 
     python scripts/evaluate/human_evaluate_triplets.py prepare save_path run_A_scores,run_B_scores,.. K L
 
 , where K is # triplets to sample, L is out of what top
+
+To prepare bucketed evaluation:
+
+    TODO
 
 To list examples:
 
@@ -33,6 +36,10 @@ To score run:
     python scripts/evaluate/human_evaluate_triplets.py score scored_csv
 
 , continues scoring from last not-resolved triplet
+
+Notes
+-----
+TODO: Disentangle from get top. This is stupid to entangle them
 """
 import os
 import json

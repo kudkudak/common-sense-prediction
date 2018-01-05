@@ -5,7 +5,7 @@ Small script taking in 2 files (rel/head/tail/score) and producing distances fro
  embeddings
 Use as:
 
-python scripts/evaluate/compute_distances.py source_dataset target_dataset embedding_source save_path ignore0
+python scripts/evaluate/compute_distances.py source_dataset target_dataset embedding_source save_path ignore0 batch
 
 Notes
 -----
@@ -27,59 +27,68 @@ import logging
 logger = logging.getLogger(__name__)
 
 from six import iteritems
-from scripts.train_factorized import load_embeddings
+from src.utils.data_loading import load_embeddings, endless_data_stream, load_external_embeddings
 # TODO(kudkudak): Fix madness with lowercase or uppercase rel.txt :P
 from src.data import LiACL_ON_REL_LOWERCASE, LiACL_ON_REL
 from src import DATA_DIR
-
-def _calculate_distance(ex, S, same_rel=False):
-    # Assumes that featurization is [head, rel, tail]
-    D = S.shape[1] / 3
-    dist1 = np.linalg.norm(ex.reshape(1, -1)[:, 0:D] - S[:, 0:D], axis=1)
-    dist2 = np.linalg.norm(ex.reshape(1, -1)[:, -D:] - S[:, -D:], axis=1)
-    if same_rel:
-        dist3 = np.linalg.norm(ex.reshape(1, -1)[:, D:2 * D] - S[:, D:2 * D], axis=1)
-        same_rel_id = (dist3 == 0).astype("int")
-        return same_rel_id * (dist1 + dist2) + (1 - same_rel_id) * 1000000000
-    else:
-        return (dist1 + dist2)
-
-
-def _calculate_distances(df, df_feat, train_feat, same_rel=False):
-    if same_rel:
-        raise NotImplementedError("Not implemented relation-aware distance")
-
-    scores = []
-    for id in tqdm.tqdm(range(len(df)), total=len(df)):
-        scores.append(_calculate_distance(df_feat[id], train_feat, same_rel=same_rel))
-
-        if id % 50 == 0:
-            print("Quantiles at {}".format(id))
-            scores_min = np.array([a.min() for a in scores])
-            scores_min = sorted(scores_min)
-            print(("33%", scores_min[id/3]))
-            print(("66%", scores_min[2*id/3]))
-            quantiles = []
-            for k in range(10):
-                quantiles.append(scores_min[k*id/10])
-            print(quantiles)
-
-
-
-    scores_min = np.array([a.min() for a in scores])
-    return scores, scores_min
-
 
 def _batch(iterable, n=1):
     l = len(iterable)
     for ndx in range(0, l, n):
         yield iterable[ndx:min(ndx + n, l)]
 
+def _calculate_distance(ex, S, same_rel=False):
+    # Assumes that featurization is [head, rel, tail]
+    D = S.shape[1] / 3
 
-def main(source_dataset, target_dataset, embedding_source, save_path, ignore0):
+    # For broadcasting
+    if ex.ndim == 1:
+        ex = ex.reshape(1, 1, -1)
+    elif ex.ndim == 2:
+        ex = ex.reshape(ex.shape[0], 1, -1)
+
+    if S.ndim == 2:
+        S = S.reshape(1, S.shape[0], S.shape[1])
+
+    dist1 = np.linalg.norm(ex[:, :, 0:D] - S[:, :, 0:D], axis=2)
+    dist2 = np.linalg.norm(ex[:, :, -D:] - S[:, :, -D:], axis=2)
+    if same_rel:
+        dist3 = np.linalg.norm(ex[:, :, D:2 * D] - S[:, :, D:2 * D], axis=2)
+        same_rel_id = (dist3 == 0).astype("int")
+        return same_rel_id * (dist1 + dist2) + (1 - same_rel_id) * 1000000000
+    else:
+        return (dist1 + dist2)
+
+
+def _calculate_distances(df, df_feat, train_feat, same_rel=False, batch_size=100):
+    if same_rel:
+        raise NotImplementedError("Not implemented relation-aware distance")
+
+    N  = len(df)
+    scores_min = np.zeros(shape=(N,))
+    id_batch = 0
+    for id in tqdm.tqdm(_batch(range(N), batch_size), total=N/batch_size):
+        scores_min[id] = _calculate_distance(df_feat[id], train_feat, same_rel=same_rel).min(axis=1)
+        id_batch += 1
+
+        K = id_batch*batch_size
+        print("Quantiles at {}".format(id_batch))
+        scores_min_K = sorted(scores_min[0:K])
+        print(("33%", scores_min_K[K/3]))
+        print(("66%", scores_min_K[2*K/3]))
+        quantiles = []
+        for k in range(10):
+            quantiles.append(scores_min_K[k*K/10])
+        print(quantiles)
+
+    return scores_min
+
+
+
+def main(source_dataset, target_dataset, embedding_source, save_path, batch_size):
     os.system("mkdir -p " + os.path.dirname(save_path))
 
-    ignore0 = int(ignore0)
+    batch_size = int(batch_size)
 
     # TODO(kudkudak): Get rid of this madness
     if "wiki" in target_dataset:
@@ -151,10 +160,7 @@ def main(source_dataset, target_dataset, embedding_source, save_path, ignore0):
     source_feat = _featurize_df(source, dim=3 * D, featurizer=featurizer)
     target_feat = _featurize_df(target, dim=3 * D, featurizer=featurizer)
 
-    invididual_dists, dists = _calculate_distances(target, target_feat, source_feat, same_rel=False)
-
-    if ignore0 == 1:
-        dists = [dists_ex[dists_ex > 0].min() for dists_ex in invididual_dists]
+    dists = _calculate_distances(target, target_feat, source_feat, same_rel=False, batch_size=batch_size)
 
     with open(save_path, "w") as f_target:
         f_target.write("\n".join([str(v) for v in dists]))

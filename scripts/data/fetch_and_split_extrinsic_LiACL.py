@@ -23,7 +23,7 @@ REL_FILES=["atlocation.txt", "capableof.txt", "causes.txt", "hasa.txt",
 
 def _ec(cmd):
     print(cmd)
-    os.system(cmd)
+    assert os.system(cmd)==0
 
 if __name__ == "__main__":
     _ec("wget {}".format(WIKI_HREF))
@@ -79,8 +79,6 @@ if __name__ == "__main__":
             _ec("cat {0}.test.tmp  > {0}.test".format(f_name))
             _ec("cat {0}.shuffled.tmp  > {0}.shuffled".format(f_name))
             _ec("cat {0}.dev.tmp  >  {0}.dev".format(f_name))
-
-
 
     _ec("mv tuples.wiki LiACL")
     _ec("mv tuples.cn.txt* LiACL")
