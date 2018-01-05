@@ -4,19 +4,14 @@
 A *tool* that has 4 functionalities
 
 1. prepares regular evaluation.
-2. prepares bucketed evaluation.
-3. allows for interactive scoring
-4. list examples
+2. allows for interactive scoring
+3. list examples
 
 To prepare normal evaluation:
 
     python scripts/evaluate/human_evaluate_triplets.py prepare save_path run_A_scores,run_B_scores,.. K L
 
 , where K is # triplets to sample, L is out of what top
-
-To prepare bucketed evaluation:
-
-    TODO
 
 To list examples:
 
@@ -85,10 +80,6 @@ if __name__ == "__main__":
             raise Exception("L should be larger or equal to K")
         runs = runs.split(",")
         key_runs = range(len(runs)) # Key of run is its id
-
-        # Weird version control
-        if not all([r.endswith("_scored.txt") for r in runs]):
-            raise Exception("Please produce scores using score_triplets.py")
 
         # Read
         tops = [get_top(r, K=K, L=L, seed=777) for r in runs]

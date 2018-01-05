@@ -20,6 +20,7 @@ from scipy import stats
 import tqdm
 
 from scripts.train_factorized import init_model_and_data as factorized_init_model_and_data
+from scripts.train_dnn_ce import init_data_and_model as dnn_init_model_and_data
 from src.data import LiACLDatasetFromFile, LiACL_ON_REL_LOWERCASE, LiACL_ON_REL
 
 def evaluate_on_file(model, save_path, f_path, word2index):
@@ -57,16 +58,20 @@ def evaluate(f_path, type, model_path, save_path):
     os.system("mkdir -p " + save_path)
 
     c = json.load(open(os.path.join(model_path, "config.json")))
-    if type != "factorized":
+    if type == "factorized":
+        model, D = factorized_init_model_and_data(c)
+        model.load_weights(os.path.join(model_path, "model.h5")) # This is best acc_monitor
+    elif type == "dnn":
+        model, D = dnn_init_model_and_data(c)
+        model.load_weights(os.path.join(model_path, "model.h5"))  # This is best acc_monitor
+    else:
         raise NotImplementedError()
-    model, D = factorized_init_model_and_data(c)
-    model.load_weights(os.path.join(model_path, "model.h5")) # This is best acc_monitor
 
     evaluate_on_file(model=model, save_path=save_path, f_path=f_path, word2index=D['word2index'])
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        print("Use as python scripts/evaluate_wiki.py dataset type save_path")
+        print("Use as python scripts/evaluate_wiki.py dataset_path type model_path  save_path")
         exit(1)
 
     file_path, type, model_path, save_path = sys.argv[1:]
