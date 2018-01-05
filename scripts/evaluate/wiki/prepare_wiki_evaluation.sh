@@ -13,7 +13,7 @@ for bucket in _b0.txt _b1.txt _b2.txt; do
     models=${RESULTS_DIR}/factorized/3_01_prototypical_conceptnet_my/${wiki_scores_template}$bucket
 
     # Collect all models
-    for modelpath in factorized/3_01_root_conceptnet_my_2 dnn_ce/3_01_root_conceptnet_my dnn_ce/3_01_root_conceptnet_my; do
+    for modelpath in factorized/3_01_root_conceptnet_my_2 dnn_ce/3_01_root_conceptnet_my; do
         models=$models,${RESULTS_DIR}/${modelpath}/${wiki_scores_template}$bucket
     done
 
