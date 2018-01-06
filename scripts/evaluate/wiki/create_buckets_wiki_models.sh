@@ -17,7 +17,7 @@ embeddings_file=$DATA_DIR/embeddings/LiACL/embeddings_OMCS.txt
 
 # factorized/3_01_prototypical_conceptnet_my_glove_3
 
-for modelpath in factorized/3_01_prototypical_conceptnet_my factorized/3_01_root_conceptnet_my_2 dnn_ce/3_01_root_conceptnet_my dnn_ce/3_01_root_conceptnet_my; do
+for modelpath in factorized/3_01_root_conceptnet_my_glove_2 factorized/3_01_prototypical_conceptnet_my factorized/3_01_root_conceptnet_my_2 dnn_ce/3_01_root_conceptnet_my dnn_ce/3_01_root_conceptnet_my; do
     source_csv=$RESULTS_DIR/${modelpath}/${source_csv_template}
 
     # Middle bucket
@@ -33,8 +33,8 @@ for modelpath in factorized/3_01_prototypical_conceptnet_my factorized/3_01_root
     fi
 
     # Bottom bucket
-#    target_file=${source_csv}_b0.txt
-#    if [ ! -f $target_file ]; then
-#        python scripts/evaluate/order_and_take_top_dist.py $source_csv $bucket_size $target_file $distance_csv  $embeddings_file -10000000 $t1 $batch_size
-#    fi
+    target_file=${source_csv}_b0.txt
+    if [ ! -f $target_file ]; then
+        python scripts/evaluate/order_and_take_top_dist.py $source_csv $bucket_size $target_file $distance_csv  $embeddings_file -10000000 $t1 $batch_size
+    fi
 done

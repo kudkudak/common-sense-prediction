@@ -6,6 +6,7 @@ A *tool* that has 4 functionalities
 1. prepares regular evaluation.
 2. allows for interactive scoring
 3. list examples
+4. processes scored triplets
 
 To prepare normal evaluation:
 
@@ -19,9 +20,9 @@ To list examples:
 
 , where K is # triplets to sample, L is out of what top
 
-To report run:
+To evaluate run:
 
-    python scripts/evaluate/human_evaluate_triplets.py report mapping_csv scored_csv json_output
+    python scripts/evaluate/human_evaluate_triplets.py evaluate mapping_csv scored_csv json_output
 
 , mapping_csv and scored_csv are produced by prepare. Expects scores in score column of scored_file.
 Prints results and saves to output_csv
@@ -35,6 +36,7 @@ To score run:
 Notes
 -----
 TODO: Disentangle from get top. This is stupid to entangle them
+TODO: List of ignored
 """
 import os
 import json
@@ -148,8 +150,15 @@ if __name__ == "__main__":
             exit(1)
         mapping_csv, scored_csv, json_output = sys.argv[2:]
 
-        evaluated = pd.read_csv(scored_csv)
-        mapping = pd.read_csv(mapping_csv)
+        if scored_csv.endswith("tsv"):
+            evaluated = pd.read_csv(scored_csv, sep="\t")
+        else:
+            evaluated = pd.read_csv(scored_csv)
+
+        if mapping_csv.endswith("tsv"):
+            mapping = pd.read_csv(mapping_csv, sep="\t")
+        else:
+            mapping = pd.read_csv(mapping_csv)
 
         assert len(evaluated) == len(mapping)
 
@@ -157,12 +166,19 @@ if __name__ == "__main__":
         scores = defaultdict(list)
 
         # Unmix
+        key_to_name = {}
         for id in range(len(evaluated)):
             score = evaluated.iloc[id]['score']
-            run_key = mapping.iloc[id]['key']
+            if "key" in mapping:
+                run_key = mapping.iloc[id]['key']
+            else:
+                run_key = mapping.iloc[id]['entity']
+            key_to_name[run_key] = mapping.iloc[id][mapping.columns[-1]]
             scores[run_key].append(score)
 
         eval_result = {key: np.mean(scores[key]) for key in scores}
+        eval_result['key_to_name'] = key_to_name
+        
         print(eval_result)
 
         with open(json_output, "w") as f:
