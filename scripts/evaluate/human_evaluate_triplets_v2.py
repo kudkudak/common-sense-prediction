@@ -178,7 +178,7 @@ if __name__ == "__main__":
 
         eval_result = {key: np.mean(scores[key]) for key in scores}
         eval_result['key_to_name'] = key_to_name
-        
+
         print(eval_result)
 
         with open(json_output, "w") as f:

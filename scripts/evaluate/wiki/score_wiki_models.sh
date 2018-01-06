@@ -8,7 +8,6 @@ wiki_target=allrel.txt.shuffled_scored.txt
 wiki_dataset=/data/milatmp1/jastrzes/l2lwe/data/LiACL/tuples.wiki/allrel.txt.shuffled
 
 # Factorized models
-
 for model in factorized/3_01_root_conceptnet_my_glove_2 factorized/3_01_prototypical_conceptnet_my factorized/3_01_root_conceptnet_my_2 factorized/3_01_prototypical_conceptnet_my_glove_3; do
     target_file=$RESULTS_DIR/$model/wiki/$wiki_target
     target_dir=$RESULTS_DIR/$model/wiki/
