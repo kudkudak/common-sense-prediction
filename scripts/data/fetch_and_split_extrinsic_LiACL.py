@@ -70,7 +70,6 @@ if __name__ == "__main__":
                 shuffled_f.write(l + "\n")
 
         # Remove middle weird column
-        # TODO(kudkudak): What is this column? (keeping files to investigate easily)
         if "tuples.wiki" in f_name:
             _ec("cat {0}.test.tmp | cut -f 1-3,5- > {0}.test".format(f_name))
             _ec("cat {0}.shuffled.tmp | cut -f 1-3,5- > {0}.shuffled".format(f_name))
@@ -83,7 +82,6 @@ if __name__ == "__main__":
     _ec("mv tuples.wiki LiACL")
     _ec("mv tuples.cn.txt* LiACL")
 
-    # TODO(kudkudak): Generalize/refactors lines below
     _ec("cp LiACL/tuples.wiki/allrel.txt.dev LiACL/tuples.wiki/allrel.txt.dev_scored.txt")
     _ec("cp LiACL/tuples.wiki/allrel.txt.test LiACL/tuples.wiki/allrel.txt.test_scored.txt")
     _ec("cp LiACL/tuples.cn.txt.dev LiACL/tuples.cn.txt.dev_scored.txt")

@@ -41,12 +41,10 @@ if __name__ == "__main__":
     _ec("mkdir " + DESTINATION2)
 
     # Cp train and rel files
-    # TODO(kudkudak): After refactoring vocab change to copying vocab
     _ec("cp {} {}".format(os.path.join(SOURCE, "*train*txt"), DESTINATION1))
     _ec("cp {} {}".format(os.path.join(SOURCE, "*rel*txt"), DESTINATION1))
     _ec("cp {} {}".format(os.path.join(SOURCE, "*rel*txt"), DESTINATION2))
 
-    """
     # Add negative samples
     for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
         N = len(open(os.path.join(SOURCE, f)).read().splitlines())
@@ -60,9 +58,8 @@ if __name__ == "__main__":
     for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
         _ec("python {} {} {} {} {} {}".format(DISTANCE_SCRIPT, os.path.join(DESTINATION1, "train100k.txt"),
             os.path.join(DESTINATION1, f), LiACL_OMCS_EMBEDDINGS, os.path.join(DESTINATION1, f + ".dists"), 0))
-    """
+
     # Read all data, perform split and save
-    # TODO(kudkudak): Removes scores!
     lines = open(os.path.join(SOURCE, "train100k.txt")).read().splitlines()
     for f in ['test.txt', 'dev1.txt', 'dev2.txt']:
         lines_f = open(os.path.join(SOURCE, f)).read().splitlines()

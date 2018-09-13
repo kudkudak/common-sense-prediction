@@ -3,16 +3,10 @@
 """
 Small script taking in 2 files (rel/head/tail/score) and producing distances from source to target using given
  embeddings
+
 Use as:
 
 python scripts/evaluate/compute_distances.py source_dataset target_dataset embedding_source save_path ignore0 batch
-
-Notes
------
-ignore0 is a hack to allow for comparing dataset subset to itself
-outputs also quantiles
-TODO(kudkudak): Normalize or not?
-TODO(kudkudak): Too slow
 """
 import h5py
 
@@ -152,7 +146,7 @@ def main(source_dataset, target_dataset, embedding_source, save_path, batch_size
         return feat
 
     source = pd.read_csv(source_dataset, sep="\t", header=None)
-    target = pd.read_csv(target_dataset, sep="\t", header=None)
+    target = pd.read_csv(target_dataset, sep="\t", header=None) #TODO: Remove this hack
     source.columns = target.columns = ['rel', 'head', 'tail', 'score']
 
     logger.info("Featurizing source and target")

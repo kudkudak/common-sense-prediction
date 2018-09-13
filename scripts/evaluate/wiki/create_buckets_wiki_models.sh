@@ -15,8 +15,6 @@ batch_size=25
 bucket_size=100
 embeddings_file=$DATA_DIR/embeddings/LiACL/embeddings_OMCS.txt
 
-# factorized/3_01_prototypical_conceptnet_my_glove_3
-
 for modelpath in factorized/3_01_root_conceptnet_my_glove_2 factorized/3_01_prototypical_conceptnet_my factorized/3_01_root_conceptnet_my_2 dnn_ce/3_01_root_conceptnet_my dnn_ce/3_01_root_conceptnet_my; do
     source_csv=$RESULTS_DIR/${modelpath}/${source_csv_template}
 

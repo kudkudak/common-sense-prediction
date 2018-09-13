@@ -10,10 +10,6 @@ We base from http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
 
 * ACL paper: http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf
 
-* Note: https://drive.google.com/drive/folders/0B8-M39RV4diKVlBvTEZidnJNYm8 (or this link https://drive.google.com/open?id=0B8-M39RV4diKVlBvTEZidnJNYm8)
-
-* Old writeup: https://www.overleaf.com/10600980csjksczhwpgb
-
 ## Setup
 
 0. Project uses primarly python2.7, but should work without issues in python3.
@@ -46,13 +42,27 @@ export DATA_DIR=$HOME/l2lwe/data
 
 We have following datasets used in project:
 
-* LiACL/conceptnet 
-* LiACL/conceptnet_my 
-* LiACL/conceptnet_my_random 
+* LiACL/conceptnet (Original dataset)
+* LiACL/conceptnet_my (Dataset used in the paper based on the original dataset)
+* LiACL/conceptnet_my_random (Dataset created by randomly shuffling train/dev/test split)
 * LiACL/tuples.wiki  
     * LiACL/tuples.wiki/tuples5k.cn.txt.dev
     * LiACL/tuples.wiki/tuples5k.cn.txt.test
     * LiACL/tuples.wiki/scored_tuples5k.cn.txt.dev
+
+## Training
+
+### Factorized
+
+``python scripts/train_factorized.py root test1``
+
+to train the default configuration of the Factorized model (saves outputs to `test`).
+
+### DNN
+
+``python scripts/train_dnn_ce.py root test2``
+
+to train the default configuration of the DNN+CE model from Li et al. (saves outputs to `test`).
 
 ## Evaluation
 
@@ -61,7 +71,7 @@ prepare AB tests of two models (for human evaluators) and to process results.
 
 ## Data folder structure
 
-* `LiACL/conceptnet_{"my","my_random",""}` - KBC dataset from ACL models and variants
+* `LiACL/conceptnet_{"my","my_random",""}` - KBC dataset from Li et al models and variants
 
 * `embeddings` - embeddings (kept separately as tend to be big)
 

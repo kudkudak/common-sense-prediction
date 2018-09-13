@@ -143,7 +143,8 @@ def main(source_dataset, target_dataset, embedding_source, save_path, ignore0):
         return feat
 
     source = pd.read_csv(source_dataset, sep="\t", header=None)
-    target = pd.read_csv(target_dataset, sep="\t", header=None)
+    target = pd.read_csv(target_dataset, sep=",")#, header=None) #TODO: Remove this hack
+    # target = pd.read_csv(target_dataset, sep="\t", header=None)
     source.columns = target.columns = ['rel', 'head', 'tail', 'score']
 
     logger.info("Featurizing source and target")
