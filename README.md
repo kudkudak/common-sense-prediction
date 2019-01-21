@@ -1,36 +1,27 @@
 # Common sense prediction project
 
-*Research objective*: how far are we from common sense prediction: measuring and evaluating.
+This is the codebase for the paper ["Commonsense mining as knowledge base completion? A study on the impact of novelty"](https://arxiv.org/pdf/1804.09259.pdf)
 
-We base from http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf.
+*Research objective*: how far are we from real common sense prediction measuring and evaluation.
 
-## Resources
+Our paper extends the work ["Commonsense Knowledge Base Completion"](http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf) by Li et al (ACL 2016)
 
-* Paper: https://www.overleaf.com/12326026ybwcgtxbxpkr#/46877048/
-
-* ACL paper: http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf
 
 ## Setup
 
-0. Project uses primarly python2.7, but should work without issues in python3.
+1. Clone the repo `git clone git@github.com:kudkudak/common-sense-prediction.git`
 
-1. Configure PYTHONPATH to include root folder of the project, DATA_DIR to point to data directory, and 
-PROJECT_ROOT to point to root of project.
+2. Setup the dependencies
+    * *recommended*: using `conda`, install the environment for python 2 or python 3 `conda env create -f environment-pyX.yaml`
+    * otherwise install dependencies with `pip`, `pip install -r requirements.txt`
 
-2. Go to DATA_DIR and:
- 
-    * Run `scripts/data/fetch_LiACL_data.sh`.
+3. Configure environment setup `env.sh` and make executable `chmod +x env.sh`
+    * `PYTHONPATH` should point to the root of the project
+    * `DATA_DIR` should point to data directory
+    * `PROJECT_ROOT` should point to the root of the project
+    * *if using conda or similar* `source activate` the correct environment
 
-    * Run `scripts/data/split_intrinsic_LiACL.py ` (takes like 15 minutes)
-
-    * Optionally run `scripts/data/fetch_and_split_extrinsic_LiACL.py ` for extrinsic evaluation.
-    
-    * Optionally run `scripts/data/fetch_glove.sh`, but probably you don't need to.
-
-3. (Optional) We provide conda environment. To install it fire `conda env create -f environment-py2.yaml` and add
-`source activate common-sense-prediction-py2` to you env file.
-For example you can have `env.sh` file that you source before running scripts. In my case it is
-
+e.g.
 ```
 #!/usr/bin/env bash
 export PROJECT_ROOT=$PYTHONPATH:$HOME/l2lwe
@@ -38,19 +29,27 @@ export PYTHONPATH=$PYTHONPATH:$HOME/l2lwe
 export DATA_DIR=$HOME/l2lwe/data
 ```
 
+4. In `DATA_DIR`
+    * Run `PATH/TO/scripts/data/fetch_LiACL_data.sh`.
+    * Run `PATH/TO/scripts/data/split_intrinsic_LiACL.py ` (takes ~15 minutes)
+    * Optionally run `PATH/TO/scripts/data/fetch_and_split_extrinsic_LiACL.py ` for extrinsic evaluation.
+    * Optionally run `PATH/TO/scripts/data/fetch_glove.sh`, but probably you don't need to.
+
 ## Datasets
 
 We have following datasets used in project:
 
-* LiACL/conceptnet (Original dataset)
-* LiACL/conceptnet_my (Dataset used in the paper based on the original dataset)
-* LiACL/conceptnet_my_random (Dataset created by randomly shuffling train/dev/test split)
-* LiACL/tuples.wiki  
-    * LiACL/tuples.wiki/tuples5k.cn.txt.dev
-    * LiACL/tuples.wiki/tuples5k.cn.txt.test
-    * LiACL/tuples.wiki/scored_tuples5k.cn.txt.dev
+* `LiACL/conceptnet` (Original dataset)
+* `LiACL/conceptnet_my` (Dataset used in the paper based on the original dataset)
+* `LiACL/conceptnet_my_random` (Dataset created by randomly shuffling train/dev/test split)
+* `LiACL/tuples.wiki`
+    * `LiACL/tuples.wiki/tuples5k.cn.txt.dev`
+    * `LiACL/tuples.wiki/tuples5k.cn.txt.test`
+    * `LiACL/tuples.wiki/scored_tuples5k.cn.txt.dev`
 
 ## Training
+
+intialize the environment with `./env.sh`
 
 ### Factorized
 
@@ -66,7 +65,7 @@ to train the default configuration of the DNN+CE model from Li et al. (saves out
 
 ## Evaluation
 
-Use `scripts/evaluate/score_trplets.py` to score using model some triplets (e.g. wiki). Use `scripts/human_evaluate_triplets.py` to
+Use `scripts/evaluate/score_triplets.py` to score using model some triplets (e.g. wiki). Use `scripts/human_evaluate_triplets.py` to
 prepare AB tests of two models (for human evaluators) and to process results.
 
 ## Data folder structure
