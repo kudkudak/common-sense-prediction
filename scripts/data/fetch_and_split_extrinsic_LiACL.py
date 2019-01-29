@@ -1,15 +1,31 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Small script to fetch, unpack, create all and top10k versions and split wiki and CN tuples from ACL paper
+Fetch, unpack, create all conceptnet and wikipedia tuples
 
-Execute in data folder, like other scipts
+Tuples are those used by Commonsense Knowledge Base Completion (Li et al, 2016)
+Creates copies of conceptnet (cn) and wikipedia (wiki) tuples to manually score (*_scored.txt)
 
 Format of training data:
 ReceivesAction  hockey  play on ice  3.4594316186372978
 
-Creates:
-all.txt.dev, all.txt.test, 10k.txt.dev, 10k.txt.test
+Execute this in data folder ($DATA_DIR) creates
+LiACL/
+    tuples.cn.txt.dev
+    tuples.cn.txt.dev_scored.txt
+    tuples.cn.txt.test
+    tuples.cn.txt.test_scored.txt
+    ...
+
+    tuples.wiki/
+        allrel.txt.shuffled <- evaluate/wiki
+        allrel.txt.dev
+        allrel.txt.dev_scored.txt
+        allrel.txt.test
+        allrel.txt.test_scored.txt
+        top10k.txt.dev
+        top10k.txt.test
+        ...
 """
 
 import os
@@ -87,4 +103,9 @@ if __name__ == "__main__":
     _ec("cp LiACL/tuples.cn.txt.dev LiACL/tuples.cn.txt.dev_scored.txt")
     _ec("cp LiACL/tuples.cn.txt.test LiACL/tuples.cn.txt.test_scored.txt")
 
+    # Cleanup
+    # TODO(mnoukhov): still lots of other files we don't use
+    _ec("rm tuples.wiki.tar")
+    _ec("rm LiACL/*.tmp")
+    _ec("rm -r LiACL/tuples.wiki/*.tmp")
 

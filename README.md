@@ -15,7 +15,7 @@ Our paper extends the work ["Commonsense Knowledge Base Completion"](http://ttic
     * *recommended*: using `conda`, install the environment for python 2 or python 3 `conda env create -f environment-pyX.yaml`
     * otherwise install dependencies with `pip`, `pip install -r requirements.txt`
 
-3. Configure environment setup `env.sh` and make executable `chmod +x env.sh`
+3. Configure environment setup `env.sh` and make executable `chmod +x env.sh` and run `./env.sh`
     * `PYTHONPATH` should point to the root of the project
     * `DATA_DIR` should point to data directory
     * `PROJECT_ROOT` should point to the root of the project
@@ -24,16 +24,16 @@ Our paper extends the work ["Commonsense Knowledge Base Completion"](http://ttic
 e.g.
 ```
 #!/usr/bin/env bash
-export PROJECT_ROOT=$PYTHONPATH:$HOME/l2lwe
-export PYTHONPATH=$PYTHONPATH:$HOME/l2lwe
-export DATA_DIR=$HOME/l2lwe/data
+export PROJECT_ROOT=$PYTHONPATH:$HOME/common-sense-prediction
+export PYTHONPATH=$PYTHONPATH:$HOME/common-sense-prediction
+export DATA_DIR=$PROJECT_ROOT/data
 ```
 
 4. In `DATA_DIR`
     * Run `PATH/TO/scripts/data/fetch_LiACL_data.sh`.
     * Run `PATH/TO/scripts/data/split_intrinsic_LiACL.py ` (takes ~15 minutes)
-    * Optionally run `PATH/TO/scripts/data/fetch_and_split_extrinsic_LiACL.py ` for extrinsic evaluation.
-    * Optionally run `PATH/TO/scripts/data/fetch_glove.sh`, but probably you don't need to.
+    * (Optional) to do extrinsic eval you need wikipedia and conceptnet tuples: run `PATH/TO/scripts/data/fetch_and_split_extrinsic_LiACL.py `
+    * (Optional) not currently needed `PATH/TO/scripts/data/fetch_glove.sh`
 
 ## Datasets
 
@@ -43,9 +43,9 @@ We have following datasets used in project:
 * `LiACL/conceptnet_my` (Dataset used in the paper based on the original dataset)
 * `LiACL/conceptnet_my_random` (Dataset created by randomly shuffling train/dev/test split)
 * `LiACL/tuples.wiki`
-    * `LiACL/tuples.wiki/tuples5k.cn.txt.dev`
-    * `LiACL/tuples.wiki/tuples5k.cn.txt.test`
-    * `LiACL/tuples.wiki/scored_tuples5k.cn.txt.dev`
+    * `tuples5k.cn.txt.dev`
+    * `tuples5k.cn.txt.test`
+    * `scored_tuples5k.cn.txt.dev`
 
 ## Training
 

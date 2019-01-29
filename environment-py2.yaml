@@ -1,4 +1,4 @@
-name: common-sense-prediction-py2
+name: csp
 
 dependencies:
     - python=2.7
