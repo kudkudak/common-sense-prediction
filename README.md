@@ -33,19 +33,31 @@ export DATA_DIR=$PROJECT_ROOT/data
     * Run `PATH/TO/scripts/data/fetch_LiACL_data.sh`.
     * Run `PATH/TO/scripts/data/split_intrinsic_LiACL.py ` (takes ~15 minutes)
     * (Optional) to do extrinsic eval you need wikipedia and conceptnet tuples: run `PATH/TO/scripts/data/fetch_and_split_extrinsic_LiACL.py `
-    * (Optional) not currently needed `PATH/TO/scripts/data/fetch_glove.sh`
+    * (Not Needed) `PATH/TO/scripts/data/fetch_glove.sh`
 
 ## Datasets
 
 We have following datasets used in project:
 
-* `LiACL/conceptnet` (Original dataset)
-* `LiACL/conceptnet_my` (Dataset used in the paper based on the original dataset)
-* `LiACL/conceptnet_my_random` (Dataset created by randomly shuffling train/dev/test split)
-* `LiACL/tuples.wiki`
-    * `tuples5k.cn.txt.dev`
-    * `tuples5k.cn.txt.test`
-    * `scored_tuples5k.cn.txt.dev`
+* `LiACL/conceptnet` Original dataset
+* `LiACL/conceptnet_my` Dataset used in the paper based on the original dataset
+* `LiACL/conceptnet_my_random` Dataset created by randomly shuffling train/dev/test split
+* (Optional) `LiACL/tuples.wiki` Wikipedia tuples
+    * `allrel.txt`
+    * `allrel.txt.dev`
+    * `allrel.txt.test`
+    * `top100.txt`
+    * `top100.txt.dev`
+    * `top100.txt.test`
+    * `top10k.txt`
+    * `top10k.txt.dev`
+    * `top10k.txt.test`
+    ...
+* (Optional) `LiACL/tuples.cn` Conceptnet tuples
+    * `tuples.cn.txt`
+    * `tuples.cn.txt.dev`
+    * `tuples.cn.txt.test`
+    ...
 
 ## Training
 

@@ -11,14 +11,14 @@ python scripts/evaluate/closest_neighbour.py source_dataset target_dataset embed
 
 e.g.:
 
-python scripts/evaluate/closest_neighbour.py $DATA_DIR/LiACL/conceptnet/train100k.txt $DATA_DIR/LiACL/tuples.cn.txt
+python scripts/evaluate/closest_neighbour.py $DATA_DIR/LiACL/conceptnet/train100k.txt $DATA_DIR/LiACL/tuples.cn/tuples.cn.txt
 DATA_DIR/embeddings/LiACL/embeddings_OMCS.txt ./closest_results/tuplescn_minimal_dist_examples.txt True  10
 
 Memory:
 
 If you want to dump the computed unique head and tail distances you need to have atleast 80GB of memory.
 I also used 8 cores for CPU.
-python scripts/evaluate/closest_neighbour.py $DATA_DIR/LiACL/conceptnet/train100k.txt $DATA_DIR/LiACL/tuples.cn.txt
+python scripts/evaluate/closest_neighbour.py $DATA_DIR/LiACL/conceptnet/train100k.txt $DATA_DIR/LiACL/tuples.cn/tuples.cn.txt
 $DATA_DIR/embeddings/LiACL/e mbeddings_OMCS.txt ./closest_results/tuplescn_minimal_dist_examples_ver2.txt True 10
 
 """
