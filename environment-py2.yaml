@@ -8,3 +8,5 @@ dependencies:
     - keras=2.*
     - tensorflow=1.2.*
     - tqdm=4.*
+    - pip:
+        - argh=0.26

@@ -33,7 +33,7 @@ def _batch(iterable, n=1):
 
 def _calculate_distance(ex, S, same_rel=False):
     # Assumes that featurization is [head, rel, tail]
-    D = S.shape[1] / 3
+    D = S.shape[1] // 3
 
     # For broadcasting
     if ex.ndim == 1:
@@ -61,18 +61,18 @@ def _calculate_distances(df, df_feat, train_feat, same_rel=False, batch_size=100
     N  = len(df)
     scores_min = np.zeros(shape=(N,))
     id_batch = 0
-    for id in tqdm.tqdm(_batch(range(N), batch_size), total=N/batch_size):
+    for id in tqdm.tqdm(_batch(range(N), batch_size), total=N//batch_size):
         scores_min[id] = _calculate_distance(df_feat[id], train_feat, same_rel=same_rel).min(axis=1)
         id_batch += 1
 
         K = id_batch*batch_size
         print("Quantiles at {}".format(id_batch))
         scores_min_K = sorted(scores_min[0:K])
-        print(("33%", scores_min_K[K/3]))
-        print(("66%", scores_min_K[2*K/3]))
+        print(("33%", scores_min_K[K//3]))
+        print(("66%", scores_min_K[2*K//3]))
         quantiles = []
         for k in range(10):
-            quantiles.append(scores_min_K[k*K/10])
+            quantiles.append(scores_min_K[k*K//10])
         print(quantiles)
 
     return scores_min

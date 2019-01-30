@@ -385,7 +385,7 @@ class NegativeSampling(Transformer):
         if self.k < 3:
             # Can 1/3 of it be false negative?
             assert len(head) == 4*batch_size
-            ids = range(batch_size)
+            ids = list(range(batch_size))
             ids_chosen = np.random.choice(batch_size*3, batch_size*self.k, replace=False)
             ids = ids + [iid + batch_size for iid in ids_chosen]
             rel = rel[ids]

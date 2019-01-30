@@ -52,7 +52,7 @@ def main(dataset, K, save_path):
 
     # TODO(kudkudak): Remove after refactor to vocab
     word2index = _build_word2index(dataset)
-    index2word = {v: k for k, v in word2index.iteritems()}
+    index2word = {v: k for k, v in iteritems(word2index)}
     # import pdb; pdb.set_trace()
 
     # Leverage LiACLDatasetFromFile to compute negative samples.
