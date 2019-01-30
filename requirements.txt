@@ -1,7 +1,7 @@
 numpy==1.13
 pandas==0.20
 fuel==0.2
-keras==2
+keras==2.1.4
 tensorflow==1.2
 tqdm==4
 argh==0.26
