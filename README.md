@@ -14,6 +14,7 @@ Our paper extends the work ["Commonsense Knowledge Base Completion"](http://ttic
 2. Setup the dependencies
     * *recommended*: using `conda`, install the environment for python 2 or python 3 `conda env create -f environment-pyX.yaml`
     * otherwise install dependencies with `pip`, `pip install -r requirements.txt`
+    * **NOTE**: if you want to run on GPU, change package definition from `tensorflow` to `tensorflow-gpu`
 
 3. Configure environment setup `env.sh` and make executable `chmod +x env.sh` and run `./env.sh`
     * `PYTHONPATH` should point to the root of the project
