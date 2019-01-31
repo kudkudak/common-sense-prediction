@@ -16,7 +16,7 @@ Our paper extends the work ["Commonsense Knowledge Base Completion"](http://ttic
     * otherwise install dependencies with `pip`, `pip install -r requirements.txt`
     * **NOTE**: if you want to run on GPU, change package definition from `tensorflow` to `tensorflow-gpu`
 
-3. Configure environment setup `env.sh` and make executable `chmod +x env.sh` and run `./env.sh`
+3. Configure environment setup `env.sh` and source the environment `source env.sh`
     * `PYTHONPATH` should point to the root of the project
     * `DATA_DIR` should point to data directory
     * `PROJECT_ROOT` should point to the root of the project

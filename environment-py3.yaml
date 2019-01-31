@@ -9,4 +9,4 @@ dependencies:
     - tensorflow=1.2
     - tqdm=4
     - pip:
-        - argh=0.26
+        - argh==0.26
