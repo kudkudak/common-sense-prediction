@@ -4,4 +4,5 @@ fuel==0.2
 keras==2.1.4
 tensorflow==1.2
 tqdm==4
+matplotlib==3
 argh==0.26

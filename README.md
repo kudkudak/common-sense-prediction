@@ -36,13 +36,24 @@ export DATA_DIR=$PROJECT_ROOT/data
     * (Optional) to do extrinsic eval you need wikipedia and conceptnet tuples: run `PATH/TO/scripts/data/fetch_and_split_extrinsic_LiACL.py `
     * (Not Needed) `PATH/TO/scripts/data/fetch_glove.sh`
 
-## Datasets
+## Data
 
 We have following datasets used in project:
 
+* `embeddings/LiACL/`
+    * `embeddings_OMCS.txt` Open Mind Common Sense embeddings used in (Li et al, 2016)
 * `LiACL/conceptnet` Original dataset
-* `LiACL/conceptnet_my` Dataset used in the paper based on the original dataset
-* `LiACL/conceptnet_my_random` Dataset created by randomly shuffling train/dev/test split
+    * `train100k.txt`
+    * `train300k.txt`
+    * `train600k.txt`
+    * `dev1.txt`
+    * `dev2.txt`
+    * `test.txt`
+    * `rel.txt` list of relations
+    * `rel_lowercase.txt`
+* `LiACL/conceptnet_my` Dataset used in the paper (Original dataset resplit randomly)
+    * `{test/dev}.dists` distance of each tuple from training data using novelty heuristic
+* `LiACL/conceptnet_my_random` Extra dataset created by randomly shuffling train/dev/test split
 * (Optional) `LiACL/tuples.wiki` Wikipedia tuples
     * `allrel.txt`
     * `allrel.txt.dev`
@@ -65,29 +76,28 @@ We have following datasets used in project:
 intialize the environment with `./env.sh`
 
 ### Factorized
+train the Factorized model with `root` configuration and save outputs to folder `factorized`
 
-``python scripts/train_factorized.py root test1``
-
-to train the default configuration of the Factorized model (saves outputs to `test`).
+``python scripts/train_factorized.py root factorized``
 
 ### DNN
+train DNN+CE model (from Li et al. 2016) with 'root' configuration and save outputs to folder `dnn`
 
-``python scripts/train_dnn_ce.py root test2``
+``python scripts/train_dnn_ce.py root dnn``
 
-to train the default configuration of the DNN+CE model from Li et al. (saves outputs to `test`).
 
 ## Evaluation
+
+``python scripts/evaluate/score_triplets.py DATA_DIR/LiACL/conceptnet_my/
 
 Use `scripts/evaluate/score_triplets.py` to score using model some triplets (e.g. wiki). Use `scripts/human_evaluate_triplets.py` to
 prepare AB tests of two models (for human evaluators) and to process results.
 
-## Data folder structure
-
-* `LiACL/conceptnet_{"my","my_random",""}` - KBC dataset from Li et al models and variants
-
-* `embeddings` - embeddings (kept separately as tend to be big)
-
 ## Notes
 
-We use vegab, it is similar to argh, but adds convention that each run necessarily has its own folder, that
+* We use vegab, it is similar to argh, but adds convention that each run necessarily has its own folder, that
 after execution will have serialized stdout, stderr, python file and config used.
+
+* There are extra `.tmp` files leftover from data creation
+
+

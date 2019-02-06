@@ -16,7 +16,7 @@ config.set_root_config({
     'epochs': 30,
     'activation': 'relu',
     'hidden_units': 1000,
-    'data_dir': 'LiACL/conceptnet/',
+    'data_dir': 'LiACL/conceptnet_my/',
     'merge': 'add',
     'merge_weight': False,
     'rel_init': 0.05,
