@@ -34,7 +34,7 @@ from src import DATA_DIR
 
 def _calculate_distance(ex, S, same_rel=False):
     # Assumes that featurization is [head, rel, tail]
-    D = S.shape[1] / 3
+    D = S.shape[1] // 3
     dist1 = np.linalg.norm(ex.reshape(1, -1)[:, 0:D] - S[:, 0:D], axis=1)
     dist2 = np.linalg.norm(ex.reshape(1, -1)[:, -D:] - S[:, -D:], axis=1)
     if same_rel:
@@ -57,11 +57,11 @@ def _calculate_distances(df, df_feat, train_feat, same_rel=False):
             print("Quantiles at {}".format(id))
             scores_min = np.array([a.min() for a in scores])
             scores_min = sorted(scores_min)
-            print(("33%", scores_min[id/3]))
-            print(("66%", scores_min[2*id/3]))
+            print(("33%", scores_min[id//3]))
+            print(("66%", scores_min[2*id//3]))
             quantiles = []
             for k in range(10):
-                quantiles.append(scores_min[k*id/10])
+                quantiles.append(scores_min[k*id//10])
             print(quantiles)
 
 
@@ -143,8 +143,8 @@ def main(source_dataset, target_dataset, embedding_source, save_path, ignore0):
         return feat
 
     source = pd.read_csv(source_dataset, sep="\t", header=None)
-    target = pd.read_csv(target_dataset, sep=",")#, header=None) #TODO: Remove this hack
-    # target = pd.read_csv(target_dataset, sep="\t", header=None)
+    # target = pd.read_csv(target_dataset, sep=",")#, header=None) #TODO: Remove this hack
+    target = pd.read_csv(target_dataset, sep="\t", header=None)
     source.columns = target.columns = ['rel', 'head', 'tail', 'score']
 
     logger.info("Featurizing source and target")

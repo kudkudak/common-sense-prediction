@@ -37,8 +37,8 @@ def _ec(cmd):
     assert os.system(cmd) == 0
 
 if __name__ == "__main__":
-    _ec("mkdir " + DESTINATION1)
-    _ec("mkdir " + DESTINATION2)
+    _ec("mkdir -p " + DESTINATION1)
+    _ec("mkdir -p " + DESTINATION2)
 
     # Cp train and rel files
     _ec("cp {} {}".format(os.path.join(SOURCE, "*train*txt"), DESTINATION1))
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         assert N%100 == 0
         _ec("cp {} {}".format(os.path.join(SOURCE, f), os.path.join(DESTINATION1, f + ".tmp")))
         # NOTE: Assumes here 50% of dataset are positive examples
-        _ec("head -n {} {} > {}".format(N/2, os.path.join(DESTINATION1, f + ".tmp"), os.path.join(DESTINATION1, f + ".tmp.2")))
+        _ec("head -n {} {} > {}".format(N // 2, os.path.join(DESTINATION1, f + ".tmp"), os.path.join(DESTINATION1, f + ".tmp.2")))
         _ec("python {} {} {} {}".format(AUGMENT_SCRIPT, os.path.join(DESTINATION1, f + ".tmp.2"), K, os.path.join(DESTINATION1, f)))
 
     # Add OMCS distances
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         lines_f = open(os.path.join(SOURCE, f)).read().splitlines()
         N = len(lines_f)
         assert N % 100 == 0
-        lines += lines_f[0:N/2]
+        lines += lines_f[0:N//2]
     rng = np.random.RandomState(SEED)
     rng.shuffle(lines)
     d = {"test.txt.tmp": lines[0:1200],

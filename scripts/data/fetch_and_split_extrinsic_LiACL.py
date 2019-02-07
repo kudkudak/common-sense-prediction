@@ -11,11 +11,13 @@ ReceivesAction  hockey  play on ice  3.4594316186372978
 
 Execute this in data folder ($DATA_DIR) creates
 LiACL/
-    tuples.cn.txt.dev
-    tuples.cn.txt.dev_scored.txt
-    tuples.cn.txt.test
-    tuples.cn.txt.test_scored.txt
-    ...
+    tuples.cn/
+        tuples.cn.txt
+        tuples.cn.txt.dev
+        tuples.cn.txt.dev_scored.txt
+        tuples.cn.txt.test
+        tuples.cn.txt.test_scored.txt
+        ...
 
     tuples.wiki/
         allrel.txt.shuffled <- evaluate/wiki
@@ -96,16 +98,17 @@ if __name__ == "__main__":
             _ec("cat {0}.dev.tmp  >  {0}.dev".format(f_name))
 
     _ec("mv tuples.wiki LiACL")
-    _ec("mv tuples.cn.txt* LiACL")
+    _ec("mkdir -p LiACL/tuples.cn")
+    _ec("mv tuples.cn.txt* LiACL/tuples.cn/")
 
     _ec("cp LiACL/tuples.wiki/allrel.txt.dev LiACL/tuples.wiki/allrel.txt.dev_scored.txt")
     _ec("cp LiACL/tuples.wiki/allrel.txt.test LiACL/tuples.wiki/allrel.txt.test_scored.txt")
-    _ec("cp LiACL/tuples.cn.txt.dev LiACL/tuples.cn.txt.dev_scored.txt")
-    _ec("cp LiACL/tuples.cn.txt.test LiACL/tuples.cn.txt.test_scored.txt")
+    _ec("cp LiACL/tuples.cn/tuples.cn.txt.dev LiACL/tuples.cn/tuples.cn.txt.dev_scored.txt")
+    _ec("cp LiACL/tuples.cn/tuples.cn.txt.test LiACL/tuples.cn/tuples.cn.txt.test_scored.txt")
 
     # Cleanup
-    # TODO(mnoukhov): still lots of other files we don't use
+    # TODO(mnoukhov): other files we don't use?
     _ec("rm tuples.wiki.tar")
-    _ec("rm LiACL/*.tmp")
+    _ec("rm LiACL/tuples.cn/*.tmp")
     _ec("rm -r LiACL/tuples.wiki/*.tmp")
 
