@@ -88,10 +88,10 @@ train DNN+CE model (from Li et al. 2016) with 'root' configuration and save outp
 
 ## Evaluation
 
-``python scripts/evaluate/score_triplets.py DATA_DIR/LiACL/conceptnet_my/
+generate the table of F1 scores bucketed by the distance of the tests to the training set (using the novelty heuristic)
 
-Use `scripts/evaluate/score_triplets.py` to score using model some triplets (e.g. wiki). Use `scripts/human_evaluate_triplets.py` to
-prepare AB tests of two models (for human evaluators) and to process results.
+``python scripts/report.py /path/to/dnn /path/to/factorized``
+
 
 ## Notes
 
@@ -100,4 +100,5 @@ after execution will have serialized stdout, stderr, python file and config used
 
 * There are extra `.tmp` files leftover from data creation
 
-
+* use `scripts/evaluate/score_triplets.py` to score using model some triplets (e.g. wiki). Use `scripts/human_evaluate_triplets.py` to
+prepare AB tests of two models (for human evaluators) and to process results.

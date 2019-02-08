@@ -8,6 +8,6 @@ dependencies:
     - keras=2.1.4
     - tensorflow=1.2.*
     - tqdm=4.*
-    - matplotlib
+    - scikit-learn
     - pip:
         - argh==0.26
