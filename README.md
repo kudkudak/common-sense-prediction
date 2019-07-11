@@ -1,11 +1,8 @@
 # Common sense prediction project
 
-This is the codebase for the paper ["Commonsense mining as knowledge base completion? A study on the impact of novelty"](https://arxiv.org/pdf/1804.09259.pdf)
+This is the codebase for the paper ["Commonsense mining as knowledge base completion? A study on the impact of novelty"](https://arxiv.org/pdf/1804.09259.pdf).
 
-*Research objective*: how far are we from real common sense prediction measuring and evaluation.
-
-Our paper extends the work ["Commonsense Knowledge Base Completion"](http://ttic.uchicago.edu/~kgimpel/papers/li+etal.acl16.pdf) by Li et al (ACL 2016)
-
+If you wish to use our evaluation, see Evaluation part of this README.
 
 ## Setup
 
@@ -14,27 +11,39 @@ Our paper extends the work ["Commonsense Knowledge Base Completion"](http://ttic
 2. Setup the dependencies
     * *recommended*: using `conda`, install the environment for python 2 or python 3 `conda env create -f environment-pyX.yaml`
     * otherwise install dependencies with `pip`, `pip install -r requirements.txt`
-    * **NOTE**: if you want to run on GPU, change package definition from `tensorflow` to `tensorflow-gpu`
 
 3. Configure environment setup `env.sh` and source the environment `source env.sh`
     * `PYTHONPATH` should point to the root of the project
     * `DATA_DIR` should point to data directory
     * `PROJECT_ROOT` should point to the root of the project
-    * *if using conda or similar* `source activate` the correct environment
-
-e.g.
-```
-#!/usr/bin/env bash
-export PROJECT_ROOT=$PYTHONPATH:$HOME/common-sense-prediction
-export PYTHONPATH=$PYTHONPATH:$HOME/common-sense-prediction
-export DATA_DIR=$PROJECT_ROOT/data
-```
 
 4. In `DATA_DIR`
-    * Run `PATH/TO/scripts/data/fetch_LiACL_data.sh`.
-    * Run `PATH/TO/scripts/data/split_intrinsic_LiACL.py ` (takes ~15 minutes)
+    * Run `bash $PROJECT_ROOT/scripts/data/fetch_LiACL_data.sh`.
+    * Run `python $PROJECT_ROOT/scripts/data/split_intrinsic_LiACL.py ` (takes ~15 minutes)
     * (Optional) to do extrinsic eval you need wikipedia and conceptnet tuples: run `PATH/TO/scripts/data/fetch_and_split_extrinsic_LiACL.py `
-    * (Not Needed) `PATH/TO/scripts/data/fetch_glove.sh`
+    * (Optional) `PATH/TO/scripts/data/fetch_glove.sh`
+
+## Training
+
+Intialize the environment with `./env.sh`
+
+### Factorized
+To train the Factorized model with `root` configuration and save outputs to folder `factorized` run:
+
+``python scripts/train_factorized.py root factorized``
+
+### DNN
+To train DNN+CE model (from Li et al. 2016) with 'root' configuration and save outputs to folder `dnn` run: 
+
+``python scripts/train_dnn_ce.py root dnn``
+
+
+## Evaluation
+
+To generate the table of F1 scores bucketed by the distance of the tests to the training set (using the novelty heuristic) run:
+
+``python scripts/report.py /path/to/dnn /path/to/factorized``
+
 
 ## Data
 
@@ -71,34 +80,11 @@ We have following datasets used in project:
     * `tuples.cn.txt.test`
     ...
 
-## Training
-
-intialize the environment with `./env.sh`
-
-### Factorized
-train the Factorized model with `root` configuration and save outputs to folder `factorized`
-
-``python scripts/train_factorized.py root factorized``
-
-### DNN
-train DNN+CE model (from Li et al. 2016) with 'root' configuration and save outputs to folder `dnn`
-
-``python scripts/train_dnn_ce.py root dnn``
-
-
-## Evaluation
-
-generate the table of F1 scores bucketed by the distance of the tests to the training set (using the novelty heuristic)
-
-``python scripts/report.py /path/to/dnn /path/to/factorized``
-
 
 ## Notes
 
-* We use vegab, it is similar to argh, but adds convention that each run necessarily has its own folder, that
+* We use vegab. This is similar to argh, but adds convention that each run necessarily has its own folder, that
 after execution will have serialized stdout, stderr, python file and config used.
-
-* There are extra `.tmp` files leftover from data creation
 
 * use `scripts/evaluate/score_triplets.py` to score using model some triplets (e.g. wiki). Use `scripts/human_evaluate_triplets.py` to
 prepare AB tests of two models (for human evaluators) and to process results.

@@ -1,7 +1,11 @@
-"""Generate Results Table 1
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Given a list of directories for each model's run
+generate a table of f1 scores bucketed by the novelty metric, as in
+https://arxiv.org/pdf/1804.09259.pdf, Table 1.
 
-given a list of directories for each model's run
-generate a table of f1 scores bucketed by the novelty metric
+Example: python scripts/report.py factorized dnn
 """
 import os
 
