@@ -1,6 +1,6 @@
 # Common sense prediction project
 
-This is the codebase for the paper ["Commonsense mining as knowledge base completion? A study on the impact of novelty"](https://arxiv.org/pdf/1804.09259.pdf).
+This is the codebase for ["Commonsense mining as knowledge base completion? A study on the impact of novelty"](https://arxiv.org/pdf/1804.09259.pdf).
 
 If you wish to use our evaluation, see Evaluation part of this README.
 
