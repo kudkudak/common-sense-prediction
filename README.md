@@ -42,7 +42,7 @@ To train DNN+CE model (from Li et al. 2016) with 'root' configuration and save o
 
 To generate the table of F1 scores bucketed by the distance of the tests to the training set (using the novelty heuristic) run:
 
-``python scripts/report.py /path/to/dnn /path/to/factorized``
+``python scripts/report.py /path/to/dnn``
 
 
 ## Data

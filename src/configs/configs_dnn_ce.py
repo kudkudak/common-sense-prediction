@@ -8,7 +8,7 @@ from src.utils.vegab import ConfigRegistry
 config = ConfigRegistry()
 
 config.set_root_config({
-    'batch_size': 600,
+    'batch_size': 200,
     'epochs': 30,
     'rel_init': 0.02,
     'rel_vec_size': 200,
